@@ -175,20 +175,20 @@ body {
     z-index: 100;
     display: flex;
     flex-direction: column;
-    padding: 2rem 1.5rem;
+    padding: 1rem 0.75rem; /* 稍微壓縮內邊距 */
 }
 
 .brand {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 2.5rem;
-    padding-bottom: 1rem;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem; /* 從 1.25rem 壓縮 */
+    padding-bottom: 0.5rem; /* 從 0.75rem 壓縮 */
     border-bottom: 1px solid var(--gold-border);
 }
 
 .brand-title {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: 1px;
@@ -202,7 +202,7 @@ body {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.25rem; /* 稍微壓縮 */
     overflow-y: auto;
     flex: 1;
 }
@@ -210,13 +210,13 @@ body {
 .nav-menu .navbar-item a {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem; /* 從 0.55rem 0.8rem 壓縮 */
     color: var(--text-muted);
     text-decoration: none;
     border-radius: var(--border-radius);
     transition: var(--transition-smooth);
-    font-size: 0.95rem;
+    font-size: 0.875rem; /* 從 0.9rem 稍微調小 */
     font-weight: 500;
 }
 
@@ -820,6 +820,10 @@ code {
     
     .top-navbar {
         display: flex; /* 手機下顯示頂部欄 */
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
         flex-direction: column;
         height: auto;
         padding: 1rem;
@@ -828,6 +832,12 @@ code {
         width: 100%;
         max-width: 100vw;
         overflow: hidden;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* 手機版往下滾動隱藏頂部選單 */
+    .top-navbar.hide-navbar {
+        transform: translateY(-100%);
     }
     
     .navbar-menu {
@@ -846,6 +856,7 @@ code {
         width: 100%;
         max-width: 100vw;
         overflow: hidden;
+        padding-top: 110px; /* 預留頂部固定 navbar 的空間，防止首頁內容被遮擋 */
     }
     
     .main-content-wrapper {
@@ -974,19 +985,6 @@ code {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
-.zoom-wrapper .table-container {
-    background: var(--bg-card);
-    border: 1px solid var(--gold-border);
-    border-radius: var(--border-radius);
-    max-width: 90vw;
-    overflow: auto;
-    pointer-events: none;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-.zoom-wrapper table {
-    min-width: 600px;
-}
 
 /* ==========================================================================
    表格頁面內向量縮放樣式 (In-Place Table Zoom Controls)

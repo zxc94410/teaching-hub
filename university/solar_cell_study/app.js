@@ -5,6 +5,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     // 初始化各模組
     initNavigation();
+    initScrollNavbar();
     initPceCalculator();
     initEqeCalculator();
     initHallCalculator();
@@ -55,6 +56,39 @@ function initNavigation() {
             }
         });
     });
+}
+
+/* ==========================================================================
+   1.5 手機版頂部導航欄滑動隱藏/顯示 (Mobile Scroll Navbar)
+   ========================================================================== */
+function initScrollNavbar() {
+    const navbar = document.querySelector(".top-navbar");
+    if (!navbar) return;
+
+    let lastScrollY = window.scrollY; // let 
+    
+    window.addEventListener("scroll", () => {
+        const currentScrollY = window.scrollY; // let 
+        
+        // 只有在手機版（螢幕寬度 <= 768px）時才生效
+        if (window.innerWidth <= 768) {
+            if (currentScrollY <= 50) {
+                // 在最頂部時強制顯示，防止邊界反彈抖動
+                navbar.classList.remove("hide-navbar");
+            } else if (currentScrollY > lastScrollY) {
+                // 往下滑動螢幕（頁面向下滾動）-> 隱藏選單
+                navbar.classList.add("hide-navbar");
+            } else {
+                // 往上滑動螢幕（頁面向上滾動）-> 顯示選單
+                navbar.classList.remove("hide-navbar");
+            }
+        } else {
+            // 桌機版確保沒有隱藏 class
+            navbar.classList.remove("hide-navbar");
+        }
+        
+        lastScrollY = currentScrollY; // let 
+    }, { passive: true });
 }
 
 /* ==========================================================================
