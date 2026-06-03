@@ -84,11 +84,12 @@ body {
    ========================================================================== */
 .app-container {
     display: flex;
-    min-height: calc(100vh - 70px);
+    min-height: 100vh;
 }
 
-/* 頂部導航欄 (曜石金磨砂玻璃美學) */
+/* 頂部導航欄 (桌機下預設隱藏，手機下顯示) */
 .top-navbar {
+    display: none; /* 桌機下隱藏 */
     position: sticky;
     top: 0;
     left: 0;
@@ -99,7 +100,6 @@ body {
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--gold-border);
     z-index: 1000;
-    display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 4rem;
@@ -134,7 +134,6 @@ body {
     padding: 0.25rem 0;
 }
 
-/* 隱藏滾動條 */
 .navbar-menu::-webkit-scrollbar {
     display: none;
 }
@@ -164,13 +163,84 @@ body {
     box-shadow: inset 0 0 0 1px var(--gold-border);
 }
 
-/* 主內容區外層置中容器 (移除 margin-left，寬度改為 100%) */
+/* 側邊導航欄 (桌機版，固定在左側) */
+.sidebar {
+    width: var(--sidebar-width);
+    background: #06070a;
+    border-right: 1px solid var(--gold-border);
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gold-border);
+}
+
+.brand-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+}
+
+.brand-title span {
+    color: var(--gold-primary);
+}
+
+.nav-menu {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.nav-menu .navbar-item a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    transition: var(--transition-smooth);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.nav-menu .navbar-item a:hover,
+.nav-menu .navbar-item.active a {
+    color: var(--gold-primary);
+    background: rgba(197, 168, 107, 0.08);
+    transform: translateX(4px);
+    box-shadow: none; /* 移除桌機下的內側邊框，使用 transform */
+}
+
+.nav-menu .navbar-item.active a {
+    border-left: 3px solid var(--gold-primary);
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    font-weight: 600;
+}
+
+/* 主內容區外層置中容器 (桌機版回復 margin-left，寬度配合側邊欄扣除) */
 .main-content-wrapper {
-    margin-left: 0;
+    margin-left: var(--sidebar-width);
     flex: 1;
     display: flex;
     justify-content: center;
-    width: 100%;
+    width: calc(100% - var(--sidebar-width));
 }
 
 /* 主內容區 (框框放大：最大寬度提升至 1400px，提供更多公式展示空間) */
@@ -744,7 +814,12 @@ code {
 
 /* 針對小螢幕適配 */
 @media (max-width: 768px) {
+    .sidebar {
+        display: none; /* 手機下隱藏側邊欄 */
+    }
+    
     .top-navbar {
+        display: flex; /* 手機下顯示頂部欄 */
         flex-direction: column;
         height: auto;
         padding: 1rem;

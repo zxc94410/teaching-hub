@@ -28,6 +28,7 @@
 </head>
 <body>
 
+<!-- 頂部導航欄 (手機版，桌機下隱藏) -->
 <header class="top-navbar">
     <div class="navbar-brand">
         <i class="fa-solid fa-solar-panel brand-icon" style="color: var(--gold-primary); font-size: 1.25rem;"></i>
@@ -48,6 +49,26 @@
 </header>
 
 <div class="app-container">
+    
+    <!-- 側邊導航欄 (電腦版，手機下隱藏) -->
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="fa-solid fa-solar-panel brand-icon" style="color: var(--gold-primary); font-size: 1.5rem;"></i>
+            <h2 class="brand-title">Solar<span>Cell</span></h2>
+        </div>
+        
+        <ul class="nav-menu">
+            <li class="navbar-item active"><a href="#overview"><i class="fa-solid fa-house"></i> 課程概覽 & 考點整理</a></li>
+            <li class="navbar-item"><a href="#iv-pce"><i class="fa-solid fa-chart-line"></i> 1. I-V 特性與 PCE 計算</a></li>
+            <li class="navbar-item"><a href="#simulator"><i class="fa-solid fa-sun"></i> 2. 太陽模擬器 & AAA 標準</a></li>
+            <li class="navbar-item"><a href="#eqe-theory"><i class="fa-solid fa-wave-square"></i> 3. 外量子效率 (EQE)</a></li>
+            <li class="navbar-item"><a href="#hall-effect"><i class="fa-solid fa-magnet"></i> 4. 霍爾效應 & van der Pauw</a></li>
+            <li class="navbar-item"><a href="#spectrometer"><i class="fa-solid fa-circle-nodes"></i> 5. FS5 螢光光譜與 PL/PLE</a></li>
+            <li class="navbar-item"><a href="#lab-experiments"><i class="fa-solid fa-flask"></i> 五大實作實驗原理</a></li>
+            <li class="navbar-item"><a href="#calculators"><i class="fa-solid fa-calculator"></i> 互動工具箱 (PCE/EQE/Hall)</a></li>
+            <li class="navbar-item"><a href="#quiz-section"><i class="fa-solid fa-graduation-cap"></i> 考試模擬考場</a></li>
+        </ul>
+    </aside>
     
     <!-- 主內容區外層置中容器 -->
     <div class="main-content-wrapper">
