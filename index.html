@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MJ Teaching Hub - 曜石金教學門戶入口</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 引入 FontAwesome 圖示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<div class="portal-container">
+    
+    <header class="portal-header">
+        <h1 class="portal-title">MJ <span>Teaching Hub</span></h1>
+        <p class="portal-subtitle">互動式學習與光電物理量測教學網頁平台</p>
+    </header>
+    
+    <main class="portal-grid">
+        
+        <!-- 大分類：大學教學 -->
+        <div class="category-card" id="univ-card">
+            <i class="fa-solid fa-graduation-cap card-icon"></i>
+            <h2 class="card-title">大學教學區</h2>
+            <p class="card-desc">涵蓋大專院校光電工程、半導體元件特性量測及物理效應等專業領域的互動式教學與複習指南。</p>
+            
+            <!-- 子項目連結列表 -->
+            <div class="sublinks-container">
+                <a href="university/solar_cell_study/index.html" class="sublink-item">
+                    <span><i class="fa-solid fa-solar-panel"></i> 太陽能電池原理與量測實務</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 大分類：國高中教學 -->
+        <div class="category-card" id="k12-card">
+            <i class="fa-solid fa-shapes card-icon"></i>
+            <h2 class="card-title">國高中教學區</h2>
+            <p class="card-desc">針對中學數學、幾何空間概念等核心學科設計的直觀視覺化教學，降低學習門檻並提升空間邏輯。</p>
+            
+            <!-- 子項目連結列表 -->
+            <div class="sublinks-container">
+                <a href="k12/three-view/index.html" class="sublink-item">
+                    <span><i class="fa-solid fa-cubes"></i> 空間幾何三視圖教學網頁</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+        
+    </main>
+    
+    <footer class="portal-footer">
+        <p>© 2026 Powered by <a href="https://github.com/zxc94410" target="_blank">zxc94410</a> • Obsidian & Gold Aesthetic System</p>
+    </footer>
+    
+</div>
+
+<!-- 簡單的卡片展開與連結防干擾 JavaScript -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const cards = document.querySelectorAll(".category-card");
+        
+        cards.forEach(card => {
+            // 預設展開所有卡片，使用戶一目了然
+            card.classList.add("expanded");
+            
+            card.addEventListener("click", (e) => {
+                // 如果點選的是子項目連結本身，不進行卡片折疊
+                if (e.target.closest(".sublink-item")) {
+                    return;
+                }
+                
+                // 折疊/展開切換效果
+                const isExpanded = card.classList.contains("expanded"); // let 
+                if (isExpanded) {
+                    card.classList.remove("expanded"); // let 
+                } else {
+                    card.classList.add("expanded"); // let 
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

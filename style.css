@@ -1,0 +1,257 @@
+/* ==========================================================================
+   Obsidian 曜石金教學門戶入口樣式表 (Teaching Hub Portal CSS)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-main: #090a0f;
+    --bg-card: rgba(13, 15, 23, 0.7);
+    --gold-primary: #c5a86b;
+    --gold-glow: rgba(197, 168, 107, 0.3);
+    --gold-border: rgba(197, 168, 107, 0.15);
+    --text-primary: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-radius: 16px;
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    padding: 2rem;
+    position: relative;
+}
+
+/* 背景光暈微光效果 */
+body::before {
+    content: '';
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle at 50% 30%, rgba(197, 168, 107, 0.05), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.portal-container {
+    max-width: 1000px;
+    width: 100%;
+    z-index: 1;
+    text-align: center;
+}
+
+/* 標頭美學 */
+.portal-header {
+    margin-bottom: 4rem;
+    animation: fadeInDown 0.8s ease;
+}
+
+.portal-title {
+    font-size: 2.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+}
+
+.portal-title span {
+    color: var(--gold-primary);
+    position: relative;
+    display: inline-block;
+}
+
+.portal-title span::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+}
+
+.portal-subtitle {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+/* 分類卡片網格 */
+.portal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    margin-bottom: 4rem;
+}
+
+@media (max-width: 768px) {
+    .portal-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.category-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--gold-border);
+    border-radius: var(--border-radius);
+    padding: 3.5rem 2.5rem;
+    transition: var(--transition-smooth);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    animation: fadeInUp 0.8s ease;
+}
+
+.category-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(197, 168, 107, 0.05), transparent);
+    opacity: 0;
+    transition: var(--transition-smooth);
+    pointer-events: none;
+}
+
+.category-card:hover {
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 35px rgba(197, 168, 107, 0.2);
+    transform: translateY(-8px);
+}
+
+.category-card:hover::before {
+    opacity: 1;
+}
+
+/* 卡片內元素 */
+.card-icon {
+    font-size: 3.5rem;
+    color: var(--gold-primary);
+    transition: var(--transition-smooth);
+}
+
+.category-card:hover .card-icon {
+    transform: scale(1.1);
+    text-shadow: 0 0 15px rgba(197, 168, 107, 0.4);
+}
+
+.card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+}
+
+.card-desc {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    text-align: center;
+}
+
+/* 子項目列表彈出 */
+.sublinks-container {
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.category-card.expanded .sublinks-container {
+    max-height: 200px; /* 大約高度 */
+}
+
+.sublink-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem;
+    background: rgba(197, 168, 107, 0.05);
+    border: 1px solid var(--gold-border);
+    border-radius: 8px;
+    color: var(--text-gold);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition-smooth);
+    width: 100%;
+    animation: fadeIn 0.4s ease;
+}
+
+.sublink-item:hover {
+    background: rgba(197, 168, 107, 0.15);
+    border-color: var(--gold-primary);
+    transform: translateX(4px);
+    box-shadow: 0 0 10px rgba(197, 168, 107, 0.1);
+}
+
+.sublink-item i {
+    font-size: 0.9rem;
+    transition: var(--transition-smooth);
+}
+
+.sublink-item:hover i {
+    transform: translateX(2px);
+}
+
+/* 底部宣告 */
+.portal-footer {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    animation: fadeIn 1.2s ease;
+}
+
+.portal-footer a {
+    color: var(--gold-primary);
+    text-decoration: none;
+    transition: var(--transition-smooth);
+}
+
+.portal-footer a:hover {
+    text-decoration: underline;
+}
+
+/* 動畫定義 */
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

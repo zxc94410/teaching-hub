@@ -1,0 +1,3670 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>空間幾何大冒險：互動三視圖探索與挑戰</title>
+    <!-- Outfit & Noto Sans TC Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CDNs for styling & icons & confetti -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- KaTeX math rendering engine (Synchronously loaded to prevent FOUC / Race Condition) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    
+    <style>
+        /* =========================================================
+           Immersive Black & Gold (Champagne Gold) Design System
+           ========================================================= */
+        :root {
+            --bg-primary: #090a0f;      /* Deep Obsidian Charcoal */
+            --bg-secondary: #0d0f17;    /* Slightly Lighter Slate for Overlays */
+            --text-primary: #f8fafc;    /* Clean Off-White */
+            --text-secondary: #94a3b8;  /* Legible Cool Grey */
+            --accent-gold: #c5a86b;     /* Champagne Gold Accent */
+            --border-gold: rgba(197, 168, 107, 0.15); /* Hairline Gold Outline */
+            
+            /* Custom Colors for Projections aligned with theme */
+            --color-front: #0284c7;     /* Sky Blue for Front View */
+            --color-right: #7c3aed;     /* Violet for Right View */
+            --color-top: var(--accent-gold); /* Gold for Top View */
+            --color-success: #10b981;   /* Emerald for Correct state */
+            --color-alert: #f43f5e;     /* Rose for Locked / Snapped states */
+            
+            --font-sans: 'Inter', 'Noto Sans TC', sans-serif;
+            --font-heading: 'Outfit', sans-serif;
+            --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.6);
+            --transition-speed: 0.25s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            line-height: 1.7;
+            overflow: hidden; /* Main window handled by main-content-wrapper */
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* =========================================================
+           Immersive Layout Structure (Sidebar + Main Content Wrapper)
+           ========================================================= */
+        .immersive-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Left Sidebar (Curriculum Drawer) */
+        .side-navigation {
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-gold);
+            padding: 32px 20px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+        .nav-brand {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 1.5px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo-symbol {
+            color: var(--accent-gold);
+            font-size: 1.25rem;
+        }
+
+        .curriculum-meta {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-gold);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .curriculum-meta .tag {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--accent-gold);
+            display: block;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+            margin-bottom: 6px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-gold);
+            width: 16%;
+            transition: width 0.4s ease;
+        }
+        .progress-indicator .lbl {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .curriculum-tree {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .chapter-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #475569;
+            margin: 8px 0 4px;
+            letter-spacing: 0.5px;
+            padding-left: 8px;
+            border-left: 2px solid var(--accent-gold);
+        }
+        .chapter-pages {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .tree-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.82rem;
+            padding: 10px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+        .tree-link:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.03);
+        }
+        .tree-link.active {
+            background: rgba(197, 168, 107, 0.08);
+            color: var(--accent-gold);
+            font-weight: 600;
+            border-color: var(--border-gold);
+        }
+        .status-dot {
+            font-size: 0.65rem;
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.03);
+            color: var(--text-secondary);
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+        .status-dot.completed {
+            background: rgba(197, 168, 107, 0.12);
+            color: var(--accent-gold);
+        }
+        .status-dot.current {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+        }
+
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+            height: 100vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Ambient Amber/Gold Breathing Glow in Background */
+        .ambient-glow {
+            position: fixed;
+            width: 700px;
+            height: 700px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(197, 168, 107, 0.045) 0%, rgba(0,0,0,0) 70%);
+            filter: blur(120px);
+            z-index: -1;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            animation: pulse-glow 20s infinite alternate;
+        }
+        @keyframes pulse-glow {
+            0% { opacity: 0.6; transform: translateX(-50%) scale(1.0); }
+            50% { opacity: 1.0; transform: translateX(-48%) scale(1.05); }
+            100% { opacity: 0.6; transform: translateX(-52%) scale(0.95); }
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Portal Header (Immersive Dark/Gold) */
+        header {
+            padding: 1.25rem 2rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-gold);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-premium);
+            z-index: 100;
+        }
+        .header-title h1 {
+            font-family: var(--font-heading);
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .header-title h1 i {
+            color: var(--accent-gold);
+        }
+        .header-title p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+        }
+        .chapter-badge {
+            background: rgba(197, 168, 107, 0.08);
+            color: var(--accent-gold);
+            border: 1px solid var(--border-gold);
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Horizontal Concept Navbar (Mobile-only) */
+        .nav-container {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-gold);
+            padding: 0.5rem 2rem;
+            display: none; /* Hidden by default on desktop */
+            gap: 0.75rem;
+            overflow-x: auto;
+            z-index: 90;
+        }
+        .nav-btn {
+            background: none;
+            border: 1px solid transparent;
+            padding: 0.5rem 1.1rem;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.25s;
+            white-space: nowrap;
+        }
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: #ffffff;
+        }
+        .nav-btn.active {
+            background: rgba(197, 168, 107, 0.08);
+            color: var(--accent-gold);
+            border-color: var(--border-gold);
+            font-weight: 700;
+        }
+        .nav-btn .icon {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Unified Split Layout Container */
+        .app-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 480px;
+            gap: 1.5rem;
+            padding: 1.5rem 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Left Side: Interactive 3D Canvas Box */
+        .canvas-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-gold);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            min-height: 550px;
+            box-shadow: var(--shadow-premium);
+        }
+        .canvas-header {
+            padding: 0.9rem 1.2rem;
+            border-bottom: 1px solid var(--border-gold);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            background: var(--bg-secondary);
+        }
+        .canvas-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .canvas-title .icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .canvas-controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        #canvas3d {
+            flex: 1;
+            width: 100%;
+            outline: none;
+            cursor: grab;
+            background: var(--bg-primary);
+        }
+        #canvas3d:active {
+            cursor: grabbing;
+        }
+
+        /* Viewport Tool Buttons */
+        .btn-icon {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-gold);
+            color: var(--text-secondary);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-speed);
+        }
+        .btn-icon:hover {
+            background: rgba(197, 168, 107, 0.05);
+            color: #ffffff;
+            border-color: var(--accent-gold);
+        }
+        .btn-icon.active-remove {
+            background: rgba(244, 63, 94, 0.08);
+            border-color: #f43f5e;
+            color: #f43f5e;
+        }
+
+        /* Top-center floating stacked alert banners */
+        .viewport-lock-alert {
+            position: absolute;
+            top: 55px; /* sit below the canvas-header */
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--color-alert);
+            padding: 0.5rem 1.2rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: var(--shadow-premium);
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity var(--transition-speed);
+            white-space: nowrap;
+        }
+        .viewport-lock-alert.show {
+            opacity: 1;
+        }
+        .viewport-lock-alert i {
+            color: var(--color-alert);
+            width: 14px;
+            height: 14px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .overlay-instruction {
+            position: absolute;
+            top: 55px; /* default: below header */
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-gold);
+            padding: 0.4rem 1rem;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: var(--shadow-premium);
+            z-index: 4;
+            pointer-events: none;
+            white-space: nowrap;
+            transition: all var(--transition-speed);
+        }
+        /* Push instruction bar lower when lock alert is also visible */
+        .viewport-lock-alert.show ~ .overlay-instruction,
+        .viewport-lock-alert.show + .overlay-instruction {
+            top: 108px;
+        }
+        .overlay-instruction i {
+            color: var(--accent-gold);
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Coordinate Directions Compass Legend overlay */
+        .direction-legend {
+            position: absolute;
+            top: 65px;
+            left: 12px;
+            background: rgba(13, 15, 23, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-gold);
+            padding: 0.4rem 0.6rem;
+            border-radius: 10px;
+            display: flex;
+            gap: 0.6rem;
+            z-index: 4;
+            box-shadow: var(--shadow-premium);
+        }
+
+        /* Dynamic 2D Mini Projections Preview Card overlay in bottom-left */
+        #mini-projections-panel {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            z-index: 4;
+            background: rgba(13, 15, 23, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-gold);
+            padding: 0.65rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-premium);
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            width: auto;
+            pointer-events: auto;
+            transition: all var(--transition-speed);
+        }
+        #mini-projections-panel .card-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        #mini-projections-panel .blueprint-row {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        #mini-projections-panel .blueprint-box {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid var(--border-gold);
+            border-radius: 8px;
+            padding: 0.35rem 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        #mini-projections-panel .blueprint-title {
+            font-size: 0.68rem;
+            font-weight: 700;
+        }
+        #mini-projections-panel .mini-grid {
+            display: grid;
+            gap: 2px;
+            background: rgba(255,255,255,0.01);
+            padding: 1px;
+            border-radius: 3px;
+        }
+        #mini-projections-panel .mini-cell {
+            width: 12px; /* make cells slightly smaller for perfect viewport overlay neatness */
+            height: 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 2px;
+            transition: background-color 0.2s;
+        }
+        #mini-projections-panel .mini-cell.filled {
+            background: var(--accent-gold);
+        }
+        .dir-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .dir-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Standard view camera controls overlay */
+        .view-shortcuts {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(13, 15, 23, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-gold);
+            padding: 0.3rem;
+            border-radius: 10px;
+            display: flex;
+            gap: 0.2rem;
+            z-index: 4;
+            box-shadow: var(--shadow-premium);
+        }
+        .view-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .view-btn:hover {
+            background: rgba(255,255,255,0.04);
+            color: #ffffff;
+        }
+        .view-btn.active {
+            background: rgba(197, 168, 107, 0.1);
+            color: var(--accent-gold);
+        }
+
+        /* Right Side: Content / Dashboard Column */
+        .dashboard-panel {
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding-right: 0.25rem;
+        }
+
+        /* Tab panes: only the active one is visible */
+        .info-pane {
+            display: none;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .info-pane.active {
+            display: flex;
+        }
+        .dashboard-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        .dashboard-panel::-webkit-scrollbar-thumb {
+            background: rgba(197, 168, 107, 0.3);
+            border-radius: 3px;
+        }
+
+        /* Premium Glass Card */
+        .glass-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-gold);
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: var(--shadow-premium);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: all var(--transition-speed);
+        }
+        .glass-card:hover {
+            border-color: rgba(197, 168, 107, 0.35);
+        }
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card-title i {
+            width: 16px;
+            height: 16px;
+            color: var(--accent-gold);
+        }
+
+        /* Action Buttons styling */
+        .btn-primary {
+            background: var(--accent-gold);
+            border: 1px solid var(--accent-gold);
+            color: var(--bg-primary);
+            padding: 0.65rem 1.2rem;
+            font-family: var(--font-sans);
+            font-weight: 700;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            transition: all var(--transition-speed);
+            box-shadow: 0 4px 12px rgba(197, 168, 107, 0.2);
+        }
+        .btn-primary:hover {
+            background: #dfc282;
+            border-color: #dfc282;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(197, 168, 107, 0.35);
+        }
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-gold);
+            color: var(--text-secondary);
+            padding: 0.65rem 1.2rem;
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            transition: all var(--transition-speed);
+        }
+        .btn-secondary:hover {
+            border-color: var(--accent-gold);
+            color: #ffffff;
+            background: rgba(255,255,255,0.01);
+        }
+
+        /* Grid sizes controls inside header control panel */
+        .grid-size-selector .grid-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-weight: 700;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .grid-size-selector .grid-btn.active {
+            background: rgba(197, 168, 107, 0.15);
+            color: var(--accent-gold);
+        }
+
+        .voxel-modes .grid-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-weight: 700;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .voxel-modes .grid-btn.active-add {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .voxel-modes .grid-btn.active-remove {
+            background: var(--color-alert);
+            color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        /* Stats Blocks */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+        }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-gold);
+            padding: 0.9rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-num {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            margin-bottom: 0.1rem;
+            font-family: 'Outfit', sans-serif;
+        }
+        .stat-num.danger {
+            color: var(--color-alert);
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Tab 2: Silhouette match game styling */
+        .silhouette-game {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .item-switcher {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.01);
+            border: 1px solid var(--border-gold);
+            padding: 0.6rem 0.8rem;
+            border-radius: 10px;
+        }
+        .item-name {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #ffffff;
+        }
+        .switcher-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .switcher-btn:hover {
+            color: var(--accent-gold);
+        }
+        .silhouette-slots-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.7rem;
+        }
+        .silhouette-slot {
+            background: rgba(0,0,0,0.15);
+            border: 2px dashed var(--border-gold);
+            border-radius: 12px;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            min-height: 140px;
+            transition: all var(--transition-speed);
+            position: relative;
+        }
+        .silhouette-slot.drag-over {
+            border-color: var(--accent-gold);
+            background: rgba(197, 168, 107, 0.03);
+        }
+        .silhouette-slot-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.04);
+            padding: 0.15rem 0.4rem;
+            border-radius: 5px;
+        }
+        .silhouette-cards-pool {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+            padding: 0.8rem;
+            background: rgba(0,0,0,0.15);
+            border: 1px solid var(--border-gold);
+            border-radius: 12px;
+            min-height: 80px;
+            flex-wrap: wrap;
+        }
+        .silhouette-card {
+            width: 60px;
+            height: 60px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-gold);
+            border-radius: 8px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-premium);
+            transition: all 0.2s;
+        }
+        .silhouette-card:active {
+            cursor: grabbing;
+        }
+        .silhouette-card:hover {
+            border-color: var(--accent-gold);
+            transform: scale(1.03);
+        }
+        .silhouette-card svg {
+            width: 80%;
+            height: 80%;
+            stroke: var(--accent-gold);
+            fill: rgba(197, 168, 107, 0.05);
+        }
+
+        /* Tab 3: Height editor grid */
+        .height-grid-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        .height-grid-layout {
+            display: grid;
+            gap: 6px;
+            background: rgba(0,0,0,0.15);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border-gold);
+        }
+        .height-cell-editor {
+            width: 55px;
+            height: 55px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-gold);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+            transition: all 0.15s;
+            cursor: pointer;
+        }
+        .height-cell-editor:hover {
+            border-color: var(--accent-gold);
+            background: rgba(197, 168, 107, 0.03);
+        }
+        .height-cell-val {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+        }
+        .height-cell-controls {
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            gap: 4px;
+            padding: 0 2px;
+        }
+        .height-cell-btn {
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(197, 168, 107, 0.55);
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.22rem 0;
+            border-radius: 6px;
+            width: 100%;
+            line-height: 1;
+            transition: all 0.15s;
+            font-family: 'Outfit', sans-serif;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+        }
+        .height-cell-btn:hover {
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
+            color: var(--bg-primary);
+            box-shadow: 0 4px 8px rgba(197, 168, 107, 0.35);
+        }
+
+        /* 3-view blueprints inside right-side glass-card */
+        .blueprint-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem;
+            width: 100%;
+        }
+        .blueprint-box {
+            background: rgba(0,0,0,0.15);
+            border: 1px solid var(--border-gold);
+            border-radius: 10px;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .blueprint-box.target {
+            border-color: var(--accent-gold);
+        }
+        .blueprint-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+        .blueprint-grid {
+            display: grid;
+            gap: 2px;
+            background: rgba(255,255,255,0.01);
+            padding: 2px;
+            border-radius: 4px;
+        }
+        .blueprint-cell {
+            width: 16px;
+            height: 16px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 3px;
+        }
+        .blueprint-cell.filled {
+            background: #ffffff;
+        }
+        .blueprint-cell.filled-target {
+            background: var(--accent-gold);
+        }
+
+        /* Painting Grid board for Quiz */
+        .paint-board-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            margin-top: 0.2rem;
+        }
+        .paint-grid-outer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.15);
+            padding: 1rem;
+            border-radius: 14px;
+            border: 1px solid var(--border-gold);
+        }
+        .paint-grid {
+            display: grid;
+            gap: 5px;
+        }
+        .paint-cell {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-gold);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .paint-cell:hover {
+            background: rgba(197, 168, 107, 0.05);
+            transform: scale(1.03);
+        }
+        .paint-cell.filled {
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
+            box-shadow: 0 2px 6px rgba(197, 168, 107, 0.2);
+            animation: bounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.7); }
+            100% { transform: scale(1); }
+        }
+
+        .quiz-question-box {
+            background: rgba(197, 168, 107, 0.04);
+            border: 1px solid var(--border-gold);
+            border-radius: 12px;
+            padding: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .quiz-q-title {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .quiz-q-text {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.4;
+        }
+
+        .quiz-feedback {
+            display: none;
+            padding: 0.85rem;
+            border-radius: 10px;
+            font-weight: 700;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideIn 0.2s ease-out;
+            font-size: 0.88rem;
+        }
+        @keyframes slideIn {
+            0% { transform: translateY(8px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .quiz-feedback.success {
+            display: flex;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid var(--color-success);
+            color: var(--color-success);
+        }
+        .quiz-feedback.error {
+            display: flex;
+            background: rgba(244, 63, 94, 0.16);
+            border: 1px solid var(--color-alert);
+            color: #ffffff;
+        }
+
+        footer {
+            padding: 1.5rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-gold);
+            background: var(--bg-secondary);
+            margin-top: auto;
+        }
+
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            .canvas-panel {
+                min-height: 480px;
+            }
+            .dashboard-panel {
+                max-height: none;
+            }
+        }
+        @media (max-width: 768px) {
+            .immersive-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .side-navigation {
+                display: none; /* Hide sidebar on mobile */
+            }
+            .nav-container {
+                display: flex; /* Show horizontal swipe nav on mobile */
+            }
+            .main-content-wrapper {
+                height: auto;
+                overflow-y: visible;
+            }
+            header {
+                flex-direction: column;
+                gap: 0.6rem;
+                align-items: flex-start;
+                padding: 1.25rem 1rem;
+            }
+            .app-container {
+                padding: 1rem;
+            }
+        }
+        /* ===== Chapter 3: Direction Map ===== */
+        #direction-map-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .dir-map-compass-row {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        .dir-map-grid {
+            display: grid;
+            gap: 3px;
+            background: rgba(197,168,107,0.06);
+            border: 1px solid var(--border-gold);
+            border-radius: 10px;
+            padding: 6px;
+        }
+        .dir-map-cell {
+            width: 56px;
+            height: 44px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.2;
+            transition: all 0.2s;
+        }
+        .dir-map-cell.shop {
+            background: rgba(197,168,107,0.12);
+            border: 1px solid rgba(197,168,107,0.3);
+            color: #ffffff;
+        }
+        .dir-map-cell.road {
+            background: rgba(255,255,255,0.02);
+            border: 1px dashed rgba(255,255,255,0.08);
+            color: var(--text-secondary);
+            font-size: 0.62rem;
+        }
+        .dir-map-cell.highlight-person {
+            background: rgba(59,130,246,0.2);
+            border: 2px solid #3b82f6;
+            color: #93c5fd;
+        }
+        .dir-map-cell.highlight-target {
+            background: rgba(250,204,21,0.18);
+            border: 2px solid var(--accent-gold);
+            color: var(--accent-gold);
+        }
+        .dir-map-side-label {
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: var(--text-secondary);
+            writing-mode: horizontal-tb;
+        }
+        .dir-map-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dir-choice-btn {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-gold);
+            color: #ffffff;
+            padding: 0.55rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-sans);
+            text-align: center;
+        }
+        .dir-choice-btn:hover {
+            background: rgba(197,168,107,0.08);
+            border-color: var(--accent-gold);
+        }
+        .dir-choice-btn.correct {
+            background: rgba(34,197,94,0.15);
+            border-color: var(--color-success);
+            color: var(--color-success);
+        }
+        .dir-choice-btn.wrong {
+            background: rgba(244, 63, 94, 0.25);
+            border-color: var(--color-alert);
+            color: #ffffff;
+        }
+        .dir-choice-btn:disabled { cursor: default; }
+
+        /* Dynamic Single-column Layout when 3D engine is hidden */
+        .app-container.no-engine-layout {
+            grid-template-columns: 1fr;
+            max-width: 920px;
+            margin: 0 auto;
+        }
+        .no-engine-layout .dir-map-cell {
+            width: 100px;
+            height: 70px;
+            font-size: 0.88rem;
+            border-radius: 8px;
+        }
+        .no-engine-layout .dir-map-grid {
+            gap: 6px;
+            padding: 10px;
+            border-radius: 14px;
+        }
+        .no-engine-layout #direction-question-text {
+            font-size: 1.05rem;
+            padding: 1.2rem 1.5rem;
+            border-radius: 12px;
+        }
+        .no-engine-layout .dir-choice-btn {
+            padding: 0.85rem 1rem;
+            font-size: 0.95rem;
+            border-radius: 10px;
+        }
+        .no-engine-layout .glass-card {
+            padding: 2rem;
+            gap: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Cozy Amber/Gold breathing glow -->
+    <div class="ambient-glow"></div>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="immersive-layout">
+        <!-- 1. 左側導覽列 (Curriculum Menu - Chapter Navigation) -->
+        <aside class="side-navigation">
+            <div class="nav-brand">
+                <span class="logo-symbol">✦</span> SPATIAL.MATH
+            </div>
+            
+            <div class="curriculum-meta">
+                <span class="tag">當前課程</span>
+                <h4 style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">空間幾何與三視圖</h4>
+                <div class="progress-indicator">
+                    <div class="progress-bar"><div class="progress-fill" id="curriculum-progress" style="width: 16%;"></div></div>
+                    <span class="lbl" id="progress-lbl">課程進度 16%</span>
+                </div>
+            </div>
+
+            <nav class="curriculum-tree">
+                <div class="chapter-title">章節大綱</div>
+                <div class="chapter-pages">
+                    <a href="javascript:void(0)" class="tree-link active" data-tab="tab-explore">
+                        <span class="status-dot current">●</span>
+                        <span class="text">1. 自由堆疊積木實驗</span>
+                    </a>
+                    <a href="javascript:void(0)" class="tree-link" data-tab="tab-hidden">
+                        <span class="status-dot">○</span>
+                        <span class="text">2. 被擋住的正方體探索</span>
+                    </a>
+                    <a href="javascript:void(0)" class="tree-link" data-tab="tab-reallife">
+                        <span class="status-dot">○</span>
+                        <span class="text">3. 生活中的方向與視角</span>
+                    </a>
+                    <a href="javascript:void(0)" class="tree-link" data-tab="tab-number">
+                        <span class="status-dot">○</span>
+                        <span class="text">4. 用數字代替立體圖形</span>
+                    </a>
+                    <a href="javascript:void(0)" class="tree-link" data-tab="tab-reverse">
+                        <span class="status-dot">○</span>
+                        <span class="text">5. 依據三視圖還原積木</span>
+                    </a>
+                    <a href="javascript:void(0)" class="tree-link" data-tab="tab-quiz">
+                        <span class="status-dot">○</span>
+                        <span class="text">🏆 三視圖隨堂挑戰</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 2. 右側主要內容區 -->
+        <div class="main-content-wrapper">
+            <!-- Top Navigation Header -->
+            <header>
+                <div class="header-title">
+                    <h1><i data-lucide="box"></i> 空間幾何大冒險：互動三視圖探索與挑戰</h1>
+                    <p>國一數學數位備課與課堂探索平台 - 3D 互動幾何教學項目</p>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.8rem;">
+                    <button class="btn-secondary" id="help-btn" style="padding:0.4rem 0.8rem; font-size:0.75rem;"><i data-lucide="help-circle" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;"></i>使用說明</button>
+                    <div class="chapter-badge">七年級第四章：三視圖</div>
+                </div>
+            </header>
+
+    <!-- Horizontal Concept Navbar -->
+    <nav class="nav-container">
+        <button class="nav-btn active" data-tab="tab-explore">
+            <span class="icon" style="background:var(--color-front)"></span>
+            1. 自由堆疊積木實驗
+        </button>
+        <button class="nav-btn" data-tab="tab-hidden">
+            <span class="icon" style="background:var(--color-alert)"></span>
+            2. 被擋住的正方體探索
+        </button>
+        <button class="nav-btn" data-tab="tab-reallife">
+            <span class="icon" style="background:var(--color-success)"></span>
+            3. 生活中的方向與視角
+        </button>
+        <button class="nav-btn" data-tab="tab-number">
+            <span class="icon" style="background:var(--accent-gold)"></span>
+            4. 用數字代替立體圖形
+        </button>
+        <button class="nav-btn" data-tab="tab-reverse">
+            <span class="icon" style="background:var(--color-right)"></span>
+            5. 依據三視圖還原積木
+        </button>
+        <button class="nav-btn" data-tab="tab-quiz">
+            <span class="icon" style="background:#ffffff"></span>
+            🏆 三視圖隨堂大挑戰
+        </button>
+    </nav>
+
+    <!-- Main App Layout Container -->
+    <div class="app-container">
+        
+        <!-- Left: Interactive 3D Canvas Panel -->
+        <div id="canvasPanel" class="canvas-panel">
+            <div class="canvas-header">
+                <div class="canvas-title" id="canvasTitle">
+                    <span class="icon" style="background:var(--accent-gold)"></span>
+                    3D 幾何投影實驗板
+                </div>
+                
+                <!-- Tools bar inside the header to keep CAD canvas perfectly neat -->
+                <div class="canvas-controls">
+                    <!-- Grid sizes -->
+                    <div class="grid-size-selector" id="grid-size-selector-container" style="background:rgba(255,255,255,0.02); padding:0.2rem; border-radius:8px; border:1px solid var(--border-gold); display:flex; gap:0.2rem;">
+                        <button class="grid-btn active" data-size="3">3 &times; 3</button>
+                        <button class="grid-btn" data-size="4">4 &times; 4</button>
+                        <button class="grid-btn" data-size="5">5 &times; 5</button>
+                    </div>
+                    
+                    <!-- Voxel Edit Modes -->
+                    <div class="voxel-modes" id="voxel-modes-container" style="background:rgba(255,255,255,0.02); padding:0.2rem; border-radius:8px; border:1px solid var(--border-gold); display:flex; gap:0.2rem;">
+                        <button class="grid-btn active-add" id="btn-mode-add"><i data-lucide="plus-circle" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:2px;"></i> 新增</button>
+                        <button class="grid-btn" id="btn-mode-remove"><i data-lucide="minus-circle" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:2px;"></i> 刪除</button>
+                    </div>
+
+                    <!-- Global Tools -->
+                    <button class="btn-icon" id="btn-lock-view" title="鎖定/解鎖 3D 視角"><i data-lucide="unlock" id="btn-lock-view-icon" style="width:14px; height:14px;"></i></button>
+                    <button class="btn-icon" id="btn-xray" title="X光透視（看穿隱藏積木）"><i data-lucide="sparkles" style="width:14px; height:14px;"></i></button>
+                    <button class="btn-icon" id="btn-reset-blocks" title="清空積木"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>
+                </div>
+            </div>
+
+            <!-- Three.js Canvas -->
+            <div id="canvas3d"></div>
+
+            <!-- Floating Top HUD Alerts (Horizontally stacked below header) -->
+            <div class="viewport-lock-alert" id="viewport-lock-ui">
+                <i data-lucide="lock"></i>
+                <div>
+                    <strong style="color: var(--color-alert); display: block; font-size: 0.85rem;">視角已被鎖定！</strong>
+                    <span id="viewport-lock-subtitle" style="font-size: 0.72rem; color: var(--text-secondary);">送出解答後即可自由旋轉。</span>
+                </div>
+            </div>
+
+            <div class="overlay-instruction" id="overlay-instruction-bar" style="display:none;">
+                <i data-lucide="info"></i>
+                <span id="overlay-instruction-text">點擊網格可以增加積木喔！</span>
+            </div>
+
+            <!-- Direction colors helper compass -->
+            <div class="direction-legend">
+                <div class="dir-item"><div class="dir-dot" style="background:var(--color-front);"></div><span>藍色為【前】</span></div>
+                <div class="dir-item"><div class="dir-dot" style="background:var(--color-right);"></div><span>紫色為【右】</span></div>
+                <div class="dir-item"><div class="dir-dot" style="background:var(--accent-gold);"></div><span>金色為【上】</span></div>
+            </div>
+
+            <!-- View Camera orientation shortcuts -->
+            <div class="view-shortcuts" id="camera-shortcuts-container">
+                <button class="view-btn" id="cam-isometric" data-view="isometric">等角</button>
+                <button class="view-btn" id="cam-front" data-view="front" style="color:var(--color-front); font-weight:700;">前視</button>
+                <button class="view-btn" id="cam-top" data-view="top" style="color:var(--accent-gold); font-weight:700;">上視</button>
+                <button class="view-btn" id="cam-right" data-view="right" style="color:var(--color-right); font-weight:700;">右視</button>
+            </div>
+
+            <!-- Dynamic 2D Mini Projections Preview Card (Persistent, absolute overlay in bottom-left) -->
+            <div class="glass-card" id="mini-projections-panel">
+                <span class="card-title"><i data-lucide="eye"></i>即時三視圖</span>
+                <div class="blueprint-row">
+                    <div class="blueprint-box">
+                        <span class="blueprint-title" style="color:var(--color-front);">前視圖</span>
+                        <div class="mini-grid" id="mini-grid-front"></div>
+                    </div>
+                    <div class="blueprint-box">
+                        <span class="blueprint-title" style="color:var(--accent-gold);">上視圖</span>
+                        <div class="mini-grid" id="mini-grid-top"></div>
+                    </div>
+                    <div class="blueprint-box">
+                        <span class="blueprint-title" style="color:var(--color-right);">右視圖</span>
+                        <div class="mini-grid" id="mini-grid-right"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Content & Control Panel Dashboard -->
+        <div class="dashboard-panel">
+
+            <!-- ================= TAB 1: FREE EXPLORE ================= -->
+            <div class="info-pane active" id="tab-explore">
+                <div class="glass-card" style="background: linear-gradient(135deg, rgba(197, 168, 107, 0.05) 0%, rgba(13, 15, 23, 0.05) 100%);">
+                    <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--accent-gold);">自由堆疊幾何實驗室</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.45;">
+                        歡迎來到三視圖探究中心！在左側 3D 空間中，點選「新增」或「刪除」，在網格地板上搭建方塊，並即時觀察上方 2D 投影面的輪廓變化。拖曳 3D 畫面即可自由旋轉！
+                    </p>
+                </div>
+
+                <div class="glass-card">
+                    <span class="card-title"><i data-lucide="mouse-pointer"></i>課堂操作指南</span>
+                    <ul style="font-size: 0.78rem; color: var(--text-secondary); margin-left: 1.1rem; display: flex; flex-direction: column; gap: 0.4rem; line-height: 1.4;">
+                        <li><strong>手動新增：</strong>點選綠色「新增」，按地面或積木的任何側面即可放置。</li>
+                        <li><strong>方向參考：</strong>3D 網格邊緣設有彩色標示線與看板：<strong>藍色代表前、紫色代表右、金色代表上</strong>，對齊投影面超級輕鬆！</li>
+                        <li><strong>自主鎖定視角：</strong>點選 3D 視窗右上角的 <i data-lucide="unlock" style="width:11px; height:11px; display:inline-block; vertical-align:middle;"></i> 圖標，即可手動鎖定，挑戰大腦在無法旋轉時的空間投影感！</li>
+                    </ul>
+                </div>
+
+                <div class="glass-card">
+                    <span class="card-title"><i data-lucide="layers"></i>積木統計資訊</span>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-num" id="explore-total-count">0</div>
+                            <div class="stat-label">當前積木總數</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-num" id="explore-max-height">0</div>
+                            <div class="stat-label">最大堆疊高度</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 2: HIDDEN CUBES ================= -->
+            <div class="info-pane" id="tab-hidden">
+                <div class="glass-card">
+                    <span class="card-title"><i data-lucide="sparkles"></i>視覺穿透模式</span>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.45;">
+                        在特定立體圖形中，有些積木會因為躲在較高積木的正後方而被遮擋。點選 3D 畫面右上角的 **X光透視按鈕（✨）**，前方積木會變半透明，而**被擋住完全不見積木會以「鮮紅色」亮起**！
+                    </p>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-num" id="hidden-visible-count">0</div>
+                            <div class="stat-label">可見積木數</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-num danger" id="hidden-invisible-count">0</div>
+                            <div class="stat-label">完全隱藏積木數</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <span class="card-title"><i data-lucide="brain"></i>極值探索探究</span>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">
+                        點擊下方產生隨機投影。在「三視圖不變」的前提下，最少與最多分別需要幾個積木？
+                    </p>
+                    <button class="btn-primary" id="btn-generate-extreme-puzzle">產生極值探究題</button>
+                    
+                    <div id="extreme-puzzle-area" style="display: none; flex-direction: column; gap: 0.8rem;">
+                        <div class="blueprint-row" id="extreme-puzzle-blueprints"></div>
+                        
+                        <div style="display: flex; gap: 0.5rem; width: 100%;">
+                            <div style="flex: 1;">
+                                <label style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">最少積木數：</label>
+                                <input type="number" id="extreme-min-input" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-gold); background:rgba(0,0,0,0.2); color:#fff; font-weight: 700; font-family: 'Outfit';">
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">最多積木數：</label>
+                                <input type="number" id="extreme-max-input" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-gold); background:rgba(0,0,0,0.2); color:#fff; font-weight: 700; font-family: 'Outfit';">
+                            </div>
+                        </div>
+                        <button class="btn-primary" id="btn-submit-extreme">送出答案驗證</button>
+                        <div class="quiz-feedback" id="extreme-feedback"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 3: REAL LIFE DIRECTION & PERSPECTIVE ================= -->
+            <div class="info-pane" id="tab-reallife">
+                <div class="glass-card">
+                    <span class="card-title"><i data-lucide="map"></i>生活中的方向與視角</span>
+                    <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45;">
+                        依據下方平面圖，回答方向情境題。記住：<strong style="color:#fff;">面向北方時，左邊是西、右邊是東</strong>；面向南方時方向相反！本章地圖不提供位置高亮標示，請自行看圖思考。
+                    </p>
+                    <!-- Floor Plan Map -->
+                    <div id="direction-map-container"></div>
+                    <!-- Question Area -->
+                    <div id="direction-question-area" style="display:flex; flex-direction:column; gap:0.7rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="grid-size-selector" id="direction-difficulty-container" style="background:rgba(255,255,255,0.02); padding:0.15rem; border-radius:6px; border:1px solid var(--border-gold); display:flex; gap:0.2rem;">
+                                <button class="grid-btn active" data-diff="easy" style="padding:0.25rem 0.5rem; font-size:0.7rem; border-radius:4px;">基礎</button>
+                                <button class="grid-btn" data-diff="medium" style="padding:0.25rem 0.5rem; font-size:0.7rem; border-radius:4px;">進階</button>
+                                <button class="grid-btn" data-diff="hard" style="padding:0.25rem 0.5rem; font-size:0.7rem; border-radius:4px;">極限</button>
+                            </div>
+                            <button class="btn-secondary" id="btn-next-direction-q" style="padding:0.3rem 0.7rem; font-size:0.72rem;"><i data-lucide="shuffle" style="width:11px;height:11px;display:inline-block;vertical-align:middle;margin-right:3px;"></i>換一題</button>
+                        </div>
+                        <div id="direction-question-text" style="font-size:0.82rem; color:#ffffff; line-height:1.6; background:rgba(197,168,107,0.05); border:1px solid var(--border-gold); border-radius:10px; padding:0.8rem 1rem;"></div>
+                        <div id="direction-choices" style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;"></div>
+                        <div class="quiz-feedback" id="direction-feedback"></div>
+                        <button class="btn-primary" id="btn-direction-explain" style="display:none;"><i data-lucide="lightbulb" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i>查看詳解</button>
+                        <div id="direction-explanation" style="display:none; font-size:0.78rem; color:var(--text-secondary); line-height:1.55; background:rgba(0,0,0,0.2); border-radius:8px; padding:0.7rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 4: HEIGHT NUMBER GRID ================= -->
+            <div class="info-pane" id="tab-number">
+                <div class="glass-card">
+                    <span class="card-title"><i data-lucide="binary"></i>2D 數字與 3D 雙向連動</span>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.45;">
+                        在台灣課本中，常使用「上視圖標示數字」代表該直列的積木層數。直接點選下方 2D 數字網格的 <strong>+</strong> 或 <strong>-</strong> 增減數值，積木就會拔地而起！
+                    </p>
+                    
+                    <div class="height-grid-container">
+                        <div class="height-grid-layout" id="height-grid-layout-editor"></div>
+                    </div>
+                </div>
+
+                <div class="glass-card" style="background: rgba(197, 168, 107, 0.02);">
+                    <span class="card-title" style="color:var(--accent-gold);"><i data-lucide="zap"></i>大師解題最大值秘訣</span>
+                    <div style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; display: flex; flex-direction: column; gap: 0.4rem;">
+                        <p>💡 <strong>前視圖高度：</strong>對齊上視圖的<strong>每一直行</strong>往前看，該直行中「<strong>最大數字的值</strong>」即為前視圖高度！</p>
+                        <p>💡 <strong>右視圖高度：</strong>對齊上視圖的<strong>右側</strong>往左看，該橫列中「<strong>最大數字的值</strong>」即為右視圖高度！</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 5: REVERSE BUILDER ================= -->
+            <div class="info-pane" id="tab-reverse">
+                <div class="glass-card">
+                    <span class="card-title"><i data-lucide="layers"></i>逆向空間重建</span>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">
+                        點擊下方按鈕隨機產生一組三視圖。請看著投影藍圖，動手在左側 3D 網格上搭建出完全吻合的立體形狀！
+                    </p>
+                    <button class="btn-primary" id="btn-generate-reverse-puzzle">產生逆向重建題</button>
+                    
+                    <div id="reverse-puzzle-area" style="display: none; flex-direction: column; gap: 0.8rem;">
+                        <div class="blueprint-row" id="reverse-puzzle-blueprints"></div>
+                        
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem;">
+                            <button class="btn-primary" id="btn-validate-reverse" style="flex: 1;">驗證重建結果</button>
+                            <button class="btn-secondary" id="btn-show-reverse-solution" style="flex: 0.8;">顯示參考答案</button>
+                        </div>
+                        <div class="quiz-feedback" id="reverse-feedback"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 6: QUIZ CHALLENGE ================= -->
+            <div class="info-pane" id="tab-quiz">
+                <div class="glass-card">
+                    <span class="card-title"><i data-lucide="trophy"></i>三視圖課堂挑戰</span>
+                    
+                    <div class="quiz-option-row" style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; color:var(--text-secondary); font-weight:600;">
+                        <span>難度選擇</span>
+                        <div class="grid-size-selector" id="quiz-difficulty-container" style="background:rgba(255,255,255,0.02); padding:0.15rem; border-radius:6px; border:1px solid var(--border-gold); display:flex; gap:0.2rem;">
+                            <button class="grid-btn active" data-diff="easy" style="padding:0.25rem 0.5rem; font-size:0.7rem; border-radius:4px;">基礎</button>
+                            <button class="grid-btn" data-diff="medium" style="padding:0.25rem 0.5rem; font-size:0.7rem; border-radius:4px;">進階</button>
+                            <button class="grid-btn" data-diff="hard" style="padding:0.25rem 0.5rem; font-size:0.7rem; border-radius:4px;">極限</button>
+                        </div>
+                    </div>
+
+                    <div class="quiz-option-row" style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; color:var(--text-secondary); font-weight:600;">
+                        <span>鎖定視角 (考驗空間想像)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="quiz-lock-view" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <button class="btn-primary" id="btn-start-quiz" style="width: 100%;"><i data-lucide="play" style="width:14px; height:14px;"></i> 開始隨隨堂測驗</button>
+                </div>
+
+                <!-- Active Quiz Area -->
+                <div id="quiz-session-area" style="display: none; flex-direction: column; gap: 1rem;">
+                    <div class="quiz-question-box">
+                        <div class="quiz-q-title" id="quiz-q-num">QUESTION 1</div>
+                        <div class="quiz-q-text" id="quiz-q-text">請觀察左側 3D 積木，並在下方的 2D 畫布中點選畫出它的【前視圖】。</div>
+                    </div>
+
+                    <!-- Drawing Paint board -->
+                    <div class="paint-board-container">
+                        <span class="card-title" style="font-size:0.85rem;"><i data-lucide="palette"></i>2D 答題投影畫板</span>
+                        <div class="paint-grid-outer">
+                            <div class="paint-grid" id="paint-grid"></div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.4rem; width: 100%;">
+                        <div style="display: flex; gap: 0.4rem;">
+                            <button class="btn-primary" id="btn-submit-quiz" style="flex: 1;">送出解答</button>
+                            <button class="btn-secondary" id="btn-clear-paint" style="flex: 0.5;"><i data-lucide="rotate-ccw" style="width:12px; height:12px;"></i> 重畫</button>
+                        </div>
+                        <button class="btn-secondary" id="btn-quiz-explain" style="display: none; width: 100%; border-color: var(--accent-gold); color: var(--accent-gold); font-weight:700;">
+                            <i data-lucide="navigation" style="width:14px; height:14px;"></i> 3D 轉向解析 (對齊投影觀察)
+                        </button>
+                    </div>
+
+                    <div class="quiz-feedback" id="quiz-feedback"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Instructions Help Modal -->
+    <div id="help-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="glass-card" style="max-width: 600px; width: 90%; background: var(--bg-secondary); border: 1px solid var(--border-gold); padding: 2rem; position: relative;">
+            <button class="btn-icon" id="close-help-btn" style="position: absolute; top: 1rem; right: 1rem; padding: 0.4rem;">
+                <i data-lucide="x"></i>
+            </button>
+            <h2 style="font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="help-circle" style="color:var(--accent-gold)"></i> 空間幾何大冒險 使用說明</h2>
+            <div style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 0.8rem; max-height: 60vh; overflow-y: auto;">
+                <p>本互動講義是為了國中七年級「三視圖」單元所開發，提供流暢的 3D 與 2D 聯動機制，包含：</p>
+                <ol style="margin-left: 1.2rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                    <li><strong>1. 自由堆疊積木</strong>：隨增隨減，即時獲得投影面圖。</li>
+                    <li><strong>2. 被擋住的正方體</strong>：開啟 ✨ 穿透看清完全藏在後方的「紅色」積木。</li>
+                    <li><strong>3. 生活中的方向與視角</strong>：小房子、玩具小車與水杯的多角度 silhouette 配對。</li>
+                    <li><strong>4. 用數字代替積木</strong>：體驗數字改變時 3D 積木隨即「拔地而起」的雙向聯動！</li>
+                    <li><strong>5. 依據三視圖找積木</strong>：逆向空間拼圖，考驗看圖搭建積木的空間還原力。</li>
+                    <li>🏆 <strong>三視圖隨堂大挑戰</strong>：鎖定視角盲測，在 2D 畫布上點選答題。答完可點選「3D 轉向解析」，鏡頭會滑順旋轉，讓你秒懂！</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>國一數學數位備課與課堂探索平台 - 3D 互動幾何教學項目</p>
+        <p>© 2026 數位教學研究小組</p>
+    </footer>
+
+    <!-- Core App Logic -->
+    <script>
+        // Initialize Lucide Icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        // Global KaTeX Render Helper
+        function renderMath(element) {
+            if (typeof renderMathInElement === 'function') {
+                renderMathInElement(element || document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true}
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+
+        // Auto-render formulas on load
+        renderMath();
+
+        // Canvas Confetti
+        function triggerConfetti() {
+            if (typeof confetti !== 'function') return;
+            var duration = 2.5 * 1000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 3,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#0284c7', '#7c3aed', '#c5a86b']
+                });
+                confetti({
+                    particleCount: 3,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#0284c7', '#7c3aed', '#c5a86b']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        // ==========================================
+        // 3D SCENE & ENGINE MANAGER (Three.js)
+        // ==========================================
+        class ThreeSceneManager {
+            constructor(containerId) {
+                this.container = document.getElementById(containerId);
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.controls = null;
+                this.floorGrid = null;
+                this.floorPlane = null;
+                this.axisGroup = null;
+                
+                this.gridSize = 3;
+                this.blocks = {};
+                this.raycaster = new THREE.Raycaster();
+                this.mouse = new THREE.Vector2();
+                
+                this.isXrayActive = false;
+                this.isRemoveMode = false;
+                this.viewLocked = false;
+                
+                this.onBlocksChanged = null;
+                
+                this.init();
+            }
+
+            init() {
+                this.scene = new THREE.Scene();
+                this.scene.background = null; 
+
+                const width = this.container.clientWidth;
+                const height = this.container.clientHeight;
+                this.camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+                this.resetCameraPosition();
+
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                this.renderer.setSize(width, height);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                this.container.appendChild(this.renderer.domElement);
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+                this.scene.add(ambientLight);
+
+                const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.4);
+                dirLight1.position.set(10, 15, 8);
+                dirLight1.castShadow = true;
+                dirLight1.shadow.mapSize.width = 1024;
+                dirLight1.shadow.mapSize.height = 1024;
+                dirLight1.shadow.camera.near = 0.5;
+                dirLight1.shadow.camera.far = 40;
+                const d = 6;
+                dirLight1.shadow.camera.left = -d;
+                dirLight1.shadow.camera.right = d;
+                dirLight1.shadow.camera.top = d;
+                dirLight1.shadow.camera.bottom = -d;
+                dirLight1.shadow.bias = -0.0005;
+                this.scene.add(dirLight1);
+
+                const dirLight2 = new THREE.DirectionalLight(0xa5b4fc, 0.25);
+                dirLight2.position.set(-10, 8, -8);
+                this.scene.add(dirLight2);
+
+                // Controls
+                this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                this.controls.dampingFactor = 0.08;
+                this.controls.minDistance = 3;
+                this.controls.maxDistance = 25;
+                this.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+                this.setupFloorGrid();
+
+                window.addEventListener('resize', () => this.onWindowResize());
+                this.renderer.domElement.addEventListener('pointerdown', (e) => this.onPointerDown(e));
+                
+                this.container.addEventListener('dblclick', () => {
+                    if (!this.viewLocked) {
+                        this.animateCameraTo('isometric');
+                    }
+                });
+
+                this.animate();
+            }
+
+            resetCameraPosition() {
+                this.camera.position.set(7, 6, 8);
+                if (this.controls) {
+                    this.controls.target.set(0, 0.8, 0);
+                }
+            }
+
+            setupFloorGrid() {
+                if (this.floorGrid) this.scene.remove(this.floorGrid);
+                if (this.floorPlane) this.scene.remove(this.floorPlane);
+                if (this.axisGroup) this.scene.remove(this.axisGroup);
+                
+                this.axisGroup = new THREE.Group();
+                const N = this.gridSize;
+                
+                // Hairline gold floor grid lines matching the style.css borders
+                this.floorGrid = new THREE.GridHelper(N, N, 0xc5a86b, 0x475569);
+                this.floorGrid.position.y = 0;
+                this.floorGrid.material.opacity = 0.4;
+                this.floorGrid.material.transparent = true;
+                this.scene.add(this.floorGrid);
+
+                // Invisible raycasting plane
+                const geom = new THREE.PlaneGeometry(N, N);
+                geom.rotateX(-Math.PI / 2);
+                const mat = new THREE.MeshBasicMaterial({ visible: false });
+                this.floorPlane = new THREE.Mesh(geom, mat);
+                this.floorPlane.position.y = 0;
+                this.scene.add(this.floorPlane);
+
+                // Create 3D directions coordinate arrows
+                const origin = new THREE.Vector3(-N/2, 0.05, -N/2);
+
+                // Blue Arrow along +Z (Front / 前) -> Sky blue (#0284c7)
+                const dirZ = new THREE.Vector3(0, 0, 1);
+                const arrowZ = new THREE.ArrowHelper(dirZ, origin, N, 0x0284c7, 0.35, 0.18);
+                this.axisGroup.add(arrowZ);
+
+                // Violet Arrow along +X (Right / 右) -> Violet (#7c3aed)
+                const dirX = new THREE.Vector3(1, 0, 0);
+                const arrowX = new THREE.ArrowHelper(dirX, origin, N, 0x7c3aed, 0.35, 0.18);
+                this.axisGroup.add(arrowX);
+
+                // Gold Arrow along +Y (Top / 上) -> Gold (#c5a86b)
+                const dirY = new THREE.Vector3(0, 1, 0);
+                const arrowY = new THREE.ArrowHelper(dirY, origin, 2.0, 0xc5a86b, 0.35, 0.18);
+                this.axisGroup.add(arrowY);
+
+                // Create beautiful rounded floating Chinese indicators
+                const labelFront = this.createTextSprite("前", "#0284c7");
+                labelFront.position.set(-N/2, 0.22, -N/2 + N + 0.45);
+                this.axisGroup.add(labelFront);
+
+                const labelRight = this.createTextSprite("右", "#7c3aed");
+                labelRight.position.set(-N/2 + N + 0.45, 0.22, -N/2);
+                this.axisGroup.add(labelRight);
+
+                const labelUp = this.createTextSprite("上", "#c5a86b");
+                labelUp.position.set(-N/2, 2.4, -N/2);
+                this.axisGroup.add(labelUp);
+
+                this.scene.add(this.axisGroup);
+                
+                if (this.controls) {
+                    this.controls.target.set(0, 0.5, 0);
+                }
+            }
+
+            createTextSprite(text, color) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 128;
+                canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, 128, 128);
+                
+                // Draw circle backing
+                ctx.fillStyle = 'rgba(9, 10, 15, 0.8)';
+                ctx.beginPath();
+                ctx.arc(64, 64, 42, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 5;
+                ctx.stroke();
+
+                // Draw Text
+                ctx.fillStyle = color;
+                ctx.font = 'bold 52px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, 64, 64);
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+                const sprite = new THREE.Sprite(mat);
+                sprite.scale.set(0.68, 0.68, 1);
+                return sprite;
+            }
+
+            setGridSize(size) {
+                this.gridSize = parseInt(size);
+                this.clearAllBlocks();
+                this.setupFloorGrid();
+                this.resetCameraPosition();
+            }
+
+            setViewLocked(locked) {
+                this.viewLocked = locked;
+                if (this.controls) {
+                    this.controls.enabled = !locked;
+                }
+                
+                const lockUI = document.getElementById('viewport-lock-ui');
+                if (locked) {
+                    lockUI.classList.add('show');
+                } else {
+                    lockUI.classList.remove('show');
+                }
+
+
+
+                // Sync global unlock/lock icon
+                const lockIcon = document.getElementById('btn-lock-view-icon');
+                const lockBtn = document.getElementById('btn-lock-view');
+                if (lockIcon) {
+                    if (locked) {
+                        lockIcon.setAttribute('data-lucide', 'lock');
+                        lockBtn.classList.add('active-remove');
+                        lockBtn.title = "解鎖 3D 視角";
+                    } else {
+                        lockIcon.setAttribute('data-lucide', 'unlock');
+                        lockBtn.classList.remove('active-remove');
+                        lockBtn.title = "鎖定 3D 視角";
+                    }
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }
+            }
+
+            clearAllBlocks() {
+                Object.values(this.blocks).forEach(item => {
+                    this.scene.remove(item.mesh);
+                    if (item.wireframe) this.scene.remove(item.wireframe);
+                });
+                this.blocks = {};
+                this.notifyBlocksChanged();
+            }
+
+            gridToPhysical(x, y, z) {
+                const N = this.gridSize;
+                const physicalX = x - (N - 1) / 2;
+                const physicalY = y + 0.5;
+                const physicalZ = z - (N - 1) / 2;
+                return new THREE.Vector3(physicalX, physicalY, physicalZ);
+            }
+
+            addBlock(x, y, z, colorHex = 0xc5a86b, force = false) {
+                const N = this.gridSize;
+                if (x < 0 || x >= N || y < 0 || y >= N || z < 0 || z >= N) return false;
+                
+                const key = `${x},${y},${z}`;
+                if (this.blocks[key]) return false;
+
+                // Support validation (gravity check)
+                if (!force && y > 0) {
+                    const underKey = `${x},${y-1},${z}`;
+                    if (!this.blocks[underKey]) {
+                        let highestY = -1;
+                        for (let tempY = y - 1; tempY >= 0; tempY--) {
+                            if (this.blocks[`${x},${tempY},${z}`]) {
+                                highestY = tempY;
+                                break;
+                            }
+                        }
+                        y = highestY + 1;
+                        if (y >= N) return false;
+                    }
+                }
+
+                // Charcoal Navy Obsidian style cubes mesh (#161925, matching --canvas-node!)
+                const geom = new THREE.BoxGeometry(0.97, 0.97, 0.97);
+                const mat = new THREE.MeshStandardMaterial({
+                    color: colorHex || 0xc5a86b,
+                    roughness: 0.15,
+                    metalness: 0.1,
+                    transparent: true,
+                    opacity: 1.0,
+                    depthWrite: true
+                });
+                
+                const mesh = new THREE.Mesh(geom, mat);
+                const physPos = this.gridToPhysical(x, y, z);
+                mesh.position.copy(physPos);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.gridPos = { x, y, z };
+                
+                this.scene.add(mesh);
+
+                // Luxury hairline gold wireframes matching champagne theme (#c5a86b)
+                const edgeGeom = new THREE.EdgesGeometry(geom);
+                const edgeMat = new THREE.LineBasicMaterial({ 
+                    color: 0x090a0f, 
+                    linewidth: 1.5,
+                    transparent: true,
+                    opacity: 0.65
+                });
+                const wireframe = new THREE.LineSegments(edgeGeom, edgeMat);
+                wireframe.position.copy(physPos);
+                this.scene.add(wireframe);
+
+                this.blocks[`${x},${y},${z}`] = {
+                    mesh: mesh,
+                    wireframe: wireframe,
+                    originalColor: colorHex || 0xc5a86b
+                };
+
+                this.notifyBlocksChanged();
+                return true;
+            }
+
+            removeBlock(x, y, z) {
+                const key = `${x},${y},${z}`;
+                if (!this.blocks[key]) return false;
+
+                const N = this.gridSize;
+                for (let tempY = y; tempY < N; tempY++) {
+                    const cascadeKey = `${x},${tempY},${z}`;
+                    const item = this.blocks[cascadeKey];
+                    if (item) {
+                        this.scene.remove(item.mesh);
+                        this.scene.remove(item.wireframe);
+                        delete this.blocks[cascadeKey];
+                    }
+                }
+
+                this.notifyBlocksChanged();
+                return true;
+            }
+
+            notifyBlocksChanged() {
+                this.updateHiddenBlocksStatus();
+                if (this.onBlocksChanged) {
+                    const blockCoords = Object.keys(this.blocks).map(k => {
+                        const [x,y,z] = k.split(',').map(Number);
+                        return { x, y, z };
+                    });
+                    this.onBlocksChanged(blockCoords);
+                }
+            }
+
+            updateHiddenBlocksStatus() {
+                const N = this.gridSize;
+                const hiddenKeys = [];
+                
+                for (let x = 0; x < N; x++) {
+                    for (let y = 0; y < N; y++) {
+                        for (let z = 0; z < N; z++) {
+                            const key = `${x},${y},${z}`;
+                            if (!this.blocks[key]) continue;
+
+                            const topCovered = (y + 1 >= N) || this.blocks[`${x},${y+1},${z}`];
+                            const frontCovered = (z + 1 >= N) || this.blocks[`${x},${y},${z+1}`];
+                            const rightCovered = (x + 1 >= N) || this.blocks[`${x+1},${y},${z}`];
+
+                            if (topCovered && frontCovered && rightCovered) {
+                                hiddenKeys.push(key);
+                            }
+                        }
+                    }
+                }
+
+                // X-ray transparent state styling
+                const hiddenColor = 0xf43f5e; // Rose warning color
+
+                Object.entries(this.blocks).forEach(([key, item]) => {
+                    const isHidden = hiddenKeys.includes(key);
+                    
+                    if (this.isXrayActive) {
+                        if (isHidden) {
+                            item.mesh.material.color.setHex(hiddenColor);
+                            item.mesh.material.opacity = 0.95;
+                            item.mesh.material.depthWrite = true;
+                            item.mesh.material.transparent = false;
+                        } else {
+                            item.mesh.material.color.setHex(item.originalColor);
+                            item.mesh.material.opacity = 0.2;
+                            item.mesh.material.depthWrite = false;
+                            item.mesh.material.transparent = true;
+                        }
+                    } else {
+                        item.mesh.material.color.setHex(item.originalColor);
+                        item.mesh.material.opacity = 1.0;
+                        item.mesh.material.depthWrite = true;
+                        item.mesh.material.transparent = false;
+                    }
+                    item.mesh.material.needsUpdate = true;
+                });
+            }
+
+            setXray(active) {
+                this.isXrayActive = active;
+                this.updateHiddenBlocksStatus();
+                
+                const btn = document.getElementById('btn-xray');
+                if (active) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            }
+
+            setMode(mode) {
+                this.isRemoveMode = (mode === 'remove');
+                const btnAdd = document.getElementById('btn-mode-add');
+                const btnRemove = document.getElementById('btn-mode-remove');
+                
+                if (this.isRemoveMode) {
+                    btnRemove.classList.add('active-remove');
+                    btnAdd.classList.remove('active-add');
+                } else {
+                    btnAdd.classList.add('active-add');
+                    btnRemove.classList.remove('active-remove');
+                }
+            }
+
+            onPointerDown(event) {
+                if (this.viewLocked) return;
+
+                const rect = this.renderer.domElement.getBoundingClientRect();
+                this.mouse.x = ((event.clientX - rect.left) / this.container.clientWidth) * 2 - 1;
+                this.mouse.y = -((event.clientY - rect.top) / this.container.clientHeight) * 2 + 1;
+
+                this.raycaster.setFromCamera(this.mouse, this.camera);
+
+                const meshes = Object.values(this.blocks).map(item => item.mesh);
+                meshes.push(this.floorPlane);
+
+                const intersects = this.raycaster.intersectObjects(meshes);
+
+                if (intersects.length > 0) {
+                    const intersect = intersects[0];
+                    const obj = intersect.object;
+
+                    if (this.isRemoveMode) {
+                        if (obj !== this.floorPlane) {
+                            this.removeBlock(obj.gridPos.x, obj.gridPos.y, obj.gridPos.z);
+                        }
+                    } else {
+                        let x, y, z;
+                        if (obj === this.floorPlane) {
+                            const pt = intersect.point;
+                            const N = this.gridSize;
+                            x = Math.floor(pt.x + N / 2);
+                            z = Math.floor(pt.z + N / 2);
+                            y = 0;
+                            
+                            this.addBlock(x, y, z);
+                        } else {
+                            const normal = intersect.face.normal.clone();
+                            normal.transformDirection(obj.matrixWorld);
+                            
+                            x = obj.gridPos.x + Math.round(normal.x);
+                            y = obj.gridPos.y + Math.round(normal.y);
+                            z = obj.gridPos.z + Math.round(normal.z);
+                            
+                            this.addBlock(x, y, z);
+                        }
+                    }
+                }
+            }
+
+            animateCameraTo(viewType, onComplete = null) {
+                if (!this.camera || !this.controls) return;
+
+                let targetPos = new THREE.Vector3();
+                let targetLookAt = new THREE.Vector3(0, 0.5, 0);
+                const distance = 8.5 + (this.gridSize - 3) * 1.5;
+
+                switch (viewType) {
+                    case 'isometric':
+                        targetPos.set(distance * 0.75, distance * 0.65, distance * 0.85);
+                        break;
+                    case 'front':
+                        targetPos.set(0, 0.5, distance);
+                        break;
+                    case 'top':
+                        targetPos.set(0, distance, 0.001);
+                        break;
+                    case 'right':
+                        targetPos.set(distance, 0.5, 0);
+                        break;
+                }
+
+                const startPos = this.camera.position.clone();
+                const startTarget = this.controls.target.clone();
+                
+                const duration = 600;
+                const startTime = performance.now();
+
+                const animateStep = (now) => {
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const ease = 1 - Math.pow(1 - progress, 3);
+
+                    this.camera.position.lerpVectors(startPos, targetPos, ease);
+                    this.controls.target.lerpVectors(startTarget, targetLookAt, ease);
+                    this.controls.update();
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animateStep);
+                    } else {
+                        if (onComplete) onComplete();
+                    }
+                };
+
+                requestAnimationFrame(animateStep);
+            }
+
+            onWindowResize() {
+                if (!this.container || !this.camera || !this.renderer) return;
+                const width = this.container.clientWidth;
+                const height = this.container.clientHeight;
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(width, height);
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                if (this.controls) {
+                    this.controls.update();
+                }
+                if (this.renderer && this.scene && this.camera) {
+                    this.renderer.render(this.scene, this.camera);
+                }
+            }
+
+            getBlocksMatrix() {
+                const N = this.gridSize;
+                const matrix = Array(N).fill(0).map(() => 
+                    Array(N).fill(0).map(() => 
+                        Array(N).fill(0).fill(false)
+                    )
+                );
+                
+                Object.keys(this.blocks).forEach(key => {
+                    const [x,y,z] = key.split(',').map(Number);
+                    if (x >= 0 && x < N && y >= 0 && y < N && z >= 0 && z < N) {
+                        matrix[x][y][z] = true;
+                    }
+                });
+                return matrix;
+            }
+        }
+
+        // ==========================================
+        // PROJECTION MATH ENGINE
+        // ==========================================
+        class ProjectionEngine {
+            static getTopProjection(matrix, N) {
+                const grid = Array(N).fill(0).map(() => Array(N).fill(false));
+                for (let x = 0; x < N; x++) {
+                    for (let z = 0; z < N; z++) {
+                        for (let y = 0; y < N; y++) {
+                            if (matrix[x][y][z]) {
+                                grid[x][z] = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                return grid;
+            }
+
+            static getFrontProjection(matrix, N) {
+                const grid = Array(N).fill(0).map(() => Array(N).fill(false));
+                for (let x = 0; x < N; x++) {
+                    for (let y = 0; y < N; y++) {
+                        for (let z = 0; z < N; z++) {
+                            if (matrix[x][y][z]) {
+                                grid[x][y] = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                return grid;
+            }
+
+            static getRightProjection(matrix, N) {
+                const grid = Array(N).fill(0).map(() => Array(N).fill(false));
+                for (let col = 0; col < N; col++) {
+                    const z = (N - 1) - col;
+                    for (let y = 0; y < N; y++) {
+                        for (let x = 0; x < N; x++) {
+                            if (matrix[x][y][z]) {
+                                grid[col][y] = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                return grid;
+            }
+
+            static countCubes(matrix, N) {
+                let count = 0;
+                for (let x = 0; x < N; x++) {
+                    for (let y = 0; y < N; y++) {
+                        for (let z = 0; z < N; z++) {
+                            if (matrix[x][y][z]) count++;
+                        }
+                    }
+                }
+                return count;
+            }
+
+            static getMaxHeight(matrix, N) {
+                let max = 0;
+                for (let x = 0; x < N; x++) {
+                    for (let z = 0; z < N; z++) {
+                        let h = 0;
+                        for (let y = 0; y < N; y++) {
+                            if (matrix[x][y][z]) h = y + 1;
+                        }
+                        if (h > max) max = h;
+                    }
+                }
+                return max;
+            }
+
+            static compareGrids(g1, g2, N) {
+                for (let r = 0; r < N; r++) {
+                    for (let c = 0; c < N; c++) {
+                        if (g1[r][c] !== g2[r][c]) return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        // ==========================================
+        // MAIN APP CONTROLLER
+        // ==========================================
+        class App {
+            constructor() {
+                this.scene3d = null;
+                this.activeTab = 'tab-explore';
+                
+                this.extremePuzzle = null;
+                this.reversePuzzle = null;
+                this.quizPuzzle = null;
+                this.quizInProgress = false;
+                
+
+
+                this.init();
+            }
+
+            init() {
+                this.scene3d = new ThreeSceneManager('canvas3d');
+                this.scene3d.onBlocksChanged = (blocks) => this.onBlocksStateChanged(blocks);
+
+                this.bindEvents();
+                this.initTabSwitching();
+                this.setupMiniProjections();
+                this.initDirectionGame();
+
+                this.loadStartDemoBlocks();
+            }
+
+            loadStartDemoBlocks() {
+                this.scene3d.addBlock(0, 0, 0);
+                this.scene3d.addBlock(0, 0, 1);
+                this.scene3d.addBlock(1, 0, 1);
+                this.scene3d.addBlock(1, 1, 1);
+                this.scene3d.addBlock(2, 0, 2);
+            }
+
+            bindEvents() {
+                document.getElementById('help-btn').addEventListener('click', () => this.setHelpModal(true));
+                document.getElementById('close-help-btn').addEventListener('click', () => this.setHelpModal(false));
+                document.getElementById('help-modal').addEventListener('click', (e) => {
+                    if (e.target.id === 'help-modal') this.setHelpModal(false);
+                });
+
+                document.getElementById('btn-lock-view').addEventListener('click', () => {
+                    this.scene3d.setViewLocked(!this.scene3d.viewLocked);
+                });
+
+                const gridBtns = document.querySelectorAll('#grid-size-selector-container .grid-btn');
+                gridBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        gridBtns.forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        const size = parseInt(e.target.dataset.size);
+                        this.scene3d.setGridSize(size);
+                        this.onGridSizeReset();
+                    });
+                });
+
+                document.getElementById('btn-reset-blocks').addEventListener('click', () => {
+                    this.scene3d.clearAllBlocks();
+                });
+
+                document.getElementById('btn-xray').addEventListener('click', () => {
+                    this.scene3d.setXray(!this.scene3d.isXrayActive);
+                });
+
+                document.getElementById('btn-mode-add').addEventListener('click', () => this.scene3d.setMode('add'));
+                document.getElementById('btn-mode-remove').addEventListener('click', () => this.scene3d.setMode('remove'));
+
+                const camBtns = document.querySelectorAll('#camera-shortcuts-container .view-btn');
+                camBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        camBtns.forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        const view = e.target.dataset.view;
+                        this.scene3d.animateCameraTo(view, () => {
+                            setTimeout(() => e.target.classList.remove('active'), 800);
+                        });
+                    });
+                });
+
+                document.getElementById('btn-generate-extreme-puzzle').addEventListener('click', () => this.generateExtremePuzzle());
+                document.getElementById('btn-submit-extreme').addEventListener('click', () => this.submitExtremePuzzle());
+
+                // (Chapter 3 direction quiz binds its own events in initDirectionGame)
+
+
+                document.getElementById('btn-generate-reverse-puzzle').addEventListener('click', () => this.generateReversePuzzle());
+                document.getElementById('btn-validate-reverse').addEventListener('click', () => this.validateReverseStructure());
+                document.getElementById('btn-show-reverse-solution').addEventListener('click', () => this.showReverseSolution());
+
+                const diffBtns = document.querySelectorAll('#quiz-difficulty-container .grid-btn');
+                diffBtns.forEach(b => {
+                    b.addEventListener('click', (e) => {
+                        diffBtns.forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                    });
+                });
+                document.getElementById('btn-start-quiz').addEventListener('click', () => this.startQuizChallenge());
+                document.getElementById('btn-submit-quiz').addEventListener('click', () => this.submitQuizAnswer());
+                document.getElementById('btn-clear-paint').addEventListener('click', () => this.clearPaintGrid());
+                document.getElementById('btn-quiz-explain').addEventListener('click', () => this.explainQuiz3dRotation());
+            }
+
+            setHelpModal(show) {
+                const modal = document.getElementById('help-modal');
+                modal.style.display = show ? 'flex' : 'none';
+            }
+
+            initTabSwitching() {
+                const treeLinks = document.querySelectorAll('.side-navigation .tree-link');
+                const navBtns = document.querySelectorAll('.nav-container .nav-btn');
+                
+                const handleSwitch = (tabId) => {
+                    treeLinks.forEach(l => {
+                        l.classList.remove('active');
+                    });
+                    const activeLink = Array.from(treeLinks).find(l => l.dataset.tab === tabId);
+                    if (activeLink) {
+                        activeLink.classList.add('active');
+                    }
+
+                    navBtns.forEach(btn => {
+                        if (btn.dataset.tab === tabId) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                    });
+
+                    const tabs = ['tab-explore', 'tab-hidden', 'tab-reallife', 'tab-number', 'tab-reverse', 'tab-quiz'];
+                    const currentIdx = tabs.indexOf(tabId);
+                    const progressPercent = {
+                        'tab-explore': 16,
+                        'tab-hidden': 33,
+                        'tab-reallife': 50,
+                        'tab-number': 66,
+                        'tab-reverse': 83,
+                        'tab-quiz': 100
+                    }[tabId] || 16;
+                    
+                    const progressFill = document.getElementById('curriculum-progress');
+                    const progressLbl = document.getElementById('progress-lbl');
+                    if (progressFill) progressFill.style.width = `${progressPercent}%`;
+                    if (progressLbl) progressLbl.textContent = `課程進度 ${progressPercent}%`;
+
+                    treeLinks.forEach(l => {
+                        const linkTab = l.dataset.tab;
+                        const linkIdx = tabs.indexOf(linkTab);
+                        const dot = l.querySelector('.status-dot');
+                        if (dot) {
+                            if (linkIdx < currentIdx) {
+                                dot.className = 'status-dot completed';
+                                dot.innerHTML = '✓';
+                            } else if (linkIdx === currentIdx) {
+                                dot.className = 'status-dot current';
+                                dot.innerHTML = '●';
+                            } else {
+                                dot.className = 'status-dot';
+                                dot.innerHTML = '○';
+                            }
+                        }
+                    });
+
+                    this.switchTab(tabId);
+                };
+
+                treeLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        handleSwitch(link.dataset.tab);
+                    });
+                });
+
+                navBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        handleSwitch(btn.dataset.tab);
+                    });
+                });
+            }
+
+            switchTab(tabId) {
+                this.activeTab = tabId;
+                
+                document.querySelectorAll('.info-pane').forEach(c => {
+                    if (c.id === tabId) {
+                        c.classList.add('active');
+                    } else {
+                        c.classList.remove('active');
+                    }
+                });
+
+                this.onTabActivated(tabId);
+            }
+
+            onTabActivated(tabId) {
+                this.scene3d.setViewLocked(false);
+                this.scene3d.setXray(false);
+                this.scene3d.setMode('add');
+                
+                document.getElementById('overlay-instruction-bar').style.display = 'none';
+
+                // Get header control elements dynamically
+                const sizeSelector = document.getElementById('grid-size-selector-container');
+                const voxelModes = document.getElementById('voxel-modes-container');
+                const btnLock = document.getElementById('btn-lock-view');
+                const btnXray = document.getElementById('btn-xray');
+                const btnReset = document.getElementById('btn-reset-blocks');
+
+                // 預設顯示左側 3D 畫布並還原雙欄佈局
+                const canvasPanel = document.getElementById('canvasPanel');
+                if (canvasPanel) canvasPanel.style.display = 'flex';
+                const appContainer = document.querySelector('.app-container');
+                if (appContainer) appContainer.classList.remove('no-engine-layout');
+
+                // Hide everything first to avoid cluttering other chapters
+                sizeSelector.style.display = 'none';
+                voxelModes.style.display = 'none';
+                btnLock.style.display = 'none';
+                btnXray.style.display = 'none';
+                btnReset.style.display = 'none';
+
+                const instructionBar = document.getElementById('overlay-instruction-bar');
+                const instructionText = document.getElementById('overlay-instruction-text');
+                
+                this.quizInProgress = false;
+                document.getElementById('mini-projections-panel').style.display = 'flex';
+                // Restore lock alert subtitle for non-quiz tabs
+                const lockSub = document.getElementById('viewport-lock-subtitle');
+                if (lockSub) lockSub.textContent = '可點擊右上角解鎖圖標以手動旋轉視角。';
+                
+                if (tabId === 'tab-explore') {
+                    instructionText.textContent = "點擊「新增」或「刪除」，即可直接在 3D 空間蓋積木囉！";
+                    instructionBar.style.display = 'flex';
+                    
+                    // Chapter 1: Show grid size, edit modes, lock view, and reset
+                    sizeSelector.style.display = 'flex';
+                    voxelModes.style.display = 'flex';
+                    btnLock.style.display = 'flex';
+                    btnReset.style.display = 'flex';
+                } 
+                else if (tabId === 'tab-hidden') {
+                    instructionText.textContent = "點擊右上角 ✨ 啟動透視，可以找出被擋住的積木！";
+                    instructionBar.style.display = 'flex';
+                    
+                    // Chapter 2: Only show view locking and X-ray tool
+                    btnLock.style.display = 'flex';
+                    btnXray.style.display = 'flex';
+                }
+                else if (tabId === 'tab-reallife') {
+                    instructionBar.style.display = 'none';
+                    // 不要顯示 3D 引擎，隱藏 Canvas Panel，改為滿版置中答題佈局
+                    if (canvasPanel) canvasPanel.style.display = 'none';
+                    if (appContainer) appContainer.classList.add('no-engine-layout');
+                }
+                else if (tabId === 'tab-number') {
+                    instructionText.textContent = "在 2D 數字格調整數值，積木會自動長高喔！";
+                    instructionBar.style.display = 'flex';
+                    this.renderHeightGridEditor();
+                    
+                    // Chapter 4: Show grid size, lock view, and reset (no stack editing)
+                    sizeSelector.style.display = 'flex';
+                    btnLock.style.display = 'flex';
+                    btnReset.style.display = 'flex';
+                }
+                else if (tabId === 'tab-reverse') {
+                    instructionText.textContent = "請看三視圖，在此空白網格中搭建出一樣的形狀！";
+                    instructionBar.style.display = 'flex';
+                    this.scene3d.clearAllBlocks();
+                    
+                    // Chapter 5: Show stack editing, lock view, and reset (size is set by puzzle)
+                    voxelModes.style.display = 'flex';
+                    btnLock.style.display = 'flex';
+                    btnReset.style.display = 'flex';
+                }
+                else if (tabId === 'tab-quiz') {
+                    instructionText.textContent = "隨堂挑戰：依題目畫出對應的 2D 投影圖！";
+                    instructionBar.style.display = 'flex';
+                    document.getElementById('quiz-session-area').style.display = 'none';
+
+                    // Chapter 6: hide lock button — students cannot manually unlock during quiz
+                    // Also update lock-alert subtitle to match
+                    btnLock.style.display = 'none';
+                    const sub = document.getElementById('viewport-lock-subtitle');
+                    if (sub) sub.textContent = '送出解答後即可自由旋轉。';
+                }
+
+                this.scene3d.clearAllBlocks();
+                this.loadStartDemoBlocks();
+            }
+
+            onGridSizeReset() {
+                if (this.activeTab === 'tab-number') {
+                    this.renderHeightGridEditor();
+                }
+            }
+
+            onBlocksStateChanged(blocks) {
+                const matrix = this.scene3d.getBlocksMatrix();
+                const N = this.scene3d.gridSize;
+
+                const topGrid = ProjectionEngine.getTopProjection(matrix, N);
+                const frontGrid = ProjectionEngine.getFrontProjection(matrix, N);
+                const rightGrid = ProjectionEngine.getRightProjection(matrix, N);
+
+                this.renderMiniProjection('mini-grid-top', topGrid, N);
+                this.renderMiniProjection('mini-grid-front', frontGrid, N);
+                this.renderMiniProjection('mini-grid-right', rightGrid, N);
+
+                const totalCount = ProjectionEngine.countCubes(matrix, N);
+                const maxHeight = ProjectionEngine.getMaxHeight(matrix, N);
+                
+                document.getElementById('explore-total-count').textContent = totalCount;
+                document.getElementById('explore-max-height').textContent = maxHeight;
+
+                let invisibleCount = 0;
+                for (let x = 0; x < N; x++) {
+                    for (let y = 0; y < N; y++) {
+                        for (let z = 0; z < N; z++) {
+                            if (matrix[x][y][z]) {
+                                const topCovered = (y + 1 >= N) || matrix[x][y+1][z];
+                                const frontCovered = (z + 1 >= N) || matrix[x][y][z+1];
+                                const rightCovered = (x + 1 >= N) || matrix[x+1][y][z];
+                                if (topCovered && frontCovered && rightCovered) {
+                                    invisibleCount++;
+                                }
+                            }
+                        }
+                    }
+                }
+                const visibleCount = totalCount - invisibleCount;
+                document.getElementById('hidden-visible-count').textContent = visibleCount;
+                document.getElementById('hidden-invisible-count').textContent = invisibleCount;
+
+                if (this.activeTab === 'tab-number') {
+                    for (let x = 0; x < N; x++) {
+                        for (let z = 0; z < N; z++) {
+                            let h = 0;
+                            for (let y = 0; y < N; y++) {
+                                if (matrix[x][y][z]) h = y + 1;
+                            }
+                            const cellVal = document.getElementById(`height-val-${x}-${z}`);
+                            if (cellVal) {
+                                cellVal.textContent = h;
+                                const cellBg = document.getElementById(`height-cell-${x}-${z}`);
+                                if (h > 0) {
+                                    cellBg.style.background = 'var(--accent-gold)';
+                                    cellBg.style.color = 'var(--bg-primary)';
+                                } else {
+                                    cellBg.style.background = 'var(--bg-secondary)';
+                                    cellBg.style.color = 'var(--text-primary)';
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            setupMiniProjections() {
+                const N = this.scene3d.gridSize;
+                this.renderMiniProjection('mini-grid-top', Array(N).fill(0).map(() => Array(N).fill(false)), N);
+                this.renderMiniProjection('mini-grid-front', Array(N).fill(0).map(() => Array(N).fill(false)), N);
+                this.renderMiniProjection('mini-grid-right', Array(N).fill(0).map(() => Array(N).fill(false)), N);
+            }
+
+            renderMiniProjection(containerId, grid, N) {
+                const container = document.getElementById(containerId);
+                container.innerHTML = '';
+                container.style.gridTemplateColumns = `repeat(${N}, 1fr)`;
+
+                if (containerId === 'mini-grid-top') {
+                    for (let z = 0; z < N; z++) {
+                        for (let x = 0; x < N; x++) {
+                            const cell = document.createElement('div');
+                            cell.className = 'mini-cell' + (grid[x][z] ? ' filled' : '');
+                            container.appendChild(cell);
+                        }
+                    }
+                } else if (containerId === 'mini-grid-front') {
+                    for (let y = N - 1; y >= 0; y--) {
+                        for (let x = 0; x < N; x++) {
+                            const cell = document.createElement('div');
+                            cell.className = 'mini-cell' + (grid[x][y] ? ' filled' : '');
+                            container.appendChild(cell);
+                        }
+                    }
+                } else if (containerId === 'mini-grid-right') {
+                    for (let y = N - 1; y >= 0; y--) {
+                        for (let col = 0; col < N; col++) {
+                            const cell = document.createElement('div');
+                            cell.className = 'mini-cell' + (grid[col][y] ? ' filled' : '');
+                            container.appendChild(cell);
+                        }
+                    }
+                }
+            }
+
+            // ==========================================
+            // TAB 2: HIDDEN CUBES PUZZLES
+            // ==========================================
+            generateExtremePuzzle() {
+                this.scene3d.clearAllBlocks();
+                const N = this.scene3d.gridSize;
+
+                const grid = Array(N).fill(0).map(() => Array(N).fill(0));
+                for (let x = 0; x < N; x++) {
+                    for (let z = 0; z < N; z++) {
+                        if (Math.random() > 0.4) {
+                            grid[x][z] = Math.floor(Math.random() * (N - 1)) + 1;
+                        }
+                    }
+                }
+                
+                for (let x = 0; x < N; x++) {
+                    for (let z = 0; z < N; z++) {
+                        const h = grid[x][z];
+                        for (let y = 0; y < h; y++) {
+                            this.scene3d.addBlock(x, y, z, 0xc5a86b, true);
+                        }
+                    }
+                }
+
+                const matrix = this.scene3d.getBlocksMatrix();
+                const topGrid = ProjectionEngine.getTopProjection(matrix, N);
+                const frontGrid = ProjectionEngine.getFrontProjection(matrix, N);
+                const rightGrid = ProjectionEngine.getRightProjection(matrix, N);
+                
+                const F = Array(N).fill(0);
+                for (let x = 0; x < N; x++) {
+                    let maxVal = 0;
+                    for (let y = 0; y < N; y++) {
+                        if (frontGrid[x][y]) maxVal = y + 1;
+                    }
+                    F[x] = maxVal;
+                }
+
+                const R = Array(N).fill(0);
+                for (let col = 0; col < N; col++) {
+                    let maxVal = 0;
+                    for (let y = 0; y < N; y++) {
+                        if (rightGrid[col][y]) maxVal = y + 1;
+                    }
+                    R[col] = maxVal;
+                }
+                let maxCubes = 0;
+                for (let x = 0; x < N; x++) {
+                    for (let z = 0; z < N; z++) {
+                        if (topGrid[x][z]) {
+                            const rightCol = (N - 1) - z;
+                            maxCubes += Math.min(F[x], R[rightCol]);
+                        }
+                    }
+                }
+
+                let minCubes = this.solveMinCubes(N, topGrid, F, R);
+
+                this.extremePuzzle = {
+                    minAnswer: minCubes,
+                    maxAnswer: maxCubes,
+                    topGrid, frontGrid, rightGrid
+                };
+
+                this.renderPuzzleBlueprints('extreme-puzzle-blueprints', topGrid, frontGrid, rightGrid, N);
+                
+                document.getElementById('extreme-puzzle-area').style.display = 'flex';
+                document.getElementById('extreme-feedback').style.display = 'none';
+                document.getElementById('extreme-min-input').value = '';
+                document.getElementById('extreme-max-input').value = '';
+            }
+
+            solveMinCubes(N, topGrid, F, R) {
+                let bestSum = Infinity;
+                const H = Array(N).fill(0).map(() => Array(N).fill(0));
+
+                const checkValid = () => {
+                    for (let x = 0; x < N; x++) {
+                        let m = 0;
+                        for (let z = 0; z < N; z++) {
+                            if (H[x][z] > m) m = H[x][z];
+                        }
+                        if (m !== F[x]) return false;
+                    }
+                    for (let z = 0; z < N; z++) {
+                        const col = (N - 1) - z;
+                        let m = 0;
+                        for (let x = 0; x < N; x++) {
+                            if (H[x][z] > m) m = H[x][z];
+                        }
+                        if (m !== R[col]) return false;
+                    }
+                    return true;
+                };
+
+                const activeCells = [];
+                for (let x = 0; x < N; x++) {
+                    for (let z = 0; z < N; z++) {
+                        if (topGrid[x][z]) {
+                            activeCells.push({ x, z });
+                        }
+                    }
+                }
+
+                const search = (idx, currentSum) => {
+                    if (currentSum >= bestSum) return;
+                    
+                    if (idx === activeCells.length) {
+                        if (checkValid()) {
+                            bestSum = Math.min(bestSum, currentSum);
+                        }
+                        return;
+                    }
+
+                    const { x, z } = activeCells[idx];
+                    const col = (N - 1) - z;
+                    const maxAllowed = Math.min(F[x], R[col]);
+
+                    for (let h = 1; h <= maxAllowed; h++) {
+                        H[x][z] = h;
+                        search(idx + 1, currentSum + h);
+                    }
+                    H[x][z] = 0;
+                };
+
+                search(0, 0);
+                return bestSum === Infinity ? 0 : bestSum;
+            }
+
+            renderPuzzleBlueprints(containerId, top, front, right, N) {
+                const container = document.getElementById(containerId);
+                container.innerHTML = '';
+
+                const drawBlueprint = (title, grid, type) => {
+                    const box = document.createElement('div');
+                    box.className = 'blueprint-box';
+                    const lbl = document.createElement('span');
+                    lbl.className = 'blueprint-title';
+                    lbl.textContent = title;
+                    box.appendChild(lbl);
+
+                    const gridDiv = document.createElement('div');
+                    gridDiv.className = 'blueprint-grid';
+                    gridDiv.style.gridTemplateColumns = `repeat(${N}, 1fr)`;
+
+                    if (type === 'top') {
+                        for (let z = 0; z < N; z++) {
+                            for (let x = 0; x < N; x++) {
+                                const c = document.createElement('div');
+                                c.className = 'blueprint-cell' + (grid[x][z] ? ' filled' : '');
+                                gridDiv.appendChild(c);
+                            }
+                        }
+                    } else if (type === 'front') {
+                        for (let y = N - 1; y >= 0; y--) {
+                            for (let x = 0; x < N; x++) {
+                                const c = document.createElement('div');
+                                c.className = 'blueprint-cell' + (grid[x][y] ? ' filled' : '');
+                                gridDiv.appendChild(c);
+                            }
+                        }
+                    } else if (type === 'right') {
+                        for (let y = N - 1; y >= 0; y--) {
+                            for (let col = 0; col < N; col++) {
+                                const c = document.createElement('div');
+                                c.className = 'blueprint-cell' + (grid[col][y] ? ' filled' : '');
+                                gridDiv.appendChild(c);
+                            }
+                        }
+                    }
+
+                    box.appendChild(gridDiv);
+                    container.appendChild(box);
+                };
+
+                drawBlueprint('上視圖 (Top)', top, 'top');
+                drawBlueprint('前視圖 (Front)', front, 'front');
+                drawBlueprint('右視圖 (Right)', right, 'right');
+            }
+
+            initDirectionGame() {
+                this.dirMap = {
+                    cols: 5, rows: 5,
+                    cells: [
+                        [{label:'電器\n用品',type:'shop'}, {label:'甲',type:'road'}, {label:'運動\n用品',type:'shop'}, {label:'乙',type:'road'}, {label:'餐廳',type:'shop'}],
+                        [{label:'丙',type:'road'},          {label:'A',type:'road'},  {label:'B',type:'road'},             {label:'丁',type:'road'}, {label:'',type:'road'}],
+                        [{label:'休閒\n用品',type:'shop'}, {label:'食品\n雜貨',type:'shop'}, {label:'C',type:'road'}, {label:'休閒\n用品',type:'shop'}, {label:'',type:'road'}],
+                        [{label:'戊',type:'road'},          {label:'庚',type:'road'}, {label:'D',type:'road'},             {label:'己',type:'road'}, {label:'',type:'road'}],
+                        [{label:'美妝\n美體',type:'shop'}, {label:'辛',type:'road'}, {label:'美妝\n美體',type:'shop'}, {label:'辛',type:'road'}, {label:'餐廳',type:'shop'}]
+                    ],
+                    northLabel:'北出入口', southLabel:'南出入口',
+                    westLabel:'西出入口', eastLabel:'東出入口'
+                };
+
+                this.dirQuestionsEasy = [
+                    {
+                        q: '小明站在 <strong>$A$ 路口</strong>，面朝<strong>南方</strong>，他的<strong>正前方</strong>會是哪一家商店？',
+                        choices: ['食品雜貨', '運動用品', '電器用品', '休閒用品'],
+                        ans: 0,
+                        explain: '$A$ 路口 $[1, 1]$ 正南方 $[2, 1]$ 即為「食品雜貨」商店。',
+                        person: [1,1], target: [2,1]
+                    },
+                    {
+                        q: '小華站在 <strong>$B$ 路口</strong>，面朝<strong>北方</strong>，他的<strong>正前方</strong>會是哪一家商店？',
+                        choices: ['餐廳', '電器用品', '運動用品', '食品雜貨'],
+                        ans: 2,
+                        explain: '$B$ 路口 $[1, 2]$ 正北方 $[0, 2]$ 即為「運動用品」商店。',
+                        person: [1,2], target: [0,2]
+                    },
+                    {
+                        q: '小美站在 <strong>$C$ 路口</strong>，面朝<strong>北方</strong>，她的<strong>右手邊</strong>（東邊）會是哪一家商店？',
+                        choices: ['休閒用品', '食品雜貨', '餐廳', '美妝美體'],
+                        ans: 0,
+                        explain: '$C$ 路口 $[2, 2]$ 正東方 $[2, 3]$ 即為「休閒用品」商店。',
+                        person: [2,2], target: [2,3]
+                    },
+                    {
+                        q: '小康站在 <strong>$C$ 路口</strong>，面朝<strong>北方</strong>，他的<strong>左手邊</strong>（西邊）會是哪一家商店？',
+                        choices: ['休閒用品', '食品雜貨', '運動用品', '電器用品'],
+                        ans: 1,
+                        explain: '$C$ 路口 $[2, 2]$ 正西方 $[2, 1]$ 即為「食品雜貨」商店。',
+                        person: [2,2], target: [2,1]
+                    },
+                    {
+                        q: '小東站在 <strong>$D$ 路口</strong>，面朝<strong>南方</strong>，他的<strong>正前方</strong>會是哪一家商店？',
+                        choices: ['美妝美體', '餐廳', '食品雜貨', '休閒用品'],
+                        ans: 0,
+                        explain: '$D$ 路口 $[3, 2]$ 正南方 $[4, 2]$ 即為「美妝美體」商店。',
+                        person: [3,2], target: [4,2]
+                    }
+                ];
+
+                this.dirQuestionsMedium = [
+                    {
+                        q: '小強從 <strong>$A$ 路口</strong>出發，往<strong>南方</strong>直走，在「食品雜貨」商店前向左轉（東方）直走一個路口，接著向右轉（南方）直走一個路口，並面朝<strong>南方</strong>。此時他的<strong>正前方</strong>是哪一家商店？',
+                        choices: ['美妝美體', '休閒用品', '食品雜貨', '餐廳'],
+                        ans: 0,
+                        explain: '沿著路線行走：$A[1,1] \\rightarrow$ 食品雜貨前 $[2,1] \\rightarrow$ 向東到 $C[2,2] \\rightarrow$ 向南到 $D[3,2]$，此時面朝南方，正前方即為 $D$ 正南方的「美妝美體」商店 $[4,2]$。',
+                        person: [3,2], target: [4,2]
+                    },
+                    {
+                        q: '小芳從 <strong>$B$ 路口</strong>出發，往<strong>西方</strong>直走一個路口，向右轉（北方）走到路口盡頭，此時她的<strong>右手邊</strong>（東邊）是哪一家商店？',
+                        choices: ['餐廳', '電器用品', '運動用品', '食品雜貨'],
+                        ans: 2,
+                        explain: '路線為：$B[1,2] \\rightarrow A[1,1] \\rightarrow$ 北向走到甲路口 $[0,1]$。面朝北方時，右手邊是東方，東側即為「運動用品」商店 $[0,2]$。',
+                        person: [0,1], target: [0,2]
+                    },
+                    {
+                        q: '小明站在 <strong>$C$ 路口</strong>，面朝<strong>南方</strong>。若他向後轉（面朝北方），接著向左轉（面朝西方）直走到底，此時他的<strong>正前方</strong>是哪一家商店？',
+                        choices: ['休閒用品', '食品雜貨', '餐廳', '美妝美體'],
+                        ans: 1,
+                        explain: '$C$ 路口 $[2, 2]$ 面南向後轉為面北，面北再左轉則為面西。面朝西方時，正前方即為西側的「食品雜貨」商店 $[2, 1]$。',
+                        person: [2,2], target: [2,1]
+                    },
+                    {
+                        q: '小紅從右邊的 <strong>辛路口</strong>出發，向<strong>北方</strong>直走一個路口，向左轉（西方）再直走一個路口，面朝<strong>西方</strong>。此時她的<strong>正前方</strong>是哪一個路口？',
+                        choices: ['庚路口', '戊路口', '丙路口', '丁路口'],
+                        ans: 0,
+                        explain: '路線為：右側辛路口 $[4,3] \\rightarrow$ 向北到己 $[3,3] \\rightarrow$ 向西走到 $D[3,2]$，此時面朝西方，正前方即為西側的「庚路口」 $[3,1]$。',
+                        person: [3,2], target: [3,1]
+                    },
+                    {
+                        q: '小芳從 <strong>$C$ 路口</strong>出發，往<strong>西方</strong>進入「食品雜貨」商店。在店內，她先向左轉（面朝南方）出店走到十字路口，接著向右轉（面朝西方）直走到底，此時她的<strong>右前方</strong>（西北方）是哪一家商店？',
+                        choices: ['休閒用品', '電器用品', '美妝美體', '餐廳'],
+                        ans: 0,
+                        explain: '路線為：$C[2,2] \\rightarrow$ 向西進入食品雜貨 $[2,1] \\rightarrow$ 向南出店到庚 $[3,1] \\rightarrow$ 向西走到 $[3,0]$。面西時，右前方（西北方）即為「休閒用品」商店 $[2,0]$。',
+                        person: [3,0], target: [2,0]
+                    }
+                ];
+
+                this.dirQuestionsHard = [
+                    {
+                        q: '小明站在 <strong>$A$ 路口</strong>，面朝<strong>南方</strong>。他先直走穿過「食品雜貨」，在十字路口向左轉（東方）直走一個路口，接著向右轉（南方）直走進入商店。此時，他面朝哪個方向？',
+                        choices: ['南方', '北方', '東方', '西方'],
+                        ans: 0,
+                        explain: '路線為：$A[1,1] \\rightarrow$ 食品雜貨 $[2,1] \\rightarrow$ 庚 $[3,1]$（面南）。向左轉（面東）走到 $D[3,2]$。在 $D$ 向右轉（面南）直走進入美妝美體 $[4,2]$，因此他最後面朝南方。',
+                        person: [4,2], target: [4,2]
+                    },
+                    {
+                        q: '有一位同學從左邊的 <strong>辛路口</strong>出發，面朝<strong>北方</strong>直走一個路口，向左轉（西方）走到道路盡頭，接著向右轉（北方）直走，他會直直撞上哪一家商店？',
+                        choices: ['電器用品', '休閒用品', '美妝美體', '餐廳'],
+                        ans: 0,
+                        explain: '路線為：左側辛 $[4,1] \\rightarrow$ 庚 $[3,1] \\rightarrow$ 向西到戊 $[3,0]$（面西）。向右轉（面北）直走，會沿著 col 0 這一直行往北，最終直直撞上 $[0,0]$ 的「電器用品」商店。',
+                        person: [3,0], target: [0,0]
+                    },
+                    {
+                        q: '小芳從 <strong>$C$ 路口</strong>出發，往<strong>北方</strong>直走一個路口，向右轉（東方）直走一個路口，再向右轉（南方）直走穿過「休閒用品」商店並走到道路底。請問她最後會停在右邊的哪一個路口？',
+                        choices: ['辛路口', '庚路口', '己路口', '丁路口'],
+                        ans: 0,
+                        explain: '路線為：$C[2,2] \\rightarrow B[1,2] \\rightarrow$ 向東到丁 $[1,3] \\rightarrow$ 向南直走，穿過休閒用品 $[2,3]$ 與己路口 $[3,3]$，最終會停在右側的辛路口 $[4,3]$。',
+                        person: [4,3], target: [4,3]
+                    },
+                    {
+                        q: '小華從 <strong>$C$ 路口</strong>出發，往<strong>西方</strong>進入「食品雜貨」商店。在店內，他先向左轉（面朝南方）出店走到十字路口，接著向右轉（面朝西方）直走到底，此時他的<strong>左手邊</strong>（南方）是哪一家商店？',
+                        choices: ['美妝美體', '電器用品', '休閒用品', '餐廳'],
+                        ans: 0,
+                        explain: '路線為：$C[2,2] \\rightarrow$ 向西進入食品雜貨 $[2,1] \\rightarrow$ 向南出店到庚 $[3,1] \\rightarrow$ 向西到戊 $[3,0]$（面西）。面西時，左手邊是南方，南側即為「美妝美體」商店 $[4,0]$。',
+                        person: [3,0], target: [4,0]
+                    },
+                    {
+                        q: '小強從 <strong>$B$ 路口</strong>出發，往<strong>南方</strong>直走一個路口，向左轉（東方）直走進入「休閒用品」商店。在店內，他向左轉（面朝北方）出店直走到十字路口，再向左轉（西方）直走。請問他最終會面向著哪一個路口？',
+                        choices: ['B 路口', 'A 路口', 'C 路口', 'D 路口'],
+                        ans: 0,
+                        explain: '路線為：$B[1,2] \\rightarrow C[2,2] \\rightarrow$ 向東進入休閒用品 $[2,3] \\rightarrow$ 向北出店到丁 $[1,3]$（面北）\\rightarrow$ 向左轉（面西）直走。此時他正面對著 $[1,2]$ 即為「$B$ 路口」。',
+                        person: [1,3], target: [1,2]
+                    }
+                ];
+
+                this.currentDirectionQuizState = null;
+                this.buildDirectionMap();
+                this.loadRandomDirectionQuestion();
+
+                // 綁定難度選擇按鈕
+                const dirDiffBtns = document.querySelectorAll('#direction-difficulty-container .grid-btn');
+                dirDiffBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        dirDiffBtns.forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.loadRandomDirectionQuestion();
+                    });
+                });
+
+                document.getElementById('btn-next-direction-q').addEventListener('click', () => {
+                    this.loadRandomDirectionQuestion();
+                });
+
+                document.getElementById('btn-direction-explain').addEventListener('click', () => {
+                    const el = document.getElementById('direction-explanation');
+                    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+
+            buildDirectionMap() {
+                const map = this.dirMap;
+                const container = document.getElementById('direction-map-container');
+                container.innerHTML = '';
+
+                // North label
+                const northRow = document.createElement('div');
+                northRow.className = 'dir-map-compass-row';
+                northRow.innerHTML = '⬆ 北 (North)';
+                container.appendChild(northRow);
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'dir-map-wrapper';
+
+                // West label
+                const westLbl = document.createElement('div');
+                westLbl.className = 'dir-map-side-label';
+                westLbl.innerHTML = '← 西';
+                wrapper.appendChild(westLbl);
+
+                // Grid
+                const grid = document.createElement('div');
+                grid.className = 'dir-map-grid';
+                grid.id = 'dir-map-grid';
+                grid.style.gridTemplateColumns = `repeat(${map.cols}, 1fr)`;
+
+                for (let r = 0; r < map.rows; r++) {
+                    for (let c = 0; c < map.cols; c++) {
+                        const cell = document.createElement('div');
+                        const def = map.cells[r][c];
+                        cell.className = `dir-map-cell ${def.type}`;
+                        cell.dataset.row = r;
+                        cell.dataset.col = c;
+                        cell.id = `dir-cell-${r}-${c}`;
+                        // Replace newlines with <br>
+                        cell.innerHTML = def.label.replace(/\n/g, '<br>');
+                        grid.appendChild(cell);
+                    }
+                }
+                wrapper.appendChild(grid);
+
+                // East label
+                const eastLbl = document.createElement('div');
+                eastLbl.className = 'dir-map-side-label';
+                eastLbl.innerHTML = '東 →';
+                wrapper.appendChild(eastLbl);
+
+                container.appendChild(wrapper);
+
+                // South label
+                const southRow = document.createElement('div');
+                southRow.className = 'dir-map-compass-row';
+                southRow.innerHTML = '⬇ 南 (South)';
+                container.appendChild(southRow);
+            }
+
+            highlightDirectionCells(personCell, targetCell) {
+                // 重置所有地圖格子的狀態。不提供位置以及正確答案標示！
+                const map = this.dirMap;
+                for (let r = 0; r < map.rows; r++) {
+                    for (let c = 0; c < map.cols; c++) {
+                        const el = document.getElementById(`dir-cell-${r}-${c}`);
+                        if (el) {
+                            el.classList.remove('highlight-person', 'highlight-target');
+                        }
+                    }
+                }
+            }
+
+            loadRandomDirectionQuestion() {
+                const diffBtn = document.querySelector('#direction-difficulty-container .grid-btn.active');
+                const diff = diffBtn ? diffBtn.dataset.diff : 'easy';
+                
+                let pool = this.dirQuestionsEasy;
+                let diffText = '基礎';
+                if (diff === 'medium') { pool = this.dirQuestionsMedium; diffText = '進階'; }
+                else if (diff === 'hard') { pool = this.dirQuestionsHard; diffText = '極限'; }
+
+                // 隨機選題 (Fully Random Pick)
+                const qIdx = Math.floor(Math.random() * pool.length);
+                const q = pool[qIdx];
+
+                // 隨機打亂選項 (Shuffle choices dynamically to keep it extremely random)
+                const correctText = q.choices[q.ans];
+                const shuffledChoices = [...q.choices];
+                for (let i = shuffledChoices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffledChoices[i], shuffledChoices[j]] = [shuffledChoices[j], shuffledChoices[i]];
+                }
+                const newCorrectIdx = shuffledChoices.indexOf(correctText);
+
+                // 暫存此題的動態隨機狀態
+                this.currentDirectionQuizState = {
+                    q: q,
+                    choices: shuffledChoices,
+                    correctAnsIdx: newCorrectIdx
+                };
+
+                const qTextEl = document.getElementById('direction-question-text');
+                qTextEl.innerHTML = `<strong>難度：${diffText}</strong><br>${q.q}`;
+                renderMath(qTextEl);
+
+                // 清除地圖高亮 (不提示所在位置)
+                this.highlightDirectionCells(null, null);
+
+                // 動態構建打亂後的選項按鈕
+                const choicesEl = document.getElementById('direction-choices');
+                choicesEl.innerHTML = '';
+                shuffledChoices.forEach((choice, i) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'dir-choice-btn';
+                    btn.textContent = choice;
+                    btn.addEventListener('click', () => this.submitDirectionAnswer(i));
+                    choicesEl.appendChild(btn);
+                });
+
+                // 重置答題反饋與詳解
+                const fb = document.getElementById('direction-feedback');
+                fb.style.display = 'none';
+                fb.className = 'quiz-feedback';
+                document.getElementById('btn-direction-explain').style.display = 'none';
+                const expEl = document.getElementById('direction-explanation');
+                expEl.style.display = 'none';
+                expEl.innerHTML = '';
+            }
+
+            submitDirectionAnswer(chosenIdx) {
+                if (!this.currentDirectionQuizState) return;
+                const state = this.currentDirectionQuizState;
+                const btns = document.querySelectorAll('#direction-choices .dir-choice-btn');
+                btns.forEach(b => b.disabled = true);
+
+                const fb = document.getElementById('direction-feedback');
+                fb.style.display = 'flex';
+                fb.className = 'quiz-feedback';
+
+                if (chosenIdx === state.correctAnsIdx) {
+                    btns[chosenIdx].classList.add('correct');
+                    fb.classList.add('success');
+                    fb.innerHTML = '🎉 答對了！方向感與推理邏輯完美無瑕！';
+                    triggerConfetti();
+                } else {
+                    btns[chosenIdx].classList.add('wrong');
+                    btns[state.correctAnsIdx].classList.add('correct');
+                    fb.classList.add('error');
+                    fb.innerHTML = `❌ 答錯了！正確答案是「${state.choices[state.correctAnsIdx]}」。`;
+                }
+
+                // 顯示詳解按鈕
+                const expBtn = document.getElementById('btn-direction-explain');
+                expBtn.style.display = 'flex';
+                const expEl = document.getElementById('direction-explanation');
+                expEl.innerHTML = `💡 ${state.q.explain}`;
+                renderMath(expEl);
+            }
+
+
+
+            // ==========================================
+            // TAB 3: HEIGHT NUMBER GRID SYNC
+            // ==========================================
+
+            renderHeightGridEditor() {
+                const N = this.scene3d.gridSize;
+                const container = document.getElementById('height-grid-layout-editor');
+                container.innerHTML = '';
+                container.style.gridTemplateColumns = `repeat(${N}, 1fr)`;
+
+                for (let z = 0; z < N; z++) {
+                    for (let x = 0; x < N; x++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'height-cell-editor';
+                        cell.id = `height-cell-${x}-${z}`;
+
+                        const num = document.createElement('span');
+                        num.className = 'height-cell-val';
+                        num.id = `height-val-${x}-${z}`;
+                        num.textContent = '0';
+
+                        const ctrl = document.createElement('div');
+                        ctrl.className = 'height-cell-controls';
+
+                        const btnMinus = document.createElement('button');
+                        btnMinus.className = 'height-cell-btn';
+                        btnMinus.textContent = '-';
+                        btnMinus.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            this.adjustHeightValue(x, z, -1);
+                        });
+
+                        const btnPlus = document.createElement('button');
+                        btnPlus.className = 'height-cell-btn';
+                        btnPlus.textContent = '+';
+                        btnPlus.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            this.adjustHeightValue(x, z, 1);
+                        });
+
+                        ctrl.appendChild(btnMinus);
+                        ctrl.appendChild(btnPlus);
+                        cell.appendChild(num);
+                        cell.appendChild(ctrl);
+
+                        cell.addEventListener('click', () => {
+                            this.adjustHeightValue(x, z, 1);
+                        });
+
+                        container.appendChild(cell);
+                    }
+                }
+
+                this.scene3d.notifyBlocksChanged();
+            }
+
+            adjustHeightValue(x, z, delta) {
+                const N = this.scene3d.gridSize;
+                const cellVal = document.getElementById(`height-val-${x}-${z}`);
+                if (!cellVal) return;
+
+                let cur = parseInt(cellVal.textContent);
+                let next = Math.max(0, Math.min(N, cur + delta));
+                if (next === cur) return;
+
+                for (let y = 0; y < N; y++) {
+                    const key = `${x},${y},${z}`;
+                    if (this.scene3d.blocks[key]) {
+                        this.scene3d.scene.remove(this.scene3d.blocks[key].mesh);
+                        this.scene3d.scene.remove(this.scene3d.blocks[key].wireframe);
+                        delete this.scene3d.blocks[key];
+                    }
+                }
+
+                for (let y = 0; y < next; y++) {
+                    this.scene3d.addBlock(x, y, z, 0xc5a86b, true);
+                }
+
+                this.scene3d.notifyBlocksChanged();
+            }
+
+            // ==========================================
+            // TAB 4: REVERSE CONSTRUCT FROM 3 VIEWS
+            // ==========================================
+            generateReversePuzzle() {
+                this.scene3d.clearAllBlocks();
+                const N = this.scene3d.gridSize;
+
+                const targetGrid = Array(N).fill(0).map(() => Array(N).fill(0));
+                for (let x = 0; x < N; x++) {
+                    for (let z = 0; z < N; z++) {
+                        if (Math.random() > 0.4) {
+                            targetGrid[x][z] = Math.floor(Math.random() * (N - 1)) + 1;
+                        }
+                    }
+                }
+
+                const targetMatrix = Array(N).fill(0).map(() => 
+                    Array(N).fill(0).map(() => 
+                        Array(N).fill(false)
+                    )
+                );
+                for (let x = 0; x < N; x++) {
+                    for (let z = 0; z < N; z++) {
+                        const h = targetGrid[x][z];
+                        for (let y = 0; y < h; y++) {
+                            targetMatrix[x][y][z] = true;
+                        }
+                    }
+                }
+
+                const targetTop = ProjectionEngine.getTopProjection(targetMatrix, N);
+                const targetFront = ProjectionEngine.getFrontProjection(targetMatrix, N);
+                const targetRight = ProjectionEngine.getRightProjection(targetMatrix, N);
+
+                this.reversePuzzle = {
+                    targetMatrix, targetTop, targetFront, targetRight
+                };
+
+                this.scene3d.clearAllBlocks();
+                this.renderPuzzleBlueprints('reverse-puzzle-blueprints', targetTop, targetFront, targetRight, N);
+                
+                document.querySelectorAll('#reverse-puzzle-blueprints .blueprint-box').forEach(box => {
+                    box.classList.add('target');
+                    box.querySelectorAll('.blueprint-cell.filled').forEach(c => {
+                        c.classList.remove('filled');
+                        c.classList.add('filled-target');
+                    });
+                });
+
+                document.getElementById('reverse-puzzle-area').style.display = 'flex';
+                document.getElementById('reverse-feedback').style.display = 'none';
+            }
+
+            validateReverseStructure() {
+                if (!this.reversePuzzle) return;
+                const N = this.scene3d.gridSize;
+
+                const curMatrix = this.scene3d.getBlocksMatrix();
+                const curTop = ProjectionEngine.getTopProjection(curMatrix, N);
+                const curFront = ProjectionEngine.getFrontProjection(curMatrix, N);
+                const curRight = ProjectionEngine.getRightProjection(curMatrix, N);
+
+                const topCorrect = ProjectionEngine.compareGrids(curTop, this.reversePuzzle.targetTop, N);
+                const frontCorrect = ProjectionEngine.compareGrids(curFront, this.reversePuzzle.targetFront, N);
+                const rightCorrect = ProjectionEngine.compareGrids(curRight, this.reversePuzzle.targetRight, N);
+
+                const fb = document.getElementById('reverse-feedback');
+                fb.style.display = 'flex';
+                fb.className = 'quiz-feedback';
+
+                if (topCorrect && frontCorrect && rightCorrect) {
+                    fb.classList.add('success');
+                    fb.innerHTML = '🎉 太棒了！你完美搭建出了符合這三視圖的立體結構！空間感十足！';
+                    triggerConfetti();
+                } else {
+                    fb.classList.add('error');
+                    let msg = '❌ 搭建的形狀有些投影跟目標不吻合喔，請檢查：';
+                    if (!topCorrect) msg += '<br>- 上視圖不正確';
+                    if (!frontCorrect) msg += '<br>- 前視圖不正確';
+                    if (!rightCorrect) msg += '<br>- 右視圖不正確';
+                    fb.innerHTML = msg;
+                }
+            }
+
+            showReverseSolution() {
+                if (!this.reversePuzzle) return;
+                const N = this.scene3d.gridSize;
+                
+                this.scene3d.clearAllBlocks();
+                for (let x = 0; x < N; x++) {
+                    for (let z = 0; z < N; z++) {
+                        for (let y = 0; y < N; y++) {
+                            if (this.reversePuzzle.targetMatrix[x][y][z]) {
+                                this.scene3d.addBlock(x, y, z, 0xd48a37, true); // Honey Bronze Gold cubes for reference answer
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ==========================================
+            // TAB 5: AUTOMATED QUIZ SYSTEM
+            // ==========================================
+            startQuizChallenge() {
+                this.scene3d.clearAllBlocks();
+                const N = this.scene3d.gridSize;
+                
+                const difficulty = document.querySelector('#quiz-difficulty-container .grid-btn.active').dataset.diff;
+                const lockViewChecked = document.getElementById('quiz-lock-view').checked;
+
+                const targetGrid = Array(N).fill(0).map(() => Array(N).fill(0));
+                
+                let activeProb = 0.5;
+                let maxH = N - 1;
+                
+                if (difficulty === 'easy') {
+                    activeProb = 0.35;
+                    maxH = 1;
+                } else if (difficulty === 'medium') {
+                    activeProb = 0.5;
+                    maxH = 2;
+                } else if (difficulty === 'hard') {
+                    activeProb = 0.65;
+                    maxH = N - 1;
+                }
+
+                // Helper: check if any block in the matrix is completely hidden
+                // (not visible from top, front, or right view using full line-of-sight checks)
+                const hasHiddenBlocks = (mat) => {
+                    for (let x = 0; x < N; x++) {
+                        for (let y = 0; y < N; y++) {
+                            for (let z = 0; z < N; z++) {
+                                if (!mat[x][y][z]) continue;
+                                
+                                // Check if covered from top (any block above it)
+                                let topCovered = false;
+                                for (let ny = y + 1; ny < N; ny++) {
+                                    if (mat[x][ny][z]) { topCovered = true; break; }
+                                }
+                                
+                                // Check if covered from front (any block in front of it, i.e. larger z)
+                                let frontCovered = false;
+                                for (let nz = z + 1; nz < N; nz++) {
+                                    if (mat[x][y][nz]) { frontCovered = true; break; }
+                                }
+                                
+                                // Check if covered from right (any block to the right of it, i.e. larger x)
+                                let rightCovered = false;
+                                for (let nx = x + 1; nx < N; nx++) {
+                                    if (mat[nx][y][z]) { rightCovered = true; break; }
+                                }
+                                
+                                if (topCovered && frontCovered && rightCovered) return true;
+                            }
+                        }
+                    }
+                    return false;
+                };
+
+                // Build blocks and verify — regenerate if hidden blocks found (max 20 attempts)
+                let attempts = 0;
+                let placed = false;
+                while (attempts < 20) {
+                    // Reset the grid for this attempt
+                    for (let x = 0; x < N; x++)
+                        for (let z = 0; z < N; z++)
+                            targetGrid[x][z] = 0;
+
+                    for (let x = 0; x < N; x++) {
+                        for (let z = 0; z < N; z++) {
+                            if (Math.random() < activeProb) {
+                                targetGrid[x][z] = Math.floor(Math.random() * maxH) + 1;
+                            }
+                        }
+                    }
+
+                    // Build a temporary matrix to test for hidden blocks
+                    const testMat = Array(N).fill(0).map(() =>
+                        Array(N).fill(0).map(() => Array(N).fill(false)));
+                    for (let x = 0; x < N; x++) {
+                        for (let z = 0; z < N; z++) {
+                            const h = targetGrid[x][z];
+                            for (let y = 0; y < h; y++) {
+                                testMat[x][y][z] = true;
+                            }
+                        }
+                    }
+
+                    if (!hasHiddenBlocks(testMat)) { placed = true; break; }
+                    attempts++;
+                }
+
+                // Fallback: if we couldn't find a clean config, use single-height columns (never hidden)
+                if (!placed) {
+                    for (let x = 0; x < N; x++)
+                        for (let z = 0; z < N; z++)
+                            targetGrid[x][z] = Math.random() < activeProb ? 1 : 0;
+                }
+
+                // Place the final blocks into the 3D scene
+                for (let x = 0; x < N; x++) {
+                    for (let z = 0; z < N; z++) {
+                        const h = targetGrid[x][z];
+                        for (let y = 0; y < h; y++) {
+                            this.scene3d.addBlock(x, y, z, 0xc5a86b, true);
+                        }
+                    }
+                }
+
+
+                const matrix = this.scene3d.getBlocksMatrix();
+                const topGrid = ProjectionEngine.getTopProjection(matrix, N);
+                const frontGrid = ProjectionEngine.getFrontProjection(matrix, N);
+                const rightGrid = ProjectionEngine.getRightProjection(matrix, N);
+
+                const views = ['前視圖 (Front)', '上視圖 (Top)', '右視圖 (Right)'];
+                const targetIdx = Math.floor(Math.random() * 3);
+                const targetViewName = views[targetIdx];
+                
+                let targetAnswerGrid;
+                if (targetIdx === 0) targetAnswerGrid = frontGrid;
+                else if (targetIdx === 1) targetAnswerGrid = topGrid;
+                else targetAnswerGrid = rightGrid;
+
+                this.quizPuzzle = {
+                    viewName: targetViewName,
+                    viewType: targetIdx === 0 ? 'front' : (targetIdx === 1 ? 'top' : 'right'),
+                    answerGrid: targetAnswerGrid,
+                    studentGrid: Array(N).fill(0).map(() => Array(N).fill(false))
+                };
+
+                this.quizInProgress = true;
+
+                // Hide the mini projections previews panel to prevent cheat!
+                document.getElementById('mini-projections-panel').style.display = 'none';
+
+                document.getElementById('quiz-session-area').style.display = 'flex';
+                document.getElementById('quiz-q-text').innerHTML = `請觀察左側 3D 積木，並在下方的 2D 畫布中點選畫出它的<strong>【${targetViewName}】</strong>。`;
+                document.getElementById('quiz-feedback').style.display = 'none';
+                document.getElementById('btn-quiz-explain').style.display = 'none';
+
+                this.initPaintGrid(N);
+
+                if (lockViewChecked) {
+                    this.scene3d.setViewLocked(true);
+                    this.scene3d.animateCameraTo('isometric');
+                } else {
+                    this.scene3d.setViewLocked(false);
+                }
+            }
+
+            initPaintGrid(N) {
+                const container = document.getElementById('paint-grid');
+                container.innerHTML = '';
+                container.style.gridTemplateColumns = `repeat(${N}, 1fr)`;
+
+                for (let r = 0; r < N; r++) {
+                    for (let c = 0; c < N; c++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'paint-cell';
+                        cell.id = `paint-cell-${c}-${r}`;
+                        
+                        cell.addEventListener('click', () => {
+                            cell.classList.toggle('filled');
+                            const isFilled = cell.classList.contains('filled');
+                            
+                            if (this.quizPuzzle.viewType === 'top') {
+                                this.quizPuzzle.studentGrid[c][r] = isFilled;
+                            } else {
+                                const y = (N - 1) - r;
+                                this.quizPuzzle.studentGrid[c][y] = isFilled;
+                            }
+                        });
+
+                        container.appendChild(cell);
+                    }
+                }
+            }
+
+            clearPaintGrid() {
+                const N = this.scene3d.gridSize;
+                document.querySelectorAll('.paint-cell').forEach(c => c.classList.remove('filled'));
+                this.quizPuzzle.studentGrid = Array(N).fill(0).map(() => Array(N).fill(false));
+            }
+
+            submitQuizAnswer() {
+                if (!this.quizPuzzle) return;
+                const N = this.scene3d.gridSize;
+
+                const isCorrect = ProjectionEngine.compareGrids(this.quizPuzzle.answerGrid, this.quizPuzzle.studentGrid, N);
+
+                const fb = document.getElementById('quiz-feedback');
+                fb.style.display = 'flex';
+                fb.className = 'quiz-feedback';
+
+                // Reveal mini previews panel after answering
+                document.getElementById('mini-projections-panel').style.display = 'flex';
+
+                if (isCorrect) {
+                    fb.classList.add('success');
+                    fb.innerHTML = '🎉 太棒了！答對了！你的三視圖空間能力是一流的！';
+                    
+                    this.scene3d.setViewLocked(false);
+                    document.getElementById('btn-quiz-explain').style.display = 'flex';
+                    triggerConfetti();
+                } else {
+                    fb.classList.add('error');
+                    fb.innerHTML = `❌ 哎呀，畫出來的【${this.quizPuzzle.viewName}】不太對喔！請再檢查一下高度和投影，或者點選下方「3D 轉向解析」學習！`;
+                    
+                    this.scene3d.setViewLocked(false);
+                    document.getElementById('btn-quiz-explain').style.display = 'flex';
+                }
+            }
+
+            explainQuiz3dRotation() {
+                if (!this.quizPuzzle) return;
+                this.scene3d.animateCameraTo(this.quizPuzzle.viewType);
+            }
+        }
+
+        // Initialize single-page app on load
+        window.addEventListener('DOMContentLoaded', () => {
+            window.appInstance = new App();
+        });
+    </script>
+        </div> <!-- Close main-content-wrapper -->
+    </div> <!-- Close immersive-layout -->
+</body>
+</html>

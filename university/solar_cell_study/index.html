@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>太陽能電池與光電量測原理教學網頁 - Obsidian 曜石金護眼美學</title>
+    
+    <!-- 引入 Obsidian 曜石金樣式 -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- 引入 MathJax 作為 LaTeX 公式渲染引擎 -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <!-- 引入 FontAwesome 圖示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- 側邊導航欄 -->
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="fa-solid fa-solar-panel brand-icon"></i>
+            <h2 class="brand-title">Solar<span>Cell</span></h2>
+        </div>
+        
+        <ul class="nav-menu">
+            <li class="nav-item active"><a href="#overview"><i class="fa-solid fa-house"></i> 課程概覽 & 考點整理</a></li>
+            <li class="nav-item"><a href="#iv-pce"><i class="fa-solid fa-chart-line"></i> 1. I-V 特性與 PCE 計算</a></li>
+            <li class="nav-item"><a href="#simulator"><i class="fa-solid fa-sun"></i> 2. 太陽模擬器 & AAA 標準</a></li>
+            <li class="nav-item"><a href="#eqe-theory"><i class="fa-solid fa-wave-square"></i> 3. 外量子效率 (EQE)</a></li>
+            <li class="nav-item"><a href="#hall-effect"><i class="fa-solid fa-magnet"></i> 4. 霍爾效應 & van der Pauw</a></li>
+            <li class="nav-item"><a href="#spectrometer"><i class="fa-solid fa-circle-nodes"></i> 5. FS5 螢光光譜與 PL/PLE</a></li>
+            <li class="nav-item"><a href="#lab-experiments"><i class="fa-solid fa-flask"></i> 五大實作實驗原理</a></li>
+            <li class="nav-item"><a href="#calculators"><i class="fa-solid fa-calculator"></i> 互動工具箱 (PCE/EQE/Hall)</a></li>
+            <li class="nav-item"><a href="#quiz-section"><i class="fa-solid fa-graduation-cap"></i> 考試模擬考場</a></li>
+        </ul>
+    </aside>
+    
+    <!-- 主內容區 -->
+    <main class="main-content">
+        
+        <!-- SECTION: 課程概覽 & 考點快速定位 -->
+        <section id="overview">
+            <h1 class="section-title"><i class="fa-solid fa-clipboard-list"></i> 課程概覽 & 期末考點整理</h1>
+            <div class="card">
+                <p>本教學網頁是針對太陽能電池原理、光電量測技術及實作實驗所設計的複習資源。版面採用 <strong>Obsidian 曜石金護眼美學</strong>，將繁雜的講義公式與實驗原理進行系統化整理，供MJ快速掌握考試重點。</p>
+                
+                <div class="alert">
+                    <div class="alert-title"><i class="fa-solid fa-triangle-exclamation"></i> 期末必考重点快速指南</div>
+                    <div class="alert-content">
+                        <ul>
+                            <li><strong>太陽光模擬器分級</strong>：IEC 60904-9:2020 的最新 AAA (A+A+A) 定義。</li>
+                            <li><strong>I-V 參數與 PCE 計算</strong>：開路電壓 $V_{OC}$、短路電流密度 $J_{SC}$、填充因子 $FF$ 及光電轉換效率 $\eta$ 的聯立公式與等效電路。</li>
+                            <li><strong>EQE / IPCE</strong>：外量子效率公式中 $1240$ 係數的物理來源，波長對應關係。</li>
+                            <li><strong>霍爾效應</strong>：以 van der Pauw 結構量測載子濃度與遷移率，以及霍爾電場 $E_H$ 的洛倫茲力平衡。</li>
+                            <li><strong>FS5 螢光光譜儀</strong>：PL 與 PLE 的物理意義與分光架構。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 1: I-V 特性與 PCE 計算 -->
+        <section id="iv-pce">
+            <h1 class="section-title"><i class="fa-solid fa-chart-line"></i> 1. 太陽能電池 I-V 特性與 PCE 計算</h1>
+            <div class="card">
+                <h3>光伏元件關鍵電氣參數</h3>
+                <p>太陽能電池本質上是一個照光產生光生電流的大面積 PN 接面。在電氣特性量測中，我們會使用 SourceMeter 掃描偏壓，得到電流密度-電壓 (J-V) 曲線，從中評估以下關鍵指標：</p>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>參數名稱</th>
+                                <th>符號</th>
+                                <th>定義與物理意義</th>
+                                <th>理想計算公式</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>開路電壓</td>
+                                <td>$V_{OC}$</td>
+                                <td>輸出電流為 0 時的兩端電壓。代表材料能隙對光生載子能階的分離能力。</td>
+                                <td>$V_{OC} = \frac{n k T}{q} \ln\left(\frac{I_{ph}}{I_0} + 1\right)$</td>
+                            </tr>
+                            <tr>
+                                <td>短路電流</td>
+                                <td>$I_{SC}$ ($J_{SC}$)</td>
+                                <td>輸出電壓為 0 時的電流（密度）。代表照光下材料吸收光子產生並收集到的載子數量。</td>
+                                <td>$I_{SC} \approx I_{ph}$</td>
+                            </tr>
+                            <tr>
+                                <td>填充因子</td>
+                                <td>$FF$</td>
+                                <td>最大輸出功率與 $V_{OC} \times I_{SC}$ 乘積之比值。代表 I-V 曲線的飽滿程度。</td>
+                                <td>$FF = \frac{V_{max} J_{max}}{V_{OC} J_{SC}} = \frac{P_{max}}{V_{OC} J_{SC}}$</td>
+                            </tr>
+                            <tr>
+                                <td>光電轉換效率</td>
+                                <td>$PCE$ ($\eta$)</td>
+                                <td>電池最大輸出功率與入射太陽光功率的比值。</td>
+                                <td>$\eta = \frac{P_{max}}{P_{in}} = \frac{V_{OC} J_{SC} FF}{P_{in}}$</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>等效電路與電阻影響</h3>
+                <p>實際的太陽能電池並非完美，通常使用包含單二極體、串聯電阻 $R_s$ 與並聯電阻 $R_{sh}$ 的等效電路來描述：</p>
+                <div class="formula-block">
+                    $$I = I_{01} \left( \exp\left( \frac{e(V - I R_s)}{n k T} \right) - 1 \right) - I_{ph} + \frac{V - I R_s}{R_{sh}}$$
+                </div>
+                
+                <div class="grid-2">
+                    <div class="card" style="margin-bottom: 0;">
+                        <span class="parameter-badge">串聯電阻 Rs</span>
+                        <p>主要來源於半導體體電阻、表面接觸電阻及金屬電極電阻。<strong>$R_s$ 越小越好</strong>。當 $R_s$ 增加時，$I-V$ 曲線右側斜率下降，主要損耗 $FF$ 與短路電流，進而降低轉換效率。</p>
+                    </div>
+                    <div class="card" style="margin-bottom: 0;">
+                        <span class="parameter-badge">並聯電阻 Rsh</span>
+                        <p>主要來源於 PN 接面邊緣漏電、微小缺陷造成的漏電通道。<strong>$R_{sh}$ 越大越好</strong>。當 $R_{sh}$ 下降時，大量光生電流發生旁路短路，$I-V$ 曲線左側斜率增加，顯著損耗 $V_{OC}$ 與 $FF$。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 2: 太陽模擬器與 AAA 標準 -->
+        <section id="simulator">
+            <h1 class="section-title"><i class="fa-solid fa-sun"></i> 2. 太陽模擬器與 IEC 60904-9:2020 AAA 標準</h1>
+            <div class="card">
+                <h3>大氣質量 (Air Mass, AM) 定義</h3>
+                <p>太陽輻射在穿過大氣層時，會受到大氣氣體、水氣及懸浮微粒的吸收與散射，導致光強衰減。<strong>Air Mass 係數</strong>定義了陽光直射穿過地球大氣層的相對光徑長度：</p>
+                <div class="formula-block">
+                    $$AM \approx \frac{1}{\cos\theta}$$
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--text-gold);">其中 $\theta$ 為太陽天頂角 (Zenith angle)</p>
+                </div>
+                
+                <ul>
+                    <li><strong>AM0</strong>：大氣層外的太陽光譜（輻照度約 $1300\text{ W/m}^2$），主要用於人造衛星與航太太陽能電池量測。</li>
+                    <li><strong>AM1</strong>：太陽直射頭頂（$\theta = 0^\circ$）穿過一倍大氣層（輻照度約 $925\text{ W/m}^2$），適用於赤道或熱帶地區。</li>
+                    <li><strong>AM1.5G</strong>：太陽天頂角 $\theta \approx 48.2^\circ$。其中「G」代表 Global（包含直射光與散射光）。<strong>光伏產業標準測試條件 (STC) 將其光強標準化為 $1000\text{ W/m}^2$ (或 $100\text{ mW/cm}^2$)</strong>，對應工作溫度 $25^\circ\text{C}$。</li>
+                </ul>
+
+                <h3>最新模擬器 AAA+ 標準分級 (IEC 60904-9:2020)</h3>
+                <p>太陽模擬器使用人工光源（如氙燈 Xenon Lamp，搭配光學濾鏡 AM1.5G filter）來模擬真實陽光。根據國際電工委員會最新標準，對模擬器之三個維度進行分級評價，由優至劣為 <strong>A+、A、B、C</strong> 級：</p>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>分級項目</th>
+                                <th>物理定義與說明</th>
+                                <th>A+ 等級要求</th>
+                                <th>A 等級要求</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1. 光譜匹配度<br>(Spectral Match)</strong></td>
+                                <td>模擬器輸出光譜與標準 AM1.5G 光譜在各波段的偏離程度。2020年新版新增 300nm-400nm 紫外線光譜評價（總區間擴展至 300-1200nm，分為 6 個波段）。</td>
+                                <td>各波段偏離度於<br><strong>0.875 ~ 1.125</strong> 之間</td>
+                                <td>各波段偏離度於<br><strong>0.75 ~ 1.25</strong> 之間</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2. 輻照均勻度<br>(Spatial Non-Uniformity)</strong></td>
+                                <td>照光有效工作區域內，不同空間位置的光強均勻性。此項是太陽模擬器設計中最具挑戰的工藝指標。</td>
+                                <td>不均勻度<br><strong>$\le 1\%$</strong></td>
+                                <td>不均勻度<br><strong>$\le 2\%$</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>3. 時間穩定度<br>(Temporal Instability)</strong></td>
+                                <td>照光強度隨時間變化的漂移量。分為短期穩定度 (STS，針對單次量測快閃) 與長期穩定度 (LTS，針對元件老化或耐久度測試)。</td>
+                                <td>時間不穩定度<br><strong>$\le 1\%$</strong></td>
+                                <td>時間不穩定度<br><strong>$\le 2\%$</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>例如，若一台模擬器的光譜匹配度為 A+、均勻度為 A、穩定度為 A+，則其評級為 <strong>A+AA+</strong> 模擬器。</p>
+            </div>
+        </section>
+        
+        <!-- SECTION 3: 外量子效率 (EQE) -->
+        <section id="eqe-theory">
+            <h1 class="section-title"><i class="fa-solid fa-wave-square"></i> 3. 外量子效率 (EQE / IPCE)</h1>
+            <div class="card">
+                <h3>EQE 與 IPCE 的物理定義</h3>
+                <p><strong>外量子效率 (External Quantum Efficiency, EQE)</strong>，又稱<strong>入射單色光光電轉換效率 (Incident Photon-to-Electron Conversion Efficiency, IPCE)</strong>，定義為：太陽能電池所收集到的電荷載子數與入射到元件表面特定波長 $\lambda$ 的單色光子數之比值。</p>
+                <div class="formula-block">
+                    $$EQE(\lambda) = \frac{\text{收集到的電荷載子流速}}{\text{入射的單色光子流速}} = \frac{I_{SC}(\lambda) / e}{P_{in}(\lambda) / h\nu}$$
+                </div>
+                
+                <h3>計算實用公式與 1240 係數來源</h3>
+                <p>在實際測試中，我們可以藉由記錄短路電流密度 $J_{SC}$（單位 $\text{A/cm}^2$ 或 $\text{mA/cm}^2$）與入射單色光功率密度 $P_{in}$（單位 $\text{W/cm}^2$ 或 $\text{mW/cm}^2$）來計算 EQE。將普朗克常數 $h$、光速 $c$ 及電子電荷 $e$ 代入，即可導出：</p>
+                <div class="formula-block">
+                    $$EQE(\lambda) = 1240 \times \frac{J_{SC} (\text{A/cm}^2)}{P_{in} (\text{W/cm}^2) \times \lambda (\text{nm})} = \frac{1240 \times J_{SC} (\text{mA/cm}^2)}{P_{in} (\text{mW/cm}^2) \times \lambda (\text{nm})}$$
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--text-gold);">
+                        ※ 物理常數推導關係：$\frac{h c}{e} \approx 1.2398 \times 10^{-6}\text{ V}\cdot\text{m} \approx 1240\text{ V}\cdot\text{nm}$
+                    </p>
+                </div>
+
+                <div class="alert warning">
+                    <div class="alert-title"><i class="fa-solid fa-lightbulb"></i> 考試觀念解析</div>
+                    <div class="alert-content">
+                        <ul>
+                            <li><strong>低於能隙能階</strong>：當入射光子能量 $h\nu$ 低於半導體材料的能隙 $E_g$ 時，光子無法激發電子-電洞對，此時該波段下的 $EQE = 0$。</li>
+                            <li><strong>EQE 與 IQE 的差異</strong>：EQE 包括了表面反射與透射的損失；而內量子效率 (IQE) 則是收集到的載子與實際「被吸收」的光子數之比。由於反射損耗，$EQE(\lambda) < IQE(\lambda)$。</li>
+                            <li><strong>單色儀 (Monochromator) 作用</strong>：量測 EQE 時，必須利用衍射光柵 (Diffraction Grating) 組成的單色儀，將氙燈等寬頻光源分解成單一波長（單色光）依次照射在樣品上。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 4: 霍爾效應與 van der Pauw 量測 -->
+        <section id="hall-effect">
+            <h1 class="section-title"><i class="fa-solid fa-magnet"></i> 4. 霍爾效應與 van der Pauw 量測</h1>
+            <div class="card">
+                <h3>霍爾效應物理原理與平衡方程式</h3>
+                <p>1879 年由 Edwin Hall 發現。當電流 $I$ 流過半導體樣品，且施加一個垂直於電流方向的外加磁場 $\mathbf{B}$ 時，運動中的電荷載子（速度 $\mathbf{v}$）會受到<strong>洛倫茲力 (Lorentz Force)</strong> 作用而發生橫向偏轉：</p>
+                <div class="formula-block">
+                    $$\mathbf{F} = q (\mathbf{E} + \mathbf{v} \times \mathbf{B})$$
+                </div>
+                <p>偏轉的電荷在樣品兩側累積，進而建立一個橫向電場，即<strong>霍爾電場 $E_H$</strong> (此處必須嚴格使用 KaTeX 格式：$E_H$)。當霍爾電場產生的靜電力與洛倫茲力達成平衡時：</p>
+                <div class="formula-block">
+                    $$q E_H = q v_x B_z \implies E_H = v_x B_z$$
+                </div>
+                <p>此時在橫向測得的穩態電壓差，即為<strong>霍爾電壓 (Hall Voltage, $V_H$)</strong>。藉由量測霍爾電壓，我們能取得材料的：載子類型 (n/p-type)、載子濃度 ($n$)、遷移率 ($\mu$) 及電導率 ($\sigma$)。</p>
+
+                <h3>van der Pauw 量測法</h3>
+                <p>1958 年由 Leo van der Pauw 提出。該方法只需在厚度均勻的扁平樣品邊緣製作 <strong>4 個微小歐姆接觸電極</strong>（常擺放於正方形的四個角），即可精確量測電阻率與霍爾電壓，不需要精準量測樣品的側向幾何尺寸。其條件包括：</p>
+                <ul>
+                    <li>電極位於樣品邊緣且足夠小。</li>
+                    <li>樣品厚度均勻、結構無孔洞（單連通）。</li>
+                </ul>
+
+                <div class="grid-2">
+                    <div class="card" style="margin-bottom: 0;">
+                        <span class="parameter-badge">電阻率與片電阻計算</span>
+                        <p>透過在相鄰電極注入電流並量測另一側電壓，獲得片電阻 $R_S$。滿足 van der Pauw 方程式：</p>
+                        <p>$$\exp\left(-\frac{\pi R_A}{R_S}\right) + \exp\left(-\frac{\pi R_B}{R_S}\right) = 1$$</p>
+                        <p>若樣品具備高度對稱性（如圓形或正方形，且電極均勻分佈），此時 $R_A = R_B$，片電阻可簡化為：</p>
+                        <p>$$R_S = \frac{\pi R_A}{\ln 2}$$</p>
+                        <p>體電阻率 $\rho = R_S \times t$ ($t$ 為樣品厚度)。</p>
+                    </div>
+                    <div class="card" style="margin-bottom: 0;">
+                        <span class="parameter-badge">霍爾載子濃度與遷移率</span>
+                        <p>在垂直磁場 $B$ 下，將電流自對角電極注入，並在另一組對角電極量測霍爾電壓。為了消除接觸熱電誤差，共需切換磁場極性與電流方向進行 <strong>8 次電壓量測</strong>，求出電壓差和 $V_{sum} = V_C + V_D + V_E + V_F$。</p>
+                        <p><strong>型態判定</strong>：若 $V_{sum} > 0$ 為 p-type；若 $V_{sum} < 0$ 為 n-type。</p>
+                        <p><strong>片載子濃度 ($n_s$)</strong>：</p>
+                        <p>$$n_s = \frac{8 \times 10^{-8} I B}{q \cdot |V_{sum}|} \text{ (cm}^{-2}\text{)}$$</p>
+                        <p>體載子濃度 $n = n_s / t$。</p>
+                        <p><strong>霍爾遷移率 ($\mu$)</strong>：</p>
+                        <p>$$\mu = \frac{1}{q \cdot n_s \cdot R_S} \text{ (cm}^2/\text{V}\cdot\text{s)}$$</p>
+                    </div>
+                </div>
+
+                <div class="alert error">
+                    <div class="alert-title"><i class="fa-solid fa-triangle-exclamation"></i> 實務量測防禦性設計</div>
+                    <div class="alert-content">
+                        <p>霍爾效應量測必須在<strong>黑暗環境下進行</strong>。因為光照產生的「光電效應」與「光伏效應」會激發出大量的非平衡光生電子-電洞對，這會人為抬高載子濃度，降低電阻率，造成材料本徵電性參數的嚴重測量誤差。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 5: FS5 螢光光譜與 PL/PLE -->
+        <section id="spectrometer">
+            <h1 class="section-title"><i class="fa-solid fa-circle-nodes"></i> 5. FS5 螢光光譜儀與 PL/PLE 原理</h1>
+            <div class="card">
+                <h3>FS5 激發光源分光原理</h3>
+                <p>在使用 FS5 螢光光譜儀 (Fluorescence Spectrometer) 進行樣品量測時，激發光源（如高功率氙燈）產生的是連續寬頻光譜。<strong>激發光必須先通過第一個單色儀 (Excitation Monochromator) 分光成特定波長的「單色光」後才能照射樣品</strong>。這是因為：</p>
+                <ul>
+                    <li>為了探測樣品在特定單一能量激發下的發光特性，避免其他雜散波長的光子直接混入發光檢測器中。</li>
+                    <li>可控制激發能量，精確研究樣品的帶對帶吸收、量子產率及激發能階響應。</li>
+                </ul>
+
+                <h3>PL (光致發光) 與 PLE (激發光譜) 的定義與差異</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>光譜類型</th>
+                                <th>英文全稱</th>
+                                <th>控制變數與操作方法</th>
+                                <th>量測結果與物理意義</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>PL 光譜</strong></td>
+                                <td>Photoluminescence</td>
+                                <td><strong>固定激發波長</strong> $\lambda_{exc}$，<br>掃描並量測不同發光波長 $\lambda_{em}$ 下的發光強度。</td>
+                                <td>顯示材料被激發後，載子複合輻射釋放出的<strong>發光能階分布</strong>（如能隙發光、缺陷發光）。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>PLE 光譜</strong></td>
+                                <td>Photoluminescence Excitation</td>
+                                <td><strong>固定發光波長</strong> $\lambda_{em}$（對準某個 PL 發光峰），<br>掃描並改變激發光波長 $\lambda_{exc}$，記錄該特定發光波長之強度變化。</td>
+                                <td>顯示<strong>哪些激發態能階</strong>參與並貢獻了該特定的發光發射。其形狀通常與樣品的吸收光譜非常相似。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Jablonski Diagram 能階衰減機制</h3>
+                <p>光激發過程中的電子躍遷與能階弛豫通常使用 Jablonski 圖表示：</p>
+                <ul>
+                    <li><strong>基態與激發態</strong>：基態 $S_0$，單重激發態 $S_1, S_2$，三重激發態 $T_1$。</li>
+                    <li><strong>螢光 (Fluorescence)</strong>：電子由單重激發態 $S_1$ 最低振動能階直接輻射躍遷回 $S_0$ 基態。過程極快，壽命通常在 <strong>$10^{-9} \sim 10^{-7}\text{ 秒 (ns 級)}$</strong>。</li>
+                    <li><strong>系際交叉 (Intersystem Crossing, ISC)</strong>：電子由單重態 $S_1$ 發生自旋反轉進入三重態 $T_1$ 的禁制躍遷過程。</li>
+                    <li><strong>磷光 (Phosphorescence)</strong>：電子由三重態 $T_1$ 緩慢輻射躍遷回 $S_0$ 基態。因屬於自旋禁制躍遷，其過程極慢，壽命通常在 <strong>$10^{-3} \sim 10\text{ 秒 (ms ~ s 級)}$</strong>。</li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- SECTION 6: 五大實作實驗原理 -->
+        <section id="lab-experiments">
+            <h1 class="section-title"><i class="fa-solid fa-flask"></i> 五大實作實驗原理與考點探討</h1>
+            
+            <div class="grid-2">
+                <!-- 實驗 1 -->
+                <div class="card">
+                    <span class="parameter-badge">實作實驗 1</span>
+                    <h3 style="margin-top: 0;">物理因子對 I-V 關係之影響</h3>
+                    <p>探討太陽能電池的面積、溫度、光源強度、波長濾光、受光角度對輸出 I-V 曲線的影響：</p>
+                    <ul style="color: var(--text-muted); font-size: 0.95rem; padding-left: 1.25rem;">
+                        <li><strong>面積</strong>：短路電流 $I_{SC}$ 與受光面積呈線性正比增加，但開路電壓 $V_{OC}$ 幾乎不變。</li>
+                        <li><strong>溫度</strong>：溫度上升時，能隙變窄，<strong>$V_{OC}$ 顯著下降</strong>（負溫度係數），而 $I_{SC}$ 略微增加，但整體效率 PCE 下降。</li>
+                        <li><strong>光源強度</strong>：光強增加使光生載子成比例增多，<strong>$I_{SC}$ 線性增加</strong>，而 $V_{OC}$ 對數微增。</li>
+                        <li><strong>波長濾光</strong>：高於截止波長（能量小於能隙 $h\nu < E_g$）的光不被吸收。短波長光雖然吸收，但高能量會產生嚴重的熱化損失。</li>
+                        <li><strong>受光角度</strong>：入射光強度正比於 $\cos\theta$，因此 $I_{SC}$ 隨入射角的餘弦值而降低（早晚受光差，正午最好）。</li>
+                    </ul>
+                </div>
+                
+                <!-- 實驗 2 -->
+                <div class="card">
+                    <span class="parameter-badge">實作實驗 2</span>
+                    <h3 style="margin-top: 0;">單片/串聯/並聯之遮蔽效應</h3>
+                    <p>當太陽能電池板局部被陰影遮蔽時的電路效應與防護：</p>
+                    <ul style="color: var(--text-muted); font-size: 0.95rem; padding-left: 1.25rem;">
+                        <li><strong>單片遮蔽與熱點效應 (Hot Spot)</strong>：被遮蔽部分不產電，反而變成負載消耗功率，在高電流下會局部劇烈發熱燒毀元件。</li>
+                        <li><strong>串聯模組遮蔽與旁路二極體 (Bypass Diode)</strong>：串聯時電流由最弱的一片決定。遮蔽會使整串電流歸零。防護方法是<strong>並聯旁路二極體</strong>，被遮蔽時二極體導通讓電流繞過，避免整串斷流。</li>
+                        <li><strong>並聯模組遮蔽與阻斷二極體 (Blocking Diode)</strong>：並聯時各串電壓相同。當某串因遮蔽導致電壓降低時，其他串會將電流倒灌入該串。防護方法是<strong>串聯防反/阻斷二極體</strong>，防止反向倒灌電流。</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <!-- 實驗 3 -->
+                <div class="card">
+                    <span class="parameter-badge">實作實驗 3</span>
+                    <h3 style="margin-top: 0;">充電與驅動應用控制</h3>
+                    <p>太陽能板對蓄電池充電並驅動負載的實務系統：</p>
+                    <ul style="color: var(--text-muted); font-size: 0.95rem; padding-left: 1.25rem;">
+                        <li><strong>不穩定電源管理</strong>：太陽能板輸出電壓隨光強劇烈變動，必須經過充電控制器進行穩壓，以防止蓄電池過充而損壞。</li>
+                        <li><strong>防夜間逆向放電</strong>：夜間無光時，蓄電池電壓高於太陽能板，電流會反灌回太陽能板漏電。必須在充電迴路中串聯一隻<strong>阻斷二極體</strong>。</li>
+                        <li><strong>負載控制與光敏偵測</strong>：利用光敏電阻阻值隨光強改變，或監測太陽能板 Voc 電壓，判斷白天或黑夜，從而自動開啟夜間照明 LED 燈或驅動馬達。</li>
+                    </ul>
+                </div>
+                
+                <!-- 實驗 4 -->
+                <div class="card">
+                    <span class="parameter-badge">實作實驗 4</span>
+                    <h3 style="margin-top: 0;">雙軸太陽光追蹤電路</h3>
+                    <p>使太陽能板能隨時直對陽光的自動化控制系統：</p>
+                    <ul style="color: var(--text-muted); font-size: 0.95rem; padding-left: 1.25rem;">
+                        <li><strong>光感測定位</strong>：對稱放置兩組（或四組）光敏電阻 (LDR)，中間以隔板隔開。</li>
+                        <li><strong>電橋比較器</strong>：當太陽偏移時，隔板陰影使兩側 LDR 照光不均勻，阻值產生電位差。由運算放大器 (Op-Amp) 構成的比較器放大此電壓差。</li>
+                        <li><strong>馬達伺服驅動</strong>：比較器輸出信號驅動伺服馬達轉動，直到兩側 LDR 重新均勻照光（電壓差歸零），使太陽能板始終保持與太陽光垂直（受光天頂角 $\theta = 0^\circ$），最大化功率輸出。</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card">
+                <span class="parameter-badge">實作實驗 5</span>
+                <h3>門多西諾電機 (Mendocino Motor) 原理</h3>
+                <p><strong>門多西諾電機</strong>是一種純光能驅動的磁懸浮無刷直流電機：</p>
+                <div class="grid-2" style="margin-top: 1rem;">
+                    <div>
+                        <p><strong>1. 磁懸浮系統（零摩擦力）：</strong></p>
+                        <p>轉子兩端及底座配置互相排斥的永久磁鐵，利用磁力將整根轉子懸浮在空中，僅有一個定位軸尖做點狀接觸。這極大地消除了機械摩擦阻力，使得微弱的光能轉矩便能驅動電機旋轉。</p>
+                    </div>
+                    <div>
+                        <p><strong>2. 光電安培力換向機制：</strong></p>
+                        <p>轉子四周貼有 4 片太陽能電池板，並與內部的電磁線圈相連。當外部光源照在最上方的太陽能板時，它產生光電流並輸入垂直於底座磁場的線圈中，線圈受到磁場的<strong>安培力作用</strong>產生轉矩：</p>
+                        <p>$$F = I L B$$</p>
+                        <p>轉子隨之轉動，原本照光的面板轉開，下一片面板轉到上方接替照光導電，形成自動無刷換向，維持持續旋轉。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 7: 互動工具箱 -->
+        <section id="calculators">
+            <h1 class="section-title"><i class="fa-solid fa-calculator"></i> 互動工具箱 (PCE / EQE / Hall 計算)</h1>
+            
+            <!-- 計算機 1: PCE & IV -->
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-chart-area"></i> 太陽能電池 PCE & IV 曲線計算機</div>
+                <div class="calc-grid">
+                    <div>
+                        <div class="input-group">
+                            <label>開路電壓 $V_{OC}$ (V)</label>
+                            <input type="number" id="pce-voc" value="0.80" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label>短路電流密度 $J_{SC}$ (mA/cm²)</label>
+                            <input type="number" id="pce-jsc" value="22.0" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>最大功率點電壓 $V_{mp}$ (V)</label>
+                            <input type="number" id="pce-vmp" value="0.66" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label>最大功率點電流密度 $J_{mp}$ (mA/cm²)</label>
+                            <input type="number" id="pce-jmp" value="19.5" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>入射光強 $P_{in}$ (mW/cm²，標準太陽為 100)</label>
+                            <input type="number" id="pce-pin" value="100.0" step="1">
+                        </div>
+                        <button class="btn-primary" id="pce-calc-btn">計算並繪製 I-V 曲線</button>
+                    </div>
+                    
+                    <div class="calc-result">
+                        <div class="canvas-wrapper">
+                            <canvas id="iv-canvas"></canvas>
+                        </div>
+                        <div style="margin-top: 1.5rem;">
+                            <div class="result-item">
+                                <span>填充因子 (Fill Factor, FF)</span>
+                                <span class="result-val" id="res-ff">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span>最大輸出功率 ($P_{max}$)</span>
+                                <span class="result-val" id="res-pmax">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span>光電轉換效率 (PCE, $\eta$)</span>
+                                <span class="result-val" id="res-pce" style="font-size: 1.25rem;">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <!-- 計算機 2: EQE -->
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-title"><i class="fa-solid fa-bolt"></i> 單色光 EQE / IPCE 計算機</div>
+                    <div class="input-group">
+                        <label>短路電流密度 $J_{SC}$ (mA/cm²)</label>
+                        <input type="number" id="eqe-jsc" value="0.045" step="0.001">
+                    </div>
+                    <div class="input-group">
+                        <label>入射單色光功率 $P_{in}$ (mW/cm²)</label>
+                        <input type="number" id="eqe-pin" value="0.12" step="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label>單色光波長 $\lambda$ (nm)</label>
+                        <input type="number" id="eqe-wl" value="550" step="1">
+                    </div>
+                    <button class="btn-primary" id="eqe-calc-btn" style="margin-bottom: 1.5rem;">計算外量子效率</button>
+                    
+                    <div class="calc-result">
+                        <div class="result-item">
+                            <span>外量子效率 (EQE / IPCE)</span>
+                            <span class="result-val" id="res-eqe" style="font-size: 1.2rem; color: #10b981;">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 計算機 3: Hall Effect -->
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-title"><i class="fa-solid fa-circle-dot"></i> van der Pauw 霍爾效應計算機</div>
+                    <div class="input-group">
+                        <label>恆定輸入電流 $I$ (A)</label>
+                        <input type="number" id="hall-current" value="0.001" step="0.0001">
+                    </div>
+                    <div class="input-group">
+                        <label>垂直外加磁場 $B$ (Gauss)</label>
+                        <input type="number" id="hall-field" value="5000" step="100">
+                    </div>
+                    <div class="input-group">
+                        <label>霍爾電壓和 $V_{sum} = V_C+V_D+V_E+V_F$ (V)</label>
+                        <input type="number" id="hall-vsum" value="0.062" step="0.001">
+                    </div>
+                    <div class="input-group">
+                        <label>樣品薄膜厚度 $t$ (nm)</label>
+                        <input type="number" id="hall-thick" value="80" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label>van der Pauw 片電阻 $R_S$ ($\Omega/\text{sq}$)</label>
+                        <input type="number" id="hall-rs" value="450" step="10">
+                    </div>
+                    <button class="btn-primary" id="hall-calc-btn" style="margin-bottom: 1.5rem;">計算電性參數</button>
+                    
+                    <div class="calc-result">
+                        <div class="result-item">
+                            <span>導電載子型態 (Type)</span>
+                            <span class="result-val" id="res-hall-type">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span>片載子密度 ($n_s$ 或 $p_s$)</span>
+                            <span class="result-val" id="res-hall-density-sheet">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span>體載子密度 ($n$ 或 $p$)</span>
+                            <span class="result-val" id="res-hall-density-bulk">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span>霍爾遷移率 ($\mu$)</span>
+                            <span class="result-val" id="res-hall-mobility">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 8: 模擬考場 -->
+        <section id="quiz-section">
+            <h1 class="section-title"><i class="fa-solid fa-graduation-cap"></i> 考試模擬考場 (Interactive Test)</h1>
+            <div class="card">
+                <div class="quiz-container">
+                    <div id="quiz-main-view">
+                        <div class="quiz-progress">
+                            <span id="quiz-progress-text">第 1 題 / 共 10 題</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="progress-fill"></div>
+                        </div>
+                        
+                        <div class="quiz-question" id="question-text">
+                            載入題目中...
+                        </div>
+                        
+                        <div class="quiz-options" id="options-container">
+                            <!-- JS 動態插入選項 -->
+                        </div>
+                        
+                        <!-- 答案解析回饋 -->
+                        <div class="quiz-feedback" id="feedback-box">
+                            <div class="quiz-feedback-title" id="feedback-title">回答正確！</div>
+                            <div id="feedback-text" style="color: var(--text-muted); font-size: 0.95rem;">
+                                解析載入中...
+                            </div>
+                        </div>
+                        
+                        <div class="quiz-nav-row">
+                            <span></span> <!-- 佔位符 -->
+                            <button class="btn-primary" id="quiz-next-btn" style="width: auto; min-width: 140px;" disabled>送出答案</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 測驗結果畫面 -->
+                    <div id="quiz-result-view" class="quiz-result-view" style="display: none;">
+                        <div class="quiz-score-circle">
+                            <span class="score-num" id="final-score">0</span>
+                            <span class="score-lbl">分</span>
+                        </div>
+                        <h3>測驗結束！</h3>
+                        <p style="margin-bottom: 2rem;">這套模擬考題涵蓋了所有大氣質量 AM、模擬器 AAA、PCE、EQE、霍爾效應與實作實驗核心考點。反覆練習能顯著加深記憶！</p>
+                        <button class="btn-primary" id="quiz-restart-btn" style="width: auto; padding: 0.75rem 2rem;">重新測驗</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+</div>
+
+<!-- 載入互動邏輯 -->
+<script src="app.js"></script>
+</body>
+</html>
