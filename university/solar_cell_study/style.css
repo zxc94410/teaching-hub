@@ -491,6 +491,39 @@ code {
 }
 
 /* ==========================================================================
+   講義圖片樣式
+   ========================================================================== */
+.theory-img-container {
+    text-align: center;
+    margin: 2rem 0;
+    padding: 0.5rem;
+}
+
+.theory-img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--gold-border);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+    background: rgba(13, 15, 23, 0.5);
+    padding: 0.6rem;
+    transition: var(--transition-smooth);
+}
+
+.theory-img:hover {
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 20px rgba(197, 168, 107, 0.2);
+    transform: scale(1.01);
+}
+
+.img-caption {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.75rem;
+    font-weight: 500;
+}
+
+/* ==========================================================================
    模擬測驗面板 (Quiz System)
    ========================================================================== */
 .quiz-container {

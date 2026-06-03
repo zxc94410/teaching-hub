@@ -123,6 +123,10 @@
 
                 <h3>等效電路與電阻影響</h3>
                 <p>實際的太陽能電池並非完美，通常使用包含單二極體、串聯電阻 $R_s$ 與並聯電阻 $R_{sh}$ 的等效電路來描述：</p>
+                <div class="theory-img-container">
+                    <img src="images/講義___SC__SS_p12_img5.jpeg" alt="太陽能電池單二極體等效電路圖" class="theory-img" style="max-width: 600px;">
+                    <div class="img-caption">圖 1.1 太陽能電池單二極體等效電路模型 (取自講義 p12)</div>
+                </div>
                 <div class="formula-block">
                     $$I = I_{01} \left( \exp\left( \frac{e(V - I R_s)}{n k T} \right) - 1 \right) - I_{ph} + \frac{V - I R_s}{R_{sh}}$$
                 </div>
@@ -146,6 +150,10 @@
             <div class="card">
                 <h3>大氣質量 (Air Mass, AM) 定義</h3>
                 <p>太陽輻射在穿過大氣層時，會受到大氣氣體、水氣及懸浮微粒的吸收與散射，導致光強衰減。<strong>Air Mass 係數</strong>定義了陽光直射穿過地球大氣層的相對光徑長度：</p>
+                <div class="theory-img-container">
+                    <img src="images/講義___SC__SS_p4_img6.jpeg" alt="大氣質量幾何定義與天頂角關係" class="theory-img" style="max-width: 500px;">
+                    <div class="img-caption">圖 2.1 大氣質量幾何定義與太陽天頂角 $\theta$ 之相對關係 (取自講義 p4)</div>
+                </div>
                 <div class="formula-block">
                     $$AM \approx \frac{1}{\cos\theta}$$
                     <p style="margin-top: 10px; font-size: 0.9rem; color: var(--text-gold);">其中 $\theta$ 為太陽天頂角 (Zenith angle)</p>
@@ -192,6 +200,10 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="theory-img-container">
+                    <img src="images/講義___SC__SS_p8_img3.jpeg" alt="IEC 60904-9:2020 模擬器分級波段" class="theory-img" style="max-width: 550px;">
+                    <div class="img-caption">圖 2.2 IEC 60904-9:2020 模擬器光譜評價的六個波段與分級標準 (取自講義 p8)</div>
+                </div>
                 <p>例如，若一台模擬器的光譜匹配度為 A+、均勻度為 A、穩定度為 A+，則其評級為 <strong>A+AA+</strong> 模擬器。</p>
             </div>
         </section>
@@ -234,6 +246,10 @@
             <div class="card">
                 <h3>霍爾效應物理原理與平衡方程式</h3>
                 <p>1879 年由 Edwin Hall 發現。當電流 $I$ 流過半導體樣品，且施加一個垂直於電流方向的外加磁場 $\mathbf{B}$ 時，運動中的電荷載子（速度 $\mathbf{v}$）會受到<strong>洛倫茲力 (Lorentz Force)</strong> 作用而發生橫向偏轉：</p>
+                <div class="theory-img-container">
+                    <img src="images/講義__Hall_p2_img21.jpeg" alt="霍爾效應中電荷偏轉與橫向霍爾電場 $E_H$ 建立原理" class="theory-img" style="max-width: 500px;">
+                    <div class="img-caption">圖 4.1 霍爾效應中電荷偏轉與橫向霍爾電場 $E_H$ 建立原理 (取自講義 p2)</div>
+                </div>
                 <div class="formula-block">
                     $$\mathbf{F} = q (\mathbf{E} + \mathbf{v} \times \mathbf{B})$$
                 </div>
@@ -245,6 +261,10 @@
 
                 <h3>van der Pauw 量測法</h3>
                 <p>1958 年由 Leo van der Pauw 提出。該方法只需在厚度均勻的扁平樣品邊緣製作 <strong>4 個微小歐姆接觸電極</strong>（常擺放於正方形的四個角），即可精確量測電阻率與霍爾電壓，不需要精準量測樣品的側向幾何尺寸。其條件包括：</p>
+                <div class="theory-img-container">
+                    <img src="images/講義__Hall_p8_img4.jpeg" alt="van der Pauw 電阻與霍爾量測接線配置" class="theory-img" style="max-width: 500px;">
+                    <div class="img-caption">圖 4.2 van der Pauw 對稱樣品與四電極量測接線配置 (取自講義 p8)</div>
+                </div>
                 <ul>
                     <li>電極位於樣品邊緣且足夠小。</li>
                     <li>樣品厚度均勻、結構無孔洞（單連通）。</li>
@@ -286,6 +306,10 @@
             <div class="card">
                 <h3>FS5 激發光源分光原理</h3>
                 <p>在使用 FS5 螢光光譜儀 (Fluorescence Spectrometer) 進行樣品量測時，激發光源（如高功率氙燈）產生的是連續寬頻光譜。<strong>激發光必須先通過第一個單色儀 (Excitation Monochromator) 分光成特定波長的「單色光」後才能照射樣品</strong>。這是因為：</p>
+                <div class="theory-img-container">
+                    <img src="images/講義___spectrometer_p2_img3.jpeg" alt="FS5 螢光光譜儀雙單色儀光路路徑" class="theory-img" style="max-width: 600px;">
+                    <div class="img-caption">圖 5.1 FS5 雙單色儀 (Excitation / Emission Monochromator) 光路結構 (取自講義 p2)</div>
+                </div>
                 <ul>
                     <li>為了探測樣品在特定單一能量激發下的發光特性，避免其他雜散波長的光子直接混入發光檢測器中。</li>
                     <li>可控制激發能量，精確研究樣品的帶對帶吸收、量子產率及激發能階響應。</li>
@@ -321,6 +345,10 @@
 
                 <h3>Jablonski Diagram 能階衰減機制</h3>
                 <p>光激發過程中的電子躍遷與能階弛豫通常使用 Jablonski 圖表示：</p>
+                <div class="theory-img-container">
+                    <img src="images/講義___spectrometer_p4_img4.jpeg" alt="Jablonski Diagram 能階弛豫機制與生命週期時間尺度" class="theory-img" style="max-width: 500px;">
+                    <div class="img-caption">圖 5.2 雅布隆斯基能階圖與螢光、系際交叉 (ISC) 及磷光衰減時間尺度 (取自講義 p4)</div>
+                </div>
                 <ul>
                     <li><strong>基態與激發態</strong>：基態 $S_0$，單重激發態 $S_1, S_2$，三重激發態 $T_1$。</li>
                     <li><strong>螢光 (Fluorescence)</strong>：電子由單重激發態 $S_1$ 最低振動能階直接輻射躍遷回 $S_0$ 基態。過程極快，壽命通常在 <strong>$10^{-9} \sim 10^{-7}\text{ 秒 (ns 級)}$</strong>。</li>
