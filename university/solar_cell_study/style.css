@@ -508,6 +508,29 @@ code {
     text-align: center;
     margin: 2rem 0;
     padding: 0.5rem;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 曜石金滾動條 (為圖片/表格滾動條美化) */
+.theory-img-container::-webkit-scrollbar,
+.table-container::-webkit-scrollbar,
+.formula-block::-webkit-scrollbar {
+    height: 6px;
+}
+
+.theory-img-container::-webkit-scrollbar-thumb,
+.table-container::-webkit-scrollbar-thumb,
+.formula-block::-webkit-scrollbar-thumb {
+    background: rgba(197, 168, 107, 0.2);
+    border-radius: 3px;
+}
+
+.theory-img-container::-webkit-scrollbar-thumb:hover,
+.table-container::-webkit-scrollbar-thumb:hover,
+.formula-block::-webkit-scrollbar-thumb:hover {
+    background: var(--gold-primary);
 }
 
 .theory-img {
