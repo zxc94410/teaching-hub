@@ -1054,4 +1054,76 @@ code {
     user-select: none;
 }
 
+/* ==========================================================================
+   曜石金客製化 Range Slider 樣式
+   ========================================================================== */
+.input-group input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: rgba(197, 168, 107, 0.15);
+    border-radius: 3px;
+    outline: none;
+    margin: 10px 0;
+    transition: var(--transition-smooth);
+    border: none;
+    padding: 0;
+}
+
+.input-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gold-primary);
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--gold-glow);
+    transition: var(--transition-smooth);
+}
+
+.input-group input[type="range"]::-webkit-slider-thumb:hover {
+    background: #e2c589;
+    transform: scale(1.15);
+    box-shadow: 0 0 15px rgba(197, 168, 107, 0.6);
+}
+
+.input-group input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gold-primary);
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--gold-glow);
+    transition: var(--transition-smooth);
+    border: none;
+}
+
+.input-group input[type="range"]::-moz-range-thumb:hover {
+    background: #e2c589;
+    transform: scale(1.15);
+    box-shadow: 0 0 15px rgba(197, 168, 107, 0.6);
+}
+
+.slider-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.slider-label-row label {
+    margin-bottom: 0;
+    display: inline-block;
+}
+
+.slider-value {
+    font-family: var(--font-mono);
+    color: var(--text-gold);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+
 

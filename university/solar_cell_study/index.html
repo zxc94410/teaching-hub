@@ -6,7 +6,7 @@
     <title>太陽能電池與光電量測原理教學網頁 - Obsidian 曜石金護眼美學</title>
     
     <!-- 引入 Obsidian 曜石金樣式 (加上版本號以強制更新快取) -->
-    <link rel="stylesheet" href="style.css?v=1.0.7">
+    <link rel="stylesheet" href="style.css?v=1.0.8">
     
     <!-- 引入 MathJax 作為 LaTeX 公式渲染引擎 -->
     <script>
@@ -465,30 +465,45 @@
                 <div class="calc-grid">
                     <div>
                         <div class="input-group">
-                            <label>開路電壓 $V_{OC}$ (V)</label>
-                            <input type="number" id="pce-voc" value="0.80" step="0.01">
+                            <div class="slider-label-row">
+                                <label>開路電壓 $V_{OC}$ (V)</label>
+                                <span class="slider-value" id="pce-voc-val">0.80 V</span>
+                            </div>
+                            <input type="range" id="pce-voc" min="0.30" max="1.50" step="0.01" value="0.80">
                         </div>
                         <div class="input-group">
-                            <label>短路電流密度 $J_{SC}$ (mA/cm²)</label>
-                            <input type="number" id="pce-jsc" value="22.0" step="0.1">
+                            <div class="slider-label-row">
+                                <label>短路電流密度 $J_{SC}$ (mA/cm²)</label>
+                                <span class="slider-value" id="pce-jsc-val">22.0 mA/cm²</span>
+                            </div>
+                            <input type="range" id="pce-jsc" min="5.0" max="40.0" step="0.1" value="22.0">
                         </div>
                         <div class="input-group">
-                            <label>最大功率點電壓 $V_{mp}$ (V)</label>
-                            <input type="number" id="pce-vmp" value="0.66" step="0.01">
+                            <div class="slider-label-row">
+                                <label>最大功率點電壓 $V_{mp}$ (V)</label>
+                                <span class="slider-value" id="pce-vmp-val">0.66 V</span>
+                            </div>
+                            <input type="range" id="pce-vmp" min="0.20" max="1.40" step="0.01" value="0.66">
                         </div>
                         <div class="input-group">
-                            <label>最大功率點電流密度 $J_{mp}$ (mA/cm²)</label>
-                            <input type="number" id="pce-jmp" value="19.5" step="0.1">
+                            <div class="slider-label-row">
+                                <label>最大功率點電流密度 $J_{mp}$ (mA/cm²)</label>
+                                <span class="slider-value" id="pce-jmp-val">19.5 mA/cm²</span>
+                            </div>
+                            <input type="range" id="pce-jmp" min="4.0" max="38.0" step="0.1" value="19.5">
                         </div>
                         <div class="input-group">
-                            <label>入射光強 $P_{in}$ (mW/cm²，標準太陽為 100)</label>
-                            <input type="number" id="pce-pin" value="100.0" step="1">
+                            <div class="slider-label-row">
+                                <label>入射光強 $P_{in}$ (mW/cm²)</label>
+                                <span class="slider-value" id="pce-pin-val">100.0 mW/cm²</span>
+                            </div>
+                            <input type="range" id="pce-pin" min="10.0" max="200.0" step="1.0" value="100.0">
                         </div>
-                        <button class="btn-primary" id="pce-calc-btn">計算並繪製 I-V 曲線</button>
+                        <button class="btn-primary" id="pce-reset-btn" style="margin-top: 0.5rem; background: rgba(255, 255, 255, 0.05); color: var(--gold-primary); border: 1px solid var(--gold-border);">重置為標準值</button>
                         
                         <!-- 搭配等效電路圖片進行演示 -->
                         <div class="theory-img-container" style="margin: 1.5rem 0 0 0; padding: 0;">
-                            <img src="images/講義___SC__SS_p12_img5.jpeg" alt="太陽能電池等效電路圖" class="theory-img" style="max-height: 100px; width: auto; min-width: auto; padding: 4px;">
+                            <img src="images/講義___SC__SS_p12_img5.jpeg" alt="太陽能電池等效電路圖" class="theory-img" style="max-height: 80px; width: auto; min-width: auto; padding: 4px;">
                             <div class="img-caption" style="margin-top: 4px; font-size: 0.8rem;">電池單二極體等效電路 (雙擊放大)</div>
                         </div>
                     </div>
@@ -518,70 +533,115 @@
                 </div>
             </div>
             
-            <div class="grid-2">
-                <!-- 計算機 2: EQE -->
-                <div class="card" style="margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+            <!-- 計算機 2: EQE -->
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-bolt"></i> 單色光 EQE / IPCE 計算機</div>
+                <div class="calc-grid">
                     <div>
-                        <div class="card-title"><i class="fa-solid fa-bolt"></i> 單色光 EQE / IPCE 計算機</div>
                         <div class="input-group">
-                            <label>短路電流密度 $J_{SC}$ (mA/cm²)</label>
-                            <input type="number" id="eqe-jsc" value="0.045" step="0.001">
-                        </div>
-                        <div class="input-group">
-                            <label>入射單色光功率 $P_{in}$ (mW/cm²)</label>
-                            <input type="number" id="eqe-pin" value="0.12" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label>單色光波長 $\lambda$ (nm)</label>
-                            <input type="number" id="eqe-wl" value="550" step="1">
-                        </div>
-                        <button class="btn-primary" id="eqe-calc-btn" style="margin-bottom: 1.25rem;">計算外量子效率</button>
-                        
-                        <div class="calc-result">
-                            <div class="result-item">
-                                <span>外量子效率 (EQE / IPCE)</span>
-                                <span class="result-val" id="res-eqe" style="font-size: 1.2rem; color: #10b981;">-</span>
+                            <div class="slider-label-row">
+                                <label>短路電流密度 $J_{SC}$ (mA/cm²)</label>
+                                <span class="slider-value" id="eqe-jsc-val">0.045 mA/cm²</span>
                             </div>
+                            <input type="range" id="eqe-jsc" min="0.001" max="1.000" step="0.001" value="0.045">
+                        </div>
+                        <div class="input-group">
+                            <div class="slider-label-row">
+                                <label>入射單色光功率 $P_{in}$ (mW/cm²)</label>
+                                <span class="slider-value" id="eqe-pin-val">0.12 mW/cm²</span>
+                            </div>
+                            <input type="range" id="eqe-pin" min="0.01" max="2.00" step="0.01" value="0.12">
+                        </div>
+                        <div class="input-group">
+                            <div class="slider-label-row">
+                                <label>單色光波長 $\lambda$ (nm)</label>
+                                <span class="slider-value" id="eqe-wl-val">550 nm</span>
+                            </div>
+                            <input type="range" id="eqe-wl" min="300" max="1100" step="5" value="550">
+                        </div>
+                        <button class="btn-primary" id="eqe-reset-btn" style="margin-top: 0.5rem; background: rgba(255, 255, 255, 0.05); color: var(--gold-primary); border: 1px solid var(--gold-border);">重置為標準值</button>
+                        
+                        <!-- 搭配 EQE 圖片演示 -->
+                        <div class="theory-img-container" style="margin: 1.25rem 0 0 0; padding: 0;">
+                            <img src="images/eqe_diagram.jpeg" alt="外量子效率量測演示圖" class="theory-img" style="max-height: 80px; width: auto; min-width: auto; padding: 4px;">
+                            <div class="img-caption" style="margin-top: 4px; font-size: 0.8rem;">單色光量測示意 (雙擊放大)</div>
                         </div>
                     </div>
                     
-                    <!-- 搭配 EQE 圖片演示 -->
-                    <div class="theory-img-container" style="margin: 1.25rem 0 0 0; padding: 0; text-align: center;">
-                        <img src="images/eqe_diagram.jpeg" alt="外量子效率量測演示圖" class="theory-img" style="max-height: 110px; width: auto; min-width: auto; padding: 4px;">
-                        <div class="img-caption" style="margin-top: 4px; font-size: 0.8rem;">單色光激發與載子收集 (雙擊放大)</div>
+                    <div class="calc-result">
+                        <div class="canvas-wrapper">
+                            <canvas id="eqe-canvas"></canvas>
+                        </div>
+                        <div style="margin-top: 1.5rem;">
+                            <div class="result-item">
+                                <span>外量子效率 (EQE / IPCE)</span>
+                                <span class="result-val" id="res-eqe" style="font-size: 1.25rem; color: #10b981;">-</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 0.75rem; text-align: center; font-size: 0.8rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-circle-info"></i> 說明：拉動左側滑桿可動態觀察該波長在量測光譜中的點位
+                        </div>
                     </div>
                 </div>
-                
-                <!-- 計算機 3: Hall Effect -->
-                <div class="card" style="margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+            </div>
+            
+            <!-- 計算機 3: Hall Effect -->
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-circle-dot"></i> van der Pauw 霍爾效應量測分析儀</div>
+                <div class="calc-grid">
                     <div>
-                        <div class="card-title"><i class="fa-solid fa-circle-dot"></i> van der Pauw 霍爾效應計算機</div>
                         <div class="input-group">
-                            <label>恆定輸入電流 $I$ (A)</label>
-                            <input type="number" id="hall-current" value="0.001" step="0.0001">
+                            <div class="slider-label-row">
+                                <label>恆定輸入電流 $I$ (mA)</label>
+                                <span class="slider-value" id="hall-current-val">1.0 mA</span>
+                            </div>
+                            <input type="range" id="hall-current" min="0.1" max="10.0" step="0.1" value="1.0">
                         </div>
                         <div class="input-group">
-                            <label>垂直外加磁場 $B$ (Gauss)</label>
-                            <input type="number" id="hall-field" value="5000" step="100">
+                            <div class="slider-label-row">
+                                <label>垂直外加磁場 $B$ (Gauss)</label>
+                                <span class="slider-value" id="hall-field-val">5000 G</span>
+                            </div>
+                            <input type="range" id="hall-field" min="-10000" max="10000" step="100" value="5000">
                         </div>
                         <div class="input-group">
-                            <label>霍爾電壓和 $V_{sum} = V_C+V_D+V_E+V_F$ (V)</label>
-                            <input type="number" id="hall-vsum" value="0.062" step="0.001">
+                            <div class="slider-label-row">
+                                <label>霍爾電壓和 $V_{sum}$ (mV)</label>
+                                <span class="slider-value" id="hall-vsum-val">62 mV</span>
+                            </div>
+                            <input type="range" id="hall-vsum" min="-500" max="500" step="1" value="62">
                         </div>
                         <div class="input-group">
-                            <label>樣品薄膜厚度 $t$ (nm)</label>
-                            <input type="number" id="hall-thick" value="80" step="1">
+                            <div class="slider-label-row">
+                                <label>樣品薄膜厚度 $t$ (nm)</label>
+                                <span class="slider-value" id="hall-thick-val">80 nm</span>
+                            </div>
+                            <input type="range" id="hall-thick" min="10" max="1000" step="5" value="80">
                         </div>
                         <div class="input-group">
-                            <label>van der Pauw 片電阻 $R_S$ ($\Omega/\text{sq}$)</label>
-                            <input type="number" id="hall-rs" value="450" step="10">
+                            <div class="slider-label-row">
+                                <label>van der Pauw 片電阻 $R_S$ ($\Omega/\text{sq}$)</label>
+                                <span class="slider-value" id="hall-rs-val">450 Ω/sq</span>
+                            </div>
+                            <input type="range" id="hall-rs" min="50" max="10000" step="50" value="450">
                         </div>
-                        <button class="btn-primary" id="hall-calc-btn" style="margin-bottom: 1.25rem;">計算電性參數</button>
+                        <button class="btn-primary" id="hall-reset-btn" style="margin-top: 0.5rem; background: rgba(255, 255, 255, 0.05); color: var(--gold-primary); border: 1px solid var(--gold-border);">重置為標準值</button>
                         
-                        <div class="calc-result">
+                        <!-- 搭配 van der Pauw 圖片演示 -->
+                        <div class="theory-img-container" style="margin: 1.25rem 0 0 0; padding: 0;">
+                            <img src="images/講義__Hall_p8_img4.jpeg" alt="van der Pauw 量測線路演示圖" class="theory-img" style="max-height: 80px; width: auto; min-width: auto; padding: 4px;">
+                            <div class="img-caption" style="margin-top: 4px; font-size: 0.8rem;">van der Pauw 電極量測配置 (雙擊放大)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="calc-result">
+                        <div class="canvas-wrapper">
+                            <canvas id="hall-canvas"></canvas>
+                        </div>
+                        <div style="margin-top: 1.25rem;">
                             <div class="result-item">
                                 <span>導電載子型態 (Type)</span>
-                                <span class="result-val" id="res-hall-type">-</span>
+                                <span class="result-val" id="res-hall-type" style="font-weight: bold;">-</span>
                             </div>
                             <div class="result-item">
                                 <span>片載子密度 ($n_s$ 或 $p_s$)</span>
@@ -593,15 +653,12 @@
                             </div>
                             <div class="result-item">
                                 <span>霍爾遷移率 ($\mu$)</span>
-                                <span class="result-val" id="res-hall-mobility">-</span>
+                                <span class="result-val" id="res-hall-mobility" style="color: #10b981; font-weight: bold;">-</span>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- 搭配 van der Pauw 圖片演示 -->
-                    <div class="theory-img-container" style="margin: 1.25rem 0 0 0; padding: 0; text-align: center;">
-                        <img src="images/講義__Hall_p8_img4.jpeg" alt="van der Pauw 量測線路演示圖" class="theory-img" style="max-height: 110px; width: auto; min-width: auto; padding: 4px;">
-                        <div class="img-caption" style="margin-top: 4px; font-size: 0.8rem;">van der Pauw 電極量測配置 (雙擊放大)</div>
+                        <div style="margin-top: 0.75rem; text-align: center; font-size: 0.8rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-compass"></i> 說明：圖中顯示偏轉電荷極性、洛倫茲力 $\vec{F}_B$ 與霍爾電場力 $\vec{F}_E$ 的平衡
+                        </div>
                     </div>
                 </div>
             </div>
@@ -676,6 +733,6 @@
 </div>
 
 <!-- 載入互動邏輯 -->
-<script src="app.js?v=1.0.7"></script>
+<script src="app.js?v=1.0.8"></script>
 </body>
 </html>

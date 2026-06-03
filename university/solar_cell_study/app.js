@@ -100,7 +100,7 @@ function initPceCalculator() {
     const vmpInput = document.getElementById("pce-vmp");
     const jmpInput = document.getElementById("pce-jmp");
     const pinInput = document.getElementById("pce-pin");
-    const calculateBtn = document.getElementById("pce-calc-btn");
+    const pceResetBtn = document.getElementById("pce-reset-btn");
 
     const ffVal = document.getElementById("res-ff");
     const pceVal = document.getElementById("res-pce");
@@ -128,13 +128,20 @@ function initPceCalculator() {
         }
     }
 
-    // 當數值改變或點選按鈕時計算與繪圖
+    // 當數值改變時計算與繪圖，並即時更新滑桿旁顯示的數值標籤
     function performCalculation() {
         const voc = parseFloat(vocInput.value) || 0.8;
-        const jsc = parseFloat(jscInput.value) || 20.0; // mA/cm2
-        const vmp = parseFloat(vmpInput.value) || 0.65;
-        const jmp = parseFloat(jmpInput.value) || 18.0; // mA/cm2
+        const jsc = parseFloat(jscInput.value) || 22.0; // mA/cm2
+        const vmp = parseFloat(vmpInput.value) || 0.66;
+        const jmp = parseFloat(jmpInput.value) || 19.5; // mA/cm2
         const pin = parseFloat(pinInput.value) || 100.0; // mW/cm2
+
+        // 即時連動更新滑桿上的數值標籤
+        document.getElementById("pce-voc-val").textContent = voc.toFixed(2) + " V";
+        document.getElementById("pce-jsc-val").textContent = jsc.toFixed(1) + " mA/cm²";
+        document.getElementById("pce-vmp-val").textContent = vmp.toFixed(2) + " V";
+        document.getElementById("pce-jmp-val").textContent = jmp.toFixed(1) + " mA/cm²";
+        document.getElementById("pce-pin-val").textContent = pin.toFixed(1) + " mW/cm²";
 
         // Pmax = Vmp * Jmp
         const pmax = vmp * jmp; // mW/cm2
@@ -159,9 +166,9 @@ function initPceCalculator() {
 
     function updateIVDrawing() {
         const voc = parseFloat(vocInput.value) || 0.8;
-        const jsc = parseFloat(jscInput.value) || 20.0;
-        const vmp = parseFloat(vmpInput.value) || 0.65;
-        const jmp = parseFloat(jmpInput.value) || 18.0;
+        const jsc = parseFloat(jscInput.value) || 22.0;
+        const vmp = parseFloat(vmpInput.value) || 0.66;
+        const jmp = parseFloat(jmpInput.value) || 19.5;
 
         const dpr = window.devicePixelRatio || 1;
         const width = canvas.width;
@@ -228,8 +235,6 @@ function initPceCalculator() {
         ctx.fillText(voc.toFixed(2), padding + graphWidth, height - padding + 18 * dpr);
 
         // 繪製 I-V 曲線 (使用簡單二極體公式模擬曲線)
-        // J = Jsc - J0 * (exp(qV / nkT) - 1)
-        // 我們用一個指數擬合：當 V = Voc 時 J = 0；當 V = 0 時 J = Jsc
         ctx.strokeStyle = "#c5a86b";
         ctx.lineWidth = 3 * dpr;
         ctx.beginPath();
@@ -238,15 +243,10 @@ function initPceCalculator() {
         let i = 0;
         for (i = 0; i <= points; i++) {
             const v = (i / points) * voc * 1.05; // 稍微畫超過 Voc
-            // 擬合曲線：滿足 V=0, J=Jsc 且 V=Voc, J=0
-            // 係數 k 用來調整 FF 逼近 Vmp, Jmp
-            // 理想二極體公式：J = Jsc - (Jsc / (exp(5) - 1)) * (exp(5 * V / Voc) - 1)
-            // 這裡用更彈性的擬合，使最大功率點正好穿過 (Vmp, Jmp)
             let j = 0; // let 
             if (v <= voc) {
                 // 混合線性與高階指數以擬合 (Vmp, Jmp)
                 const ratio = v / voc;
-                // 用指數型態逼近
                 const p = Math.log(1 - jmp / jsc) / Math.log(vmp / voc);
                 j = jsc * (1 - Math.pow(ratio, Math.max(2, p || 4))); // let 
             } else {
@@ -346,9 +346,9 @@ function initPceCalculator() {
         const graphHeight = canvas.height - padding * 2;
 
         const voc = parseFloat(vocInput.value) || 0.8;
-        const jsc = parseFloat(jscInput.value) || 20.0;
-        const vmp = parseFloat(vmpInput.value) || 0.65;
-        const jmp = parseFloat(jmpInput.value) || 18.0;
+        const jsc = parseFloat(jscInput.value) || 22.0;
+        const vmp = parseFloat(vmpInput.value) || 0.66;
+        const jmp = parseFloat(jmpInput.value) || 19.5;
 
         const clickX = e.offsetX * dpr;
         const clickY = e.offsetY * dpr;
@@ -385,9 +385,9 @@ function initPceCalculator() {
         const graphHeight = canvas.height - padding * 2;
 
         const voc = parseFloat(vocInput.value) || 0.8;
-        const jsc = parseFloat(jscInput.value) || 20.0;
-        const vmp = parseFloat(vmpInput.value) || 0.65;
-        const jmp = parseFloat(jmpInput.value) || 18.0;
+        const jsc = parseFloat(jscInput.value) || 22.0;
+        const vmp = parseFloat(vmpInput.value) || 0.66;
+        const jmp = parseFloat(jmpInput.value) || 19.5;
 
         const clickX = e.offsetX * dpr;
         const clickY = e.offsetY * dpr;
@@ -397,20 +397,20 @@ function initPceCalculator() {
             const yRatio = Math.max(0, Math.min(1, (padding + graphHeight - clickY) / graphHeight));
 
             if (activeDragPoint === "voc") {
-                const newVoc = Math.max(0.1, xRatio * voc * 1.1);
+                const newVoc = Math.max(0.30, Math.min(1.50, xRatio * voc * 1.1));
                 vocInput.value = newVoc.toFixed(2);
                 if (vmp >= newVoc) {
                     vmpInput.value = (newVoc * 0.8).toFixed(2);
                 }
             } else if (activeDragPoint === "jsc") {
-                const newJsc = Math.max(1, yRatio * jsc * 1.1);
+                const newJsc = Math.max(5.0, Math.min(40.0, yRatio * jsc * 1.1));
                 jscInput.value = newJsc.toFixed(1);
                 if (jmp >= newJsc) {
                     jmpInput.value = (newJsc * 0.85).toFixed(1);
                 }
             } else if (activeDragPoint === "mpp") {
-                const newVmp = Math.max(0.05, Math.min(voc - 0.02, xRatio * voc * 1.1));
-                const newJmp = Math.max(0.5, Math.min(jsc - 0.2, yRatio * jsc * 1.1));
+                const newVmp = Math.max(0.20, Math.min(voc - 0.02, xRatio * voc * 1.1));
+                const newJmp = Math.max(4.0, Math.min(jsc - 0.2, yRatio * jsc * 1.1));
                 vmpInput.value = newVmp.toFixed(2);
                 jmpInput.value = newJmp.toFixed(1);
             }
@@ -456,8 +456,24 @@ function initPceCalculator() {
     canvas.addEventListener("pointerup", releaseCapture);
     canvas.addEventListener("pointercancel", releaseCapture);
 
-    // 監聽按鈕點擊與輸入事件
-    calculateBtn.addEventListener("click", performCalculation);
+    // 監聽拉桿輸入事件 (即時連動計算)
+    [vocInput, jscInput, vmpInput, jmpInput, pinInput].forEach(inp => {
+        if (inp) {
+            inp.addEventListener("input", performCalculation);
+        }
+    });
+
+    if (pceResetBtn) {
+        pceResetBtn.addEventListener("click", () => {
+            vocInput.value = "0.80";
+            jscInput.value = "22.0";
+            vmpInput.value = "0.66";
+            jmpInput.value = "19.5";
+            pinInput.value = "100.0";
+            performCalculation();
+        });
+    }
+
     window.addEventListener("resize", resizeCanvas);
 
     // 初始執行一次
@@ -468,17 +484,42 @@ function initPceCalculator() {
 /* ==========================================================================
    3. EQE / IPCE 百分比計算機 (EQE Calculator)
    ========================================================================== */
+/* ==========================================================================
+   3. EQE / IPCE 百分比計算機 & 動態光譜定位 (EQE Calculator & Canvas)
+   ========================================================================== */
 function initEqeCalculator() {
     const jscInput = document.getElementById("eqe-jsc");
     const pinInput = document.getElementById("eqe-pin");
     const wlInput = document.getElementById("eqe-wl");
-    const calculateBtn = document.getElementById("eqe-calc-btn");
     const eqeVal = document.getElementById("res-eqe");
+    const eqeResetBtn = document.getElementById("eqe-reset-btn");
+    const canvas = document.getElementById("eqe-canvas");
+
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const targetWidth = rect.width * dpr;
+        const targetHeight = 180 * dpr; // 設定固定展示高度
+
+        if (Math.abs(canvas.width - targetWidth) > 8 || Math.abs(canvas.height - targetHeight) > 8) {
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            updateEqeDrawing();
+        }
+    }
 
     function calculateEqe() {
-        const jsc = parseFloat(jscInput.value) || 0.04; // mA/cm²
-        const pin = parseFloat(pinInput.value) || 0.1;  // mW/cm²
+        const jsc = parseFloat(jscInput.value) || 0.045; // mA/cm²
+        const pin = parseFloat(pinInput.value) || 0.12;  // mW/cm²
         const wl = parseFloat(wlInput.value) || 550;    // nm
+
+        // 即時連動更新滑桿上的數值標籤
+        document.getElementById("eqe-jsc-val").textContent = jsc.toFixed(3) + " mA/cm²";
+        document.getElementById("eqe-pin-val").textContent = pin.toFixed(2) + " mW/cm²";
+        document.getElementById("eqe-wl-val").textContent = wl + " nm";
 
         let eqe = 0; // let 
         if (pin * wl > 0) {
@@ -486,15 +527,135 @@ function initEqeCalculator() {
             eqe = (1240 * jsc) / (pin * wl) * 100; // let 
         }
 
-        // 限制最大值不超過物理極限 100%（供教學顯示參考，實際可能因量測誤差微幅爆表）
         eqeVal.textContent = eqe.toFixed(2) + " %";
+
+        // 更新繪圖
+        updateEqeDrawing(eqe, wl);
     }
 
-    calculateBtn.addEventListener("click", calculateEqe);
+    function updateEqeDrawing(currentEqe = 0, currentWl = 550) {
+        const dpr = window.devicePixelRatio || 1;
+        const width = canvas.width;
+        const height = canvas.height;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const padding = 35 * dpr;
+        const graphWidth = width - padding * 2;
+        const graphHeight = height - padding * 2;
+
+        // 畫網格與座標軸
+        ctx.strokeStyle = "rgba(197, 168, 107, 0.08)";
+        ctx.lineWidth = 1 * dpr;
+        ctx.beginPath();
+        for (let col = 0; col <= 5; col++) {
+            const x = padding + (col / 5) * graphWidth;
+            ctx.moveTo(x, padding);
+            ctx.lineTo(x, height - padding);
+        }
+        for (let row = 0; row <= 4; row++) {
+            const y = padding + (row / 4) * graphHeight;
+            ctx.moveTo(padding, y);
+            ctx.lineTo(width - padding, y);
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = "#c5a86b";
+        ctx.lineWidth = 1 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(padding, padding);
+        ctx.lineTo(padding, height - padding);
+        ctx.lineTo(width - padding, height - padding);
+        ctx.stroke();
+
+        // 標記刻度文字
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = `${8 * dpr}px 'Outfit'`;
+        ctx.textAlign = "center";
+        ctx.fillText("300", padding, height - padding + 12 * dpr);
+        ctx.fillText("700", padding + (400 / 800) * graphWidth, height - padding + 12 * dpr);
+        ctx.fillText("1100", padding + graphWidth, height - padding + 12 * dpr);
+
+        ctx.textAlign = "right";
+        ctx.fillText("100%", padding - 5 * dpr, padding + 4 * dpr);
+        ctx.fillText("0%", padding - 5 * dpr, height - padding + 4 * dpr);
+
+        // 繪製一條典型的 EQE 模擬參考光譜曲線 (300nm 到 1100nm)
+        ctx.strokeStyle = "rgba(197, 168, 107, 0.4)";
+        ctx.lineWidth = 2 * dpr;
+        ctx.beginPath();
+        for (let w = 300; w <= 1100; w += 10) {
+            let refEqe = 0; // let 
+            if (w >= 320 && w < 380) {
+                refEqe = 80 * (w - 320) / 60; // let 
+            } else if (w >= 380 && w <= 850) {
+                refEqe = 80 + 8 * Math.sin(((w - 380) / 470) * Math.PI); // let 
+            } else if (w > 850 && w <= 1100) {
+                refEqe = 88 * Math.pow(1 - (w - 850) / 250, 1.5); // let 
+            }
+            const x = padding + ((w - 300) / 800) * graphWidth;
+            const y = padding + graphHeight - (refEqe / 100) * graphHeight;
+            if (w === 300) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // 標記當前選取波長處的計算點
+        const dotX = padding + ((currentWl - 300) / 800) * graphWidth;
+        const dotY = padding + graphHeight - (Math.min(100, currentEqe) / 100) * graphHeight;
+
+        // 繪製十字虛線
+        ctx.strokeStyle = "rgba(16, 185, 129, 0.4)";
+        ctx.lineWidth = 1 * dpr;
+        ctx.setLineDash([3 * dpr, 3 * dpr]);
+        ctx.beginPath();
+        ctx.moveTo(padding, dotY);
+        ctx.lineTo(dotX, dotY);
+        ctx.lineTo(dotX, height - padding);
+        ctx.stroke();
+        ctx.setLineDash([]); // 恢復實線
+
+        // 繪製發光點
+        ctx.fillStyle = "#10b981";
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 5 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(16, 185, 129, 0.5)";
+        ctx.lineWidth = 1 * dpr;
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 8 * dpr, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 警示文字
+        if (currentEqe > 100) {
+            ctx.fillStyle = "#ef4444";
+            ctx.font = `bold ${8 * dpr}px 'Outfit'`;
+            ctx.textAlign = "left";
+            ctx.fillText("⚠️ EQE > 100% 物理上不合理", padding + 10 * dpr, padding + 15 * dpr);
+        }
+    }
+
+    [jscInput, pinInput, wlInput].forEach(inp => {
+        if (inp) inp.addEventListener("input", calculateEqe);
+    });
+
+    if (eqeResetBtn) {
+        eqeResetBtn.addEventListener("click", () => {
+            jscInput.value = "0.045";
+            pinInput.value = "0.12";
+            wlInput.value = "550";
+            calculateEqe();
+        });
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    calculateEqe();
+    resizeCanvas();
 }
 
 /* ==========================================================================
-   4. Van der Pauw 霍爾係數與載子濃度計算機 (Hall Calculator)
+   4. Van der Pauw 霍爾量測受力分析儀 (Hall Calculator & Lorentz Canvas)
    ========================================================================== */
 function initHallCalculator() {
     const currentInput = document.getElementById("hall-current");
@@ -502,55 +663,79 @@ function initHallCalculator() {
     const vsumInput = document.getElementById("hall-vsum");
     const thickInput = document.getElementById("hall-thick");
     const rsInput = document.getElementById("hall-rs");
-    const calculateBtn = document.getElementById("hall-calc-btn");
+    const hallResetBtn = document.getElementById("hall-reset-btn");
 
     const typeVal = document.getElementById("res-hall-type");
     const densitySheetVal = document.getElementById("res-hall-density-sheet");
     const densityBulkVal = document.getElementById("res-hall-density-bulk");
     const mobilityVal = document.getElementById("res-hall-mobility");
+    const canvas = document.getElementById("hall-canvas");
+
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const targetWidth = rect.width * dpr;
+        const targetHeight = 180 * dpr;
+
+        if (Math.abs(canvas.width - targetWidth) > 8 || Math.abs(canvas.height - targetHeight) > 8) {
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            updateHallDrawing();
+        }
+    }
 
     function calculateHall() {
-        const current = parseFloat(currentInput.value) || 0.001; // A (1 mA)
-        const field = parseFloat(fieldInput.value) || 5000;      // G (0.5 T)
-        const vsum = parseFloat(vsumInput.value) || 0.05;        // V (50 mV)
-        const thick = parseFloat(thickInput.value) || 100;       // nm
-        const rs = parseFloat(rsInput.value) || 500;             // ohm/sq
+        const current_mA = parseFloat(currentInput.value) || 1.0; // mA
+        const field_G = parseFloat(fieldInput.value) || 5000;    // Gauss
+        const vsum_mV = parseFloat(vsumInput.value) || 62.0;    // mV
+        const thick_nm = parseFloat(thickInput.value) || 80.0;  // nm
+        const rs_ohm = parseFloat(rsInput.value) || 450.0;      // ohm/sq
+
+        // 即時連動更新滑桿上的數值標籤
+        document.getElementById("hall-current-val").textContent = current_mA.toFixed(1) + " mA";
+        document.getElementById("hall-field-val").textContent = field_G.toFixed(0) + " G";
+        document.getElementById("hall-vsum-val").textContent = vsum_mV.toFixed(0) + " mV";
+        document.getElementById("hall-thick-val").textContent = thick_nm.toFixed(0) + " nm";
+        document.getElementById("hall-rs-val").textContent = rs_ohm.toFixed(0) + " Ω/sq";
 
         const q = 1.602e-19; // 電子電荷
 
         // 1. 判定載子型態
         let carrierType = "無法判定"; // let 
-        if (vsum > 0) {
+        let isPType = true; // let 
+        if (vsum_mV > 0) {
             carrierType = "P-type (電洞導電)"; // let 
-            typeVal.style.color = "#10b981";
-        } else if (vsum < 0) {
+            typeVal.style.color = "#c5a86b"; // 金色代表電洞
+            isPType = true; // let 
+        } else if (vsum_mV < 0) {
             carrierType = "N-type (電子導電)"; // let 
-            typeVal.style.color = "#ef4444";
+            typeVal.style.color = "#10b981"; // 綠色代表電子
+            isPType = false; // let 
         } else {
             typeVal.style.color = "#94a3b8";
         }
 
         // 2. 計算片載子密度 Sheet Carrier Density (cm-2)
-        // ps = 8 * 10^-8 * I * B / [q * |Vsum|]
         let nsSheet = 0; // let 
-        const absVsum = Math.abs(vsum);
+        const absVsum = Math.abs(vsum_mV);
         if (absVsum > 0) {
-            nsSheet = (8e-8 * current * field) / (q * absVsum); // let 
+            nsSheet = (4e-8 * current_mA * Math.abs(field_G)) / (q * absVsum); // let 
         }
 
         // 3. 計算體載子密度 Bulk Carrier Density (cm-3)
-        // n = nsSheet / t (t 必須轉為 cm，1 nm = 1e-7 cm)
-        const thickCm = thick * 1e-7;
+        const thickCm = thick_nm * 1e-7;
         let nsBulk = 0; // let 
         if (thickCm > 0) {
             nsBulk = nsSheet / thickCm; // let 
         }
 
         // 4. 計算霍爾遷移率 Hall Mobility (cm²/V·s)
-        // µ = 1 / (q * nsSheet * Rs)
         let mobility = 0; // let 
-        if (nsSheet * rs > 0) {
-            mobility = 1 / (q * nsSheet * rs); // let 
+        if (nsSheet * rs_ohm > 0) {
+            mobility = 1 / (q * nsSheet * rs_ohm); // let 
         }
 
         // 渲染結果
@@ -558,9 +743,174 @@ function initHallCalculator() {
         densitySheetVal.textContent = nsSheet.toExponential(4) + " cm⁻²";
         densityBulkVal.textContent = nsBulk.toExponential(4) + " cm⁻³";
         mobilityVal.textContent = mobility.toFixed(2) + " cm² / V·s";
+
+        // 更新受力平衡繪圖
+        updateHallDrawing(isPType, field_G, vsum_mV);
     }
 
-    calculateBtn.addEventListener("click", calculateHall);
+    function updateHallDrawing(isPType = true, field = 5000, vsum = 62) {
+        const dpr = window.devicePixelRatio || 1;
+        const width = canvas.width;
+        const height = canvas.height;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const size = 45 * dpr; // 樣品框大小
+
+        // 1. 繪製 van der Pauw cloverleaf 樣品背景 (暗灰色發光)
+        ctx.fillStyle = "rgba(13, 15, 23, 0.9)";
+        ctx.strokeStyle = "rgba(197, 168, 107, 0.3)";
+        ctx.lineWidth = 2 * dpr;
+        ctx.beginPath();
+        ctx.rect(centerX - size, centerY - size, size * 2, size * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 2. 標註 4 個角電極點
+        const offset = size + 5 * dpr;
+        ctx.fillStyle = "#c5a86b";
+        ctx.font = `bold ${8 * dpr}px 'Outfit'`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.fillText("1 (I+)", centerX, centerY - offset);
+        ctx.fillText("3 (I-)", centerX, centerY + offset);
+        ctx.fillText("4 (V+)", centerX - offset, centerY);
+        ctx.fillText("2 (V-)", centerX + offset, centerY);
+
+        // 3. 繪製輸入電流方向 (1 -> 3, 向下)
+        ctx.strokeStyle = "rgba(197, 168, 107, 0.4)";
+        ctx.lineWidth = 1.5 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY - size + 10 * dpr);
+        ctx.lineTo(centerX, centerY + size - 15 * dpr);
+        ctx.stroke();
+        // 箭頭
+        ctx.fillStyle = "rgba(197, 168, 107, 0.6)";
+        ctx.beginPath();
+        ctx.moveTo(centerX - 3 * dpr, centerY + size - 18 * dpr);
+        ctx.lineTo(centerX + 3 * dpr, centerY + size - 18 * dpr);
+        ctx.lineTo(centerX, centerY + size - 12 * dpr);
+        ctx.fill();
+
+        // 4. 繪製外加磁場 B 的標記
+        if (field !== 0) {
+            ctx.fillStyle = "rgba(197, 168, 107, 0.18)";
+            ctx.font = `${9 * dpr}px 'Outfit'`;
+            ctx.textAlign = "center";
+            const points = [
+                { x: centerX - 22 * dpr, y: centerY - 22 * dpr },
+                { x: centerX + 22 * dpr, y: centerY - 22 * dpr },
+                { x: centerX - 22 * dpr, y: centerY + 22 * dpr },
+                { x: centerX + 22 * dpr, y: centerY + 22 * dpr }
+            ];
+            points.forEach(pt => {
+                ctx.fillText(field > 0 ? "✕" : "⊙", pt.x, pt.y);
+            });
+            ctx.fillStyle = "#dfc89a";
+            ctx.fillText(field > 0 ? "B (In)" : "B (Out)", centerX - offset + 15 * dpr, centerY - size + 12 * dpr);
+        }
+
+        // 5. 繪製核心載子受力分析
+        if (vsum !== 0 && field !== 0) {
+            ctx.fillStyle = isPType ? "#c5a86b" : "#10b981";
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 9 * dpr, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#090a0f";
+            ctx.font = `bold ${9 * dpr}px 'Outfit'`;
+            ctx.fillText(isPType ? "+" : "-", centerX, centerY);
+
+            const speedY = isPType ? 22 * dpr : -22 * dpr;
+            ctx.strokeStyle = "#94a3b8";
+            ctx.lineWidth = 1.5 * dpr;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(centerX, centerY + speedY);
+            ctx.stroke();
+            ctx.fillStyle = "#94a3b8";
+            ctx.beginPath();
+            if (isPType) {
+                ctx.moveTo(centerX - 3 * dpr, centerY + speedY - 3 * dpr);
+                ctx.lineTo(centerX + 3 * dpr, centerY + speedY - 3 * dpr);
+                ctx.lineTo(centerX, centerY + speedY);
+            } else {
+                ctx.moveTo(centerX - 3 * dpr, centerY + speedY + 3 * dpr);
+                ctx.lineTo(centerX + 3 * dpr, centerY + speedY + 3 * dpr);
+                ctx.lineTo(centerX, centerY + speedY);
+            }
+            ctx.fill();
+            ctx.font = `${6 * dpr}px 'Outfit'`;
+            ctx.fillText("v", centerX + 5 * dpr, centerY + speedY / 2);
+
+            const forceDir = field > 0 ? 1 : -1;
+            const forceX = centerX + 26 * dpr * forceDir;
+
+            ctx.strokeStyle = "#c5a86b";
+            ctx.lineWidth = 2 * dpr;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(forceX, centerY);
+            ctx.stroke();
+            ctx.fillStyle = "#c5a86b";
+            ctx.beginPath();
+            ctx.moveTo(forceX - 3 * dpr * forceDir, centerY - 3 * dpr);
+            ctx.lineTo(forceX - 3 * dpr * forceDir, centerY + 3 * dpr);
+            ctx.lineTo(forceX, centerY);
+            ctx.fill();
+            ctx.font = `${7 * dpr}px 'Outfit'`;
+            ctx.fillText("FB", forceX, centerY - 7 * dpr);
+
+            const electricX = centerX - 26 * dpr * forceDir;
+            ctx.strokeStyle = "#10b981";
+            ctx.lineWidth = 1.5 * dpr;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(electricX, centerY);
+            ctx.stroke();
+            ctx.fillStyle = "#10b981";
+            ctx.beginPath();
+            ctx.moveTo(electricX + 3 * dpr * forceDir, centerY - 3 * dpr);
+            ctx.lineTo(electricX + 3 * dpr * forceDir, centerY + 3 * dpr);
+            ctx.lineTo(electricX, centerY);
+            ctx.fill();
+            ctx.fillText("FE", electricX, centerY - 7 * dpr);
+
+            ctx.fillStyle = isPType ? "#c5a86b" : "#10b981";
+            ctx.font = `bold ${8 * dpr}px 'Outfit'`;
+            const plusStr = isPType ? "++" : "--";
+            const minusStr = isPType ? "--" : "++";
+            
+            if (forceDir > 0) {
+                ctx.fillText(plusStr, centerX + size - 8 * dpr, centerY);
+                ctx.fillText(minusStr, centerX - size + 8 * dpr, centerY);
+            } else {
+                ctx.fillText(plusStr, centerX - size + 8 * dpr, centerY);
+                ctx.fillText(minusStr, centerX + size - 8 * dpr, centerY);
+            }
+        }
+    }
+
+    [currentInput, fieldInput, vsumInput, thickInput, rsInput].forEach(inp => {
+        if (inp) inp.addEventListener("input", calculateHall);
+    });
+
+    if (hallResetBtn) {
+        hallResetBtn.addEventListener("click", () => {
+            currentInput.value = "1.0";
+            fieldInput.value = "5000";
+            vsumInput.value = "62";
+            thickInput.value = "80";
+            rsInput.value = "450";
+            calculateHall();
+        });
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    calculateHall();
+    resizeCanvas();
 }
 
 /* ==========================================================================
