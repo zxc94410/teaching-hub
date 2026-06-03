@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initHallCalculator();
     initQuiz();
     initZoomModal();
+    initTableZoom();
 });
 
 /* ==========================================================================
@@ -244,6 +245,45 @@ function initPceCalculator() {
         ctx.arc(mppX, mppY, 6 * dpr, 0, Math.PI * 2);
         ctx.fill();
 
+        // 繪製 MPP 圈線提示
+        ctx.strokeStyle = "rgba(16, 185, 129, 0.6)";
+        ctx.lineWidth = 1 * dpr;
+        ctx.beginPath();
+        ctx.arc(mppX, mppY, 9 * dpr, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 標註 Voc 拖拽點 (X軸交點)
+        const vocX = padding + (voc / (voc * 1.1)) * graphWidth;
+        const vocY = height - padding;
+
+        ctx.fillStyle = "#c5a86b";
+        ctx.beginPath();
+        ctx.arc(vocX, vocY, 6 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 繪製 Voc 圈線提示
+        ctx.strokeStyle = "rgba(197, 168, 107, 0.6)";
+        ctx.lineWidth = 1 * dpr;
+        ctx.beginPath();
+        ctx.arc(vocX, vocY, 9 * dpr, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 標註 Jsc 拖拽點 (Y軸交點)
+        const jscX = padding;
+        const jscY = padding + graphHeight - (jsc / (jsc * 1.1)) * graphHeight;
+
+        ctx.fillStyle = "#c5a86b";
+        ctx.beginPath();
+        ctx.arc(jscX, jscY, 6 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 繪製 Jsc 圈線提示
+        ctx.strokeStyle = "rgba(197, 168, 107, 0.6)";
+        ctx.lineWidth = 1 * dpr;
+        ctx.beginPath();
+        ctx.arc(jscX, jscY, 9 * dpr, 0, Math.PI * 2);
+        ctx.stroke();
+
         // 繪製 Pmax 虛線矩形
         ctx.strokeStyle = "rgba(16, 185, 129, 0.4)";
         ctx.lineWidth = 1 * dpr;
@@ -261,6 +301,126 @@ function initPceCalculator() {
         ctx.textAlign = "left";
         ctx.fillText(` MPP (Vmp: ${vmp}V, Jmp: ${jmp}mA)`, mppX + 8 * dpr, mppY - 4 * dpr);
     }
+
+    // 拖曳圖形控制點邏輯
+    let activeDragPoint = null;
+
+    canvas.addEventListener("pointerdown", (e) => {
+        const dpr = window.devicePixelRatio || 1;
+        const padding = 45 * dpr;
+        const graphWidth = canvas.width - padding * 2;
+        const graphHeight = canvas.height - padding * 2;
+
+        const voc = parseFloat(vocInput.value) || 0.8;
+        const jsc = parseFloat(jscInput.value) || 20.0;
+        const vmp = parseFloat(vmpInput.value) || 0.65;
+        const jmp = parseFloat(jmpInput.value) || 18.0;
+
+        const clickX = e.offsetX * dpr;
+        const clickY = e.offsetY * dpr;
+
+        const mppX = padding + (vmp / (voc * 1.1)) * graphWidth;
+        const mppY = padding + graphHeight - (jmp / (jsc * 1.1)) * graphHeight;
+
+        const vocX = padding + (voc / (voc * 1.1)) * graphWidth;
+        const vocY = canvas.height - padding;
+
+        const jscX = padding;
+        const jscY = padding + graphHeight - (jsc / (jsc * 1.1)) * graphHeight;
+
+        const threshold = 18 * dpr;
+
+        if (Math.hypot(clickX - mppX, clickY - mppY) < threshold) {
+            activeDragPoint = "mpp"; // let 
+        } else if (Math.hypot(clickX - vocX, clickY - vocY) < threshold) {
+            activeDragPoint = "voc"; // let 
+        } else if (Math.hypot(clickX - jscX, clickY - jscY) < threshold) {
+            activeDragPoint = "jsc"; // let 
+        }
+
+        if (activeDragPoint) {
+            canvas.setPointerCapture(e.pointerId);
+            e.preventDefault();
+        }
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+        const dpr = window.devicePixelRatio || 1;
+        const padding = 45 * dpr;
+        const graphWidth = canvas.width - padding * 2;
+        const graphHeight = canvas.height - padding * 2;
+
+        const voc = parseFloat(vocInput.value) || 0.8;
+        const jsc = parseFloat(jscInput.value) || 20.0;
+        const vmp = parseFloat(vmpInput.value) || 0.65;
+        const jmp = parseFloat(jmpInput.value) || 18.0;
+
+        const clickX = e.offsetX * dpr;
+        const clickY = e.offsetY * dpr;
+
+        if (activeDragPoint) {
+            const xRatio = Math.max(0, Math.min(1, (clickX - padding) / graphWidth));
+            const yRatio = Math.max(0, Math.min(1, (padding + graphHeight - clickY) / graphHeight));
+
+            if (activeDragPoint === "voc") {
+                const newVoc = Math.max(0.1, xRatio * voc * 1.1);
+                vocInput.value = newVoc.toFixed(2);
+                if (vmp >= newVoc) {
+                    vmpInput.value = (newVoc * 0.8).toFixed(2);
+                }
+            } else if (activeDragPoint === "jsc") {
+                const newJsc = Math.max(1, yRatio * jsc * 1.1);
+                jscInput.value = newJsc.toFixed(1);
+                if (jmp >= newJsc) {
+                    jmpInput.value = (newJsc * 0.85).toFixed(1);
+                }
+            } else if (activeDragPoint === "mpp") {
+                const newVmp = Math.max(0.05, Math.min(voc - 0.02, xRatio * voc * 1.1));
+                const newJmp = Math.max(0.5, Math.min(jsc - 0.2, yRatio * jsc * 1.1));
+                vmpInput.value = newVmp.toFixed(2);
+                jmpInput.value = newJmp.toFixed(1);
+            }
+            performCalculation();
+            e.preventDefault();
+        } else {
+            // Hover 游標提示邏輯
+            const mppX = padding + (vmp / (voc * 1.1)) * graphWidth;
+            const mppY = padding + graphHeight - (jmp / (jsc * 1.1)) * graphHeight;
+
+            const vocX = padding + (voc / (voc * 1.1)) * graphWidth;
+            const vocY = canvas.height - padding;
+
+            const jscX = padding;
+            const jscY = padding + graphHeight - (jsc / (jsc * 1.1)) * graphHeight;
+
+            const threshold = 12 * dpr;
+
+            if (Math.hypot(clickX - mppX, clickY - mppY) < threshold ||
+                Math.hypot(clickX - vocX, clickY - vocY) < threshold ||
+                Math.hypot(clickX - jscX, clickY - jscY) < threshold) {
+                canvas.style.cursor = "pointer";
+            } else {
+                canvas.style.cursor = "default";
+            }
+        }
+    });
+
+    const releaseCapture = (e) => {
+        if (activeDragPoint) {
+            if (canvas.hasPointerCapture && e && e.pointerId !== undefined) {
+                try {
+                    canvas.releasePointerCapture(e.pointerId);
+                } catch (err) {
+                    // 忽略捕獲釋放錯誤
+                }
+            }
+            activeDragPoint = null; // let 
+            performCalculation();
+        }
+    };
+
+    canvas.addEventListener("pointerup", releaseCapture);
+    canvas.addEventListener("pointercancel", releaseCapture);
 
     // 監聽按鈕點擊與輸入事件
     calculateBtn.addEventListener("click", performCalculation);
@@ -648,14 +808,11 @@ function initZoomModal() {
         wrapper.className = "zoom-wrapper";
         activeWrapper = wrapper; // let 
 
-        // 根據目標類型複製元素
+        // 僅複製圖片元素
         if (target.tagName === "IMG") {
             const clone = target.cloneNode(true);
             clone.style.minWidth = "auto"; // 移除縮放下的 min-width 限制
             clone.style.transform = "none";
-            wrapper.appendChild(clone);
-        } else if (target.classList.contains("table-container")) {
-            const clone = target.cloneNode(true);
             wrapper.appendChild(clone);
         }
 
@@ -734,8 +891,8 @@ function initZoomModal() {
     modalBody.addEventListener("pointerup", endDrag);
     modalBody.addEventListener("pointercancel", endDrag);
 
-    // 雙擊/雙觸控觸發邏輯
-    const triggerElements = document.querySelectorAll(".theory-img, .table-container");
+    // 雙擊/雙觸控觸發邏輯 (僅針對圖片)
+    const triggerElements = document.querySelectorAll(".theory-img");
 
     triggerElements.forEach(el => {
         // 電腦版雙擊 (dblclick)
@@ -757,6 +914,87 @@ function initZoomModal() {
 
         // 設定滑鼠樣式，提示可點擊放大
         el.style.cursor = "zoom-in";
+    });
+}
+
+/* ==========================================================================
+   7. 表格頁面內向量縮放模組 (In-Place Vector Table Zoom)
+   ========================================================================== */
+function initTableZoom() {
+    const tableContainers = document.querySelectorAll(".table-container");
+
+    tableContainers.forEach(container => {
+        const table = container.querySelector("table");
+        if (!table) return;
+
+        // 建立浮動縮放控制項
+        const controls = document.createElement("div");
+        controls.className = "table-zoom-controls";
+
+        const btnOut = document.createElement("button");
+        btnOut.className = "table-zoom-btn table-zoom-out";
+        btnOut.innerHTML = '<i class="fa-solid fa-minus"></i>';
+        btnOut.title = "縮小表格文字";
+
+        const indicator = document.createElement("span");
+        indicator.className = "table-zoom-indicator";
+        indicator.textContent = "100%";
+
+        const btnIn = document.createElement("button");
+        btnIn.className = "table-zoom-btn table-zoom-in";
+        btnIn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+        btnIn.title = "放大表格文字";
+
+        controls.appendChild(btnOut);
+        controls.appendChild(indicator);
+        controls.appendChild(btnIn);
+        container.appendChild(controls);
+
+        let zoom = 1.0; // let 
+
+        function updateZoom(newZoom) {
+            zoom = Math.max(0.75, Math.min(1.6, newZoom)); // let 
+            table.style.fontSize = `${zoom * 100}%`;
+            indicator.textContent = `${Math.round(zoom * 100)}%`;
+        }
+
+        btnIn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            updateZoom(zoom + 0.15);
+        });
+
+        btnOut.addEventListener("click", (e) => {
+            e.stopPropagation();
+            updateZoom(zoom - 0.15);
+        });
+
+        // 雙擊/雙觸碰循環縮放 (100% -> 130% -> 160% -> 100%)
+        container.addEventListener("dblclick", (e) => {
+            if (e.target.closest(".table-zoom-controls")) return;
+            cycleZoom();
+        });
+
+        let lastTapTime = 0;
+        container.addEventListener("touchstart", (e) => {
+            if (e.target.closest(".table-zoom-controls")) return;
+            const now = Date.now();
+            const delay = now - lastTapTime;
+            if (delay < 300 && delay > 0) {
+                e.preventDefault();
+                cycleZoom();
+            }
+            lastTapTime = now; // let 
+        });
+
+        function cycleZoom() {
+            if (zoom < 1.15) {
+                updateZoom(1.3);
+            } else if (zoom < 1.45) {
+                updateZoom(1.6);
+            } else {
+                updateZoom(1.0);
+            }
+        }
     });
 }
 

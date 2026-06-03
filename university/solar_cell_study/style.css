@@ -988,3 +988,72 @@ code {
     min-width: 600px;
 }
 
+/* ==========================================================================
+   表格頁面內向量縮放樣式 (In-Place Table Zoom Controls)
+   ========================================================================== */
+.table-container {
+    position: relative;
+    transition: var(--transition-smooth);
+}
+
+.table-zoom-controls {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    gap: 4px;
+    z-index: 10;
+    opacity: 0;
+    transition: var(--transition-smooth);
+}
+
+/* 滑鼠移入或聚焦時顯示縮放按鈕 */
+.table-container:hover .table-zoom-controls,
+.table-container:focus-within .table-zoom-controls {
+    opacity: 1;
+}
+
+/* 手機版裝置上直接顯示，提升易用性 */
+@media (max-width: 768px) {
+    .table-zoom-controls {
+        opacity: 0.85;
+    }
+}
+
+.table-zoom-btn {
+    background: rgba(9, 10, 15, 0.85);
+    border: 1px solid var(--gold-border);
+    color: var(--text-primary);
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: var(--transition-smooth);
+}
+
+.table-zoom-btn:hover {
+    border-color: var(--gold-primary);
+    color: var(--gold-primary);
+    background: rgba(197, 168, 107, 0.15);
+}
+
+.table-zoom-indicator {
+    background: rgba(9, 10, 15, 0.85);
+    border: 1px solid var(--gold-border);
+    color: var(--text-gold);
+    padding: 0 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    user-select: none;
+}
+
+
