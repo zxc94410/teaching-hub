@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initEqeCalculator();
     initHallCalculator();
     initQuiz();
+    initZoomModal();
 });
 
 /* ==========================================================================
@@ -610,3 +611,152 @@ function initQuiz() {
     // 初始載入第一題
     loadQuestion();
 }
+
+/* ==========================================================================
+   6. 雙擊放大檢視模組 (Zoom Lightbox for Mobile & Desktop)
+   ========================================================================== */
+function initZoomModal() {
+    const modal = document.getElementById("zoom-modal");
+    const modalBody = document.getElementById("zoom-modal-body");
+    const zoomInBtn = document.getElementById("zoom-in-btn");
+    const zoomOutBtn = document.getElementById("zoom-out-btn");
+    const zoomResetBtn = document.getElementById("zoom-reset-btn");
+    const zoomCloseBtn = document.getElementById("zoom-close-btn");
+
+    if (!modal || !modalBody) return;
+
+    let scale = 1;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let activeWrapper = null;
+
+    // 開啟放大視窗並複製內容
+    function openModal(target) {
+        modal.style.display = "flex";
+        modalBody.innerHTML = "";
+
+        // 重置縮放與位移參數
+        scale = 1; // let 
+        translateX = 0; // let 
+        translateY = 0; // let 
+
+        // 建立包裹容器
+        const wrapper = document.createElement("div");
+        wrapper.className = "zoom-wrapper";
+        activeWrapper = wrapper; // let 
+
+        // 根據目標類型複製元素
+        if (target.tagName === "IMG") {
+            const clone = target.cloneNode(true);
+            clone.style.minWidth = "auto"; // 移除縮放下的 min-width 限制
+            clone.style.transform = "none";
+            wrapper.appendChild(clone);
+        } else if (target.classList.contains("table-container")) {
+            const clone = target.cloneNode(true);
+            wrapper.appendChild(clone);
+        }
+
+        modalBody.appendChild(wrapper);
+        updateTransform();
+    }
+
+    function closeModal() {
+        modal.style.display = "none";
+        modalBody.innerHTML = "";
+        activeWrapper = null; // let 
+    }
+
+    function updateTransform() {
+        if (activeWrapper) {
+            activeWrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        }
+    }
+
+    // 縮放按鈕監聽
+    zoomInBtn.addEventListener("click", () => {
+        scale = Math.min(scale + 0.25, 4); // let 
+        updateTransform();
+    });
+
+    zoomOutBtn.addEventListener("click", () => {
+        scale = Math.max(scale - 0.25, 0.5); // let 
+        updateTransform();
+    });
+
+    zoomResetBtn.addEventListener("click", () => {
+        scale = 1; // let 
+        translateX = 0; // let 
+        translateY = 0; // let 
+        updateTransform();
+    });
+
+    zoomCloseBtn.addEventListener("click", closeModal);
+    
+    // 點擊背景關閉
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal || e.target === modalBody) {
+            closeModal();
+        }
+    });
+
+    // 拖曳 (Pan) 邏輯，使用 PointerEvents 統一適配滑鼠與觸控
+    modalBody.addEventListener("pointerdown", (e) => {
+        if (!activeWrapper) return;
+        isDragging = true; // let 
+        startX = e.clientX - translateX; // let 
+        startY = e.clientY - translateY; // let 
+        modalBody.setPointerCapture(e.pointerId);
+    });
+
+    modalBody.addEventListener("pointermove", (e) => {
+        if (!isDragging || !activeWrapper) return;
+        translateX = e.clientX - startX; // let 
+        translateY = e.clientY - startY; // let 
+        updateTransform();
+    });
+
+    const endDrag = (e) => {
+        if (isDragging) {
+            isDragging = false; // let 
+            if (modalBody.hasPointerCapture && e && e.pointerId !== undefined) {
+                try {
+                    modalBody.releasePointerCapture(e.pointerId);
+                } catch (err) {
+                    // 忽略捕獲釋放的錯誤
+                }
+            }
+        }
+    };
+
+    modalBody.addEventListener("pointerup", endDrag);
+    modalBody.addEventListener("pointercancel", endDrag);
+
+    // 雙擊/雙觸控觸發邏輯
+    const triggerElements = document.querySelectorAll(".theory-img, .table-container");
+
+    triggerElements.forEach(el => {
+        // 電腦版雙擊 (dblclick)
+        el.addEventListener("dblclick", () => {
+            openModal(el);
+        });
+
+        // 手機版雙觸控 (Double Tap)
+        let lastTapTime = 0;
+        el.addEventListener("touchstart", (e) => {
+            const now = Date.now();
+            const delay = now - lastTapTime;
+            if (delay < 300 && delay > 0) {
+                e.preventDefault(); // 避免觸發預設視窗縮放
+                openModal(el);
+            }
+            lastTapTime = now; // let 
+        });
+
+        // 設定滑鼠樣式，提示可點擊放大
+        el.style.cursor = "zoom-in";
+    });
+}
+

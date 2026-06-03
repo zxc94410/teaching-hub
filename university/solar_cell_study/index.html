@@ -634,6 +634,21 @@
         </main>
     </div>
 </div>
+<!-- 雙擊放大檢視模組 -->
+<div id="zoom-modal" class="zoom-modal">
+    <div class="zoom-modal-header">
+        <span class="zoom-modal-title"><i class="fa-solid fa-expand"></i> 雙擊縮放檢視</span>
+        <div class="zoom-controls">
+            <button class="zoom-btn" id="zoom-out-btn" title="縮小"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+            <button class="zoom-btn" id="zoom-reset-btn" title="重置">1:1</button>
+            <button class="zoom-btn" id="zoom-in-btn" title="放大"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+            <button class="zoom-btn close-btn" id="zoom-close-btn" title="關閉"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    </div>
+    <div class="zoom-modal-body" id="zoom-modal-body">
+        <!-- JS 動態寫入複製內容 -->
+    </div>
+</div>
 
 <!-- 載入互動邏輯 -->
 <script src="app.js"></script>
