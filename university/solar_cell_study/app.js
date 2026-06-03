@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
    1. 導航與滾動監聽 (Navigation & Scroll Spy)
    ========================================================================== */
 function initNavigation() {
-    const navItems = document.querySelectorAll(".nav-item");
+    const navItems = document.querySelectorAll(".navbar-item");
     const sections = document.querySelectorAll("section");
 
     // 點擊導航欄平滑跳轉
