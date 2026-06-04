@@ -136,13 +136,19 @@ body::before {
 }
 
 /* 書籍容器 */
-.book-container {
+.book-container, 
+.book-container:visited, 
+.book-container:hover, 
+.book-container:active {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-decoration: none;
-    color: inherit;
+    color: var(--text-primary);
     cursor: pointer;
+}
+
+.book-container {
     animation: fadeInUp 0.8s ease;
 }
 
