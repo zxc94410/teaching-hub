@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>霍爾效應與 van der Pauw 量測原理教學網頁 - Obsidian 曜石金護眼美學</title>
+    
+    <!-- 引入樣式表 -->
+    <link rel="stylesheet" href="style.css?v=1.0.1">
+    
+    <!-- 引入 MathJax 作為 LaTeX 公式渲染引擎 -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <!-- 引入 FontAwesome 圖示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<!-- 頂部導航欄 (行動裝置專用) -->
+<header class="top-navbar">
+    <div class="navbar-brand">
+        <i class="fa-solid fa-magnet brand-icon" style="color: var(--gold-primary); font-size: 1.25rem;"></i>
+        <h2 class="navbar-brand-title">Hall<span>Effect</span></h2>
+    </div>
+    
+    <ul class="navbar-menu">
+        <li class="navbar-item active"><a href="#overview"><i class="fa-solid fa-house"></i> 概覽</a></li>
+        <li class="navbar-item"><a href="#physical-principle">1. 物理原理</a></li>
+        <li class="navbar-item"><a href="#vdp-method">2. van der Pauw</a></li>
+        <li class="navbar-item"><a href="#mobility-concentration">3. 遷移率 & 濃度</a></li>
+        <li class="navbar-item"><a href="#lab-discussion">4. 實驗考點</a></li>
+        <li class="navbar-item"><a href="#calculators">5. 工具箱</a></li>
+        <li class="navbar-item"><a href="#web-reader">6. 閱讀艙</a></li>
+        <li class="navbar-item"><a href="#quiz-section">7. 模擬考場</a></li>
+    </ul>
+</header>
+
+<div class="app-container">
+    
+    <!-- 側邊導航欄 (桌機版固定在左側) -->
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="fa-solid fa-magnet brand-icon" style="color: var(--gold-primary); font-size: 1.5rem;"></i>
+            <h2 class="brand-title">Hall<span>Effect</span></h2>
+        </div>
+        
+        <ul class="nav-menu">
+            <li class="navbar-item active"><a href="#overview"><i class="fa-solid fa-house"></i> 課程概覽 & 考點整理</a></li>
+            <li class="navbar-item"><a href="#physical-principle"><i class="fa-solid fa-atom"></i> 1. 霍爾效應物理原理</a></li>
+            <li class="navbar-item"><a href="#vdp-method"><i class="fa-solid fa-draw-polygon"></i> 2. van der Pauw 量測技術</a></li>
+            <li class="navbar-item"><a href="#mobility-concentration"><i class="fa-solid fa-bolt"></i> 3. 載子濃度與霍爾遷移率</a></li>
+            <li class="navbar-item"><a href="#lab-discussion"><i class="fa-solid fa-flask"></i> 4. 實作實驗考點探討</a></li>
+            <li class="navbar-item"><a href="#calculators"><i class="fa-solid fa-calculator"></i> 5. 互動工具箱 (物理與計算)</a></li>
+            <li class="navbar-item"><a href="#web-reader"><i class="fa-solid fa-book-open"></i> 6. AI 網頁/論文閱讀艙</a></li>
+            <li class="navbar-item"><a href="#quiz-section"><i class="fa-solid fa-graduation-cap"></i> 7. 考試模擬考場</a></li>
+        </ul>
+    </aside>
+    
+    <!-- 主內容區外層置中容器 -->
+    <div class="main-content-wrapper">
+        <main class="main-content">
+        
+            <!-- SECTION: 課程概覽 & 考點快速定位 -->
+            <section id="overview">
+                <h1 class="section-title"><i class="fa-solid fa-clipboard-list"></i> 課程概覽 & 期末考點整理</h1>
+                <div class="card">
+                    <p>本教學網頁是針對半導體元件物理、材料特性分析中的 **霍爾效應 (Hall Effect)** 與 **van der Pauw 量測原理** 所設計的複習資源。版面採用 **Obsidian 曜石金護眼美學**，將複雜的物理公式、幾何對稱量測及多步驟消除誤差實驗流程進行系統化整理，供 MJ 快速掌握考試重點與實務知識。</p>
+                    
+                    <div class="alert">
+                        <div class="alert-title"><i class="fa-solid fa-triangle-exclamation"></i> 期末必考重點快速指南</div>
+                        <div class="alert-content">
+                            <ul>
+                                <li><strong>洛倫茲力平衡</strong>：載子受洛倫茲力偏轉與霍爾電場 $E_H$ 之靜電力平衡公式推導，以及對應的邊界電荷累積。</li>
+                                <li><strong>van der Pauw 方程式</strong>：片電阻超越方程式 $\exp(-\pi R_A / R_s) + \exp(-\pi R_B / R_s) = 1$ 的物理背景與數值求解原理。</li>
+                                <li><strong>消除熱電誤差 (Thermal EMF)</strong>：利用磁場方向、電流極性切換進行 8 次對角量測的霍爾電壓平均法。</li>
+                                <li><strong>遷移率 $\mu$ 與載子濃度 $n, p$</strong>：霍爾係數 $R_H$ 的符號判定，電阻率 $\rho$ 與電導率 $\sigma$ 的聯立物理關係。</li>
+                                <li><strong>實務防禦性設計</strong>：為什麼量測必須在<strong>黑暗環境</strong>下進行？如何判定接點是否為<strong>歐姆接觸 (Ohmic Contact)</strong>？</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SECTION 1: 霍爾效應物理原理 -->
+            <section id="physical-principle">
+                <h1 class="section-title"><i class="fa-solid fa-atom"></i> 1. 霍爾效應物理原理與公式</h1>
+                <div class="card">
+                    <h3>洛倫茲力與霍爾電場的動態平衡</h3>
+                    <p>當一個電流 $I$ 流經半導體薄膜，且施加一個垂直於電流方向的外加磁場 $\mathbf{B}$ 時，材料中的運動電荷載子會受到<strong>洛倫茲力 (Lorentz Force)</strong> 作用而發生橫向偏移。這些電荷在材料側壁累積，建立一個橫向電場，即為<strong>霍爾電場 $E_H$</strong>。當橫向電場產生的靜電力與洛倫茲力達到平衡時，橫向偏轉停止，形成穩態電流分佈。</p>
+                    
+                    <div class="formula-block">
+                        $$\mathbf{F} = q (\mathbf{E} + \mathbf{v} \times \mathbf{B}) = 0$$
+                        <p style="margin-top: 10px; font-size: 0.95rem; color: var(--text-gold);">
+                            對於單一方向偏轉（假設電流沿 $x$ 軸，磁場沿 $z$ 軸，載子速度為漂移速度 $v_d$）：
+                        </p>
+                        $$q E_y = q v_d B_z \implies E_H = v_d B$$
+                    </div>
+
+                    <h3>霍爾係數 ($R_H$) 與霍爾電壓 ($V_H$) 推導</h3>
+                    <p>電流密度與漂移速度的關係為 $J = q n v_d$，其中 $n$ 為載子濃度。將 $v_d = \frac{J}{q n}$ 代入平衡公式：</p>
+                    <div class="formula-block">
+                        $$E_H = \left(\frac{1}{q n}\right) J B$$
+                    </div>
+                    <p>定義 **霍爾係數 (Hall Coefficient, $R_H$)** 為：</p>
+                    <div class="formula-block">
+                        $$R_H = \frac{E_H}{J B} = \frac{1}{q n}$$
+                    </div>
+                    <p>考慮到樣品的幾何形狀（寬度 $w$，厚度 $t$，電流 $I = J \cdot w \cdot t$），霍爾電場在兩端產生的電位差即為 **霍爾電壓 (Hall Voltage, $V_H$)**：</p>
+                    <div class="formula-block">
+                        $$V_H = E_H \cdot w = v_d B \cdot w = \frac{I B}{q n t} = R_H \frac{I B}{t}$$
+                    </div>
+
+                    <h3>載子型態與極性判別</h3>
+                    <p>由公式可知，霍爾電壓 $V_H$ 及霍爾係數 $R_H$ 的符號完全由載子電荷 $q$ 的電性決定：</p>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>主要載子類型</th>
+                                    <th>載子電性 $q$</th>
+                                    <th>霍爾係數 $R_H$ 符號</th>
+                                    <th>電荷偏轉與霍爾電壓極性</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>n 型半導體</strong> (電子導電)</td>
+                                    <td>$-e < 0$</td>
+                                    <td>負值 ($R_H < 0$)</td>
+                                    <td>電子受到磁場偏轉方向與電洞相同，但因帶負電，累積端呈現負電位，$V_H < 0$。</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>p 型半導體</strong> (電洞導電)</td>
+                                    <td>$+e > 0$</td>
+                                    <td>正值 ($R_H > 0$)</td>
+                                    <td>電洞帶正電，在相同磁場/電流方向下受力偏轉，累積端呈現正電位，$V_H > 0$。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="alert warning">
+                        <div class="alert-title"><i class="fa-solid fa-lightbulb"></i> 易錯重點提示</div>
+                        <div class="alert-content">
+                            <p>不論是電子 (帶負電) 或是電洞 (帶正電)，在同向電流 $\mathbf{I}$（注意電子流向與電流方向相反）和同向磁場 $\mathbf{B}$ 下，<strong>受洛倫茲力偏轉偏向同側</strong>。然而，因為它們攜帶電荷電性相反，所以在該側累積產生的霍爾電壓極性正好相反。這正是霍爾效應能最直接、最無爭議地判斷半導體為 n 型或 p 型的核心物理依據。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SECTION 2: van der Pauw 量測技術 -->
+            <section id="vdp-method">
+                <h1 class="section-title"><i class="fa-solid fa-draw-polygon"></i> 2. van der Pauw 電阻率量測</h1>
+                <div class="card">
+                    <h3>van der Pauw 量測幾何條件要求</h3>
+                    <p>傳統的四探針法常用於大面積或一維線性的電阻量測。然而，1958 年由 Leo van der Pauw 提出的 **van der Pauw 方法** 更加強大：它允許量測任意形狀、厚度均勻且無孔洞（單連通）的二維薄膜樣品的電阻率及載子參數，只需在薄膜邊緣製作 4 個微小電極（通常在正方形的四個角，順時針或逆時針編號為 1, 2, 3, 4）。</p>
+                    
+                    <div class="theory-img-container">
+                        <div style="display: inline-block; background: rgba(0, 0, 0, 0.3); padding: 1.5rem; border-radius: var(--border-radius); border: 1px solid var(--gold-border);">
+                            <!-- 用 SVG 或簡易 CSS 替代講義圖片 -->
+                            <svg width="280" height="180" viewBox="0 0 280 180">
+                                <rect x="40" y="20" width="200" height="140" rx="10" fill="rgba(197, 168, 107, 0.05)" stroke="var(--gold-primary)" stroke-width="2" stroke-dasharray="4"/>
+                                <circle cx="40" cy="20" r="10" fill="#090a0f" stroke="var(--gold-primary)" stroke-width="2"/>
+                                <text x="36" y="24" fill="var(--text-gold)" font-family="monospace" font-weight="bold">1</text>
+                                
+                                <circle cx="240" cy="20" r="10" fill="#090a0f" stroke="var(--gold-primary)" stroke-width="2"/>
+                                <text x="236" y="24" fill="var(--text-gold)" font-family="monospace" font-weight="bold">2</text>
+                                
+                                <circle cx="240" cy="160" r="10" fill="#090a0f" stroke="var(--gold-primary)" stroke-width="2"/>
+                                <text x="236" y="164" fill="var(--text-gold)" font-family="monospace" font-weight="bold">3</text>
+                                
+                                <circle cx="40" cy="160" r="10" fill="#090a0f" stroke="var(--gold-primary)" stroke-width="2"/>
+                                <text x="36" y="164" fill="var(--text-gold)" font-family="monospace" font-weight="bold">4</text>
+                                
+                                <path d="M 40 20 L 240 20" stroke="#ef4444" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+                                <text x="120" y="40" fill="#ef4444" font-size="12">I_12 (注入電流)</text>
+                                
+                                <path d="M 240 160 L 40 160" stroke="#10b981" stroke-width="2" fill="none"/>
+                                <text x="100" y="150" fill="#10b981" font-size="12">V_43 = V_4 - V_3</text>
+                            </svg>
+                        </div>
+                        <div class="img-caption">圖 2.1 van der Pauw 正方形樣品配置與電阻率 $R_{12,43}$ 量測接線示意</div>
+                    </div>
+
+                    <h3>片電阻與 van der Pauw 方程式</h3>
+                    <p>定義相鄰兩端輸入電流，另兩端讀取電壓的等效電阻：</p>
+                    <ul>
+                        <li>$R_{12,43} = \frac{V_{43}}{I_{12}}$ ：從電極 1 注入電流、2 流出，量測電極 4 與 3 之間的電壓。</li>
+                        <li>$R_{23,14} = \frac{V_{14}}{I_{23}}$ ：從電極 2 注入電流、3 流出，量測電極 1 與 4 之間的電壓。</li>
+                    </ul>
+                    <p>Leo van der Pauw 證明了對於符合上述幾何特性的樣品，其 **片電阻 (Sheet Resistance, $R_s$)** 滿足以下超越方程式 (Transcendental Equation)：</p>
+                    
+                    <div class="formula-block">
+                        $$\exp\left(-\frac{\pi R_{12,43}}{R_s}\right) + \exp\left(-\frac{\pi R_{23,14}}{R_s}\right) = 1$$
+                    </div>
+
+                    <p>一般簡寫為：</p>
+                    <div class="formula-block">
+                        $$\exp\left(-\frac{\pi R_A}{R_s}\right) + \exp\left(-\frac{\pi R_B}{R_s}\right) = 1$$
+                    </div>
+
+                    <p>若樣品具有高度空間對稱性（例如完美的圓形或正方形，且四個電極呈對稱分佈），此時相鄰電阻 $R_A = R_B$。方程式可直接以解析解求出：</p>
+                    <div class="formula-block">
+                        $$2 \exp\left(-\frac{\pi R_A}{R_s}\right) = 1 \implies R_s = \frac{\pi R_A}{\ln 2} \approx 4.532 \times R_A$$
+                    </div>
+                    <p>若樣品不對稱（$R_A \neq R_B$），則無法求出代數解析解，必須利用數值方法（如 **牛頓疊代法**）進行求解，這也是本教學網頁互動工具箱所採用的精密核心演算法。</p>
+                    <p>體電阻率 $\rho$ 與片電阻 $R_s$ 及樣品薄膜厚度 $t$ 的關係為：</p>
+                    <div class="formula-block">
+                        $$\rho = R_s \times t$$
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SECTION 3: 消除熱電誤差之 8 次霍爾量測 -->
+            <section id="vdp-hall">
+                <h1 class="section-title"><i class="fa-solid fa-sync"></i> 3. van der Pauw 霍爾電壓與 8 次切換量測</h1>
+                <div class="card">
+                    <h3>消除熱電效應 (Thermal EMF) 與熱電偶誤差</h3>
+                    <p>在實際量測中，由於接點微小的溫度不均勻會產生 **Seebeck 效應（溫差電效應）**，或者探針不對稱導致偏置電壓 (Offset Voltage)。這些雜散電壓會直接疊加在微弱的霍爾電壓上，造成極大的量測誤差。為了消除這些與磁場無關的寄生直流電壓，我們必須在垂直磁場下，進行 **2 種電流方向、2 種對角線接線、2 種磁場極性 (正向/反向磁場 $B^+$ 與 $B^-$)** 的組合切換，共計 **8 次電壓量測**：</p>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>量測序號</th>
+                                    <th>施加磁場</th>
+                                    <th>電流方向</th>
+                                    <th>電壓量測點</th>
+                                    <th>記錄電壓符號</th>
+                                    <th>物理解析與消除雜訊目標</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>正向磁場 $B^+$</td>
+                                    <td>$I_{13}$ (1 注入, 3 流出)</td>
+                                    <td>$V_{24} = V_2 - V_4$</td>
+                                    <td>$V_{13,24}(B^+)$</td>
+                                    <td rowspan="4">在磁場固定為 $B^+$ 下，切換對角線電極與電流方向，可以將探針物理接觸幾何不對稱產生的偏壓與熱電效應雜訊進行一次平均消除。</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>正向磁場 $B^+$</td>
+                                    <td>$I_{31}$ (3 注入, 1 流出)</td>
+                                    <td>$V_{24} = V_2 - V_4$</td>
+                                    <td>$V_{31,24}(B^+)$</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>正向磁場 $B^+$</td>
+                                    <td>$I_{24}$ (2 注入, 4 流出)</td>
+                                    <td>$V_{13} = V_1 - V_3$</td>
+                                    <td>$V_{24,13}(B^+)$</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>正向磁場 $B^+$</td>
+                                    <td>$I_{42}$ (4 注入, 2 流出)</td>
+                                    <td>$V_{13} = V_1 - V_3$</td>
+                                    <td>$V_{42,13}(B^+)$</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>反向磁場 $B^-$</td>
+                                    <td>$I_{13}$ (1 注入, 3 流出)</td>
+                                    <td>$V_{24} = V_2 - V_4$</td>
+                                    <td>$V_{13,24}(B^-)$</td>
+                                    <td rowspan="4">將磁場反向為 $B^-$ 並重複 4 次量測。因為真實的霍爾電壓與磁場成正比，而熱電偏置電壓與磁場無關，因此將 $B^+$ 的測量結果減去 $B^-$ 的測量結果，便能徹底將與磁場無關的直流偏置與溫差電阻完全相消。</td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td>反向磁場 $B^-$</td>
+                                    <td>$I_{31}$ (3 注入, 1 流出)</td>
+                                    <td>$V_{24} = V_2 - V_4$</td>
+                                    <td>$V_{31,24}(B^-)$</td>
+                                </tr>
+                                <tr>
+                                    <td>7</td>
+                                    <td>反向磁場 $B^-$</td>
+                                    <td>$I_{24}$ (2 注入, 4 流出)</td>
+                                    <td>$V_{13} = V_1 - V_3$</td>
+                                    <td>$V_{24,13}(B^-)$</td>
+                                </tr>
+                                <tr>
+                                    <td>8</td>
+                                    <td>反向磁場 $B^-$</td>
+                                    <td>$I_{42}$ (4 注入, 2 流出)</td>
+                                    <td>$V_{13} = V_1 - V_3$</td>
+                                    <td>$V_{42,13}(B^-)$</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>淨霍爾電壓和與計算公式</h3>
+                    <p>首先將對角線 1-3 和對角線 2-4 的兩組電壓差相減，獲得淨霍爾電壓差：</p>
+                    <div class="formula-block">
+                        $$V_C = V_{13,24}(B^+) - V_{13,24}(B^-)$$
+                        $$V_D = V_{24,13}(B^+) - V_{24,13}(B^-)$$
+                    </div>
+                    <p>加總求和，得到用於計算的霍爾電壓和 $V_{sum}$：</p>
+                    <div class="formula-block">
+                        $$V_{sum} = V_C + V_D$$
+                    </div>
+                    <p>利用 $V_{sum}$ 計算薄膜片載子濃度 ($n_s$ 或 $p_s$)：</p>
+                    <div class="formula-block">
+                        $$n_s = \frac{8 \cdot 10^{-8} I B}{q \cdot |V_{sum}|} \text{ (cm}^{-2}\text{)}$$
+                        <p style="margin-top: 10px; font-size: 0.9rem; color: var(--text-muted);">
+                            其中：電流 $I$ 單位為 A，磁場 $B$ 單位為 Gauss，電荷常數 $q = 1.602 \times 10^{-19}$ C
+                        </p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SECTION 4: 載子濃度與霍爾遷移率 -->
+            <section id="mobility-concentration">
+                <h1 class="section-title"><i class="fa-solid fa-bolt"></i> 4. 載子濃度、遷移率與散射機制</h1>
+                <div class="card">
+                    <h3>體載子濃度 (Bulk Carrier Concentration)</h3>
+                    <p>利用片載子濃度 $n_s$ 及薄膜的物理均勻厚度 $t$，可直接得出體載子濃度：</p>
+                    <div class="formula-block">
+                        $$n = \frac{n_s}{t} \text{ (cm}^{-3}\text{)} \quad \text{或} \quad p = \frac{p_s}{t} \text{ (cm}^{-3}\text{)}$$
+                    </div>
+
+                    <h3>霍爾遷移率 (Hall Mobility, $\mu_H$)</h3>
+                    <p>載子在單位電場下的漂移速度即為遷移率。結合已量測出的片電阻 $R_s$ 與片載子濃度 $n_s$，可求得霍爾遷移率：</p>
+                    <div class="formula-block">
+                        $$\mu_H = \frac{1}{q \cdot n_s \cdot R_s} \text{ (cm}^2/\text{V}\cdot\text{s)}$$
+                    </div>
+                    <p>對應的電導率 $\sigma$ 為：</p>
+                    <div class="formula-block">
+                        $$\sigma = \frac{1}{\rho} = q \cdot n \cdot \mu_H \text{ (S/cm)}$$
+                    </div>
+
+                    <h3>溫度對遷移率之影響與散射機制</h3>
+                    <p>在不同溫度下，半導體薄膜的遷移率會展現截然不同的趨勢，主要由兩種散射機制主導：</p>
+                    
+                    <div class="grid-2">
+                        <div class="card" style="margin-bottom: 0;">
+                            <span class="parameter-badge">晶格振動散射 (聲子散射)</span>
+                            <p>在高溫下，晶格原子的熱運動加劇，電子與聲子發生碰撞（聲子散射）的機率大增。此機制下，遷移率與溫度的關係滿足：</p>
+                            <p>$$\mu_{phonon} \propto T^{-3/2}$$</p>
+                            <p>這意味著<strong>高溫下，遷移率會隨著溫度升高而下降</strong>。</p>
+                        </div>
+                        <div class="card" style="margin-bottom: 0;">
+                            <span class="parameter-badge">電離雜質散射 (Ionized Impurity)</span>
+                            <p>在低溫下，載子運動速度變慢。當其經過被電離的摻雜原子（雜質）附近時，會受到庫倫引力或斥力而發生偏轉。溫度越低，載子熱速度越慢，在庫倫場附近停留時間越長，偏轉越嚴重：</p>
+                            <p>$$\mu_{impurity} \propto T^{3/2}$$</p>
+                            <p>這意味著<strong>低溫下，遷移率會隨著溫度升高而上升</strong>。</p>
+                        </div>
+                    </div>
+                    
+                    <p style="margin-top: 1.5rem;">實際總遷移率符合馬西森定則 (Matthiessen's Rule)：</p>
+                    <div class="formula-block">
+                        $$\frac{1}{\mu_{total}} = \frac{1}{\mu_{phonon}} + \frac{1}{\mu_{impurity}}$$
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SECTION 5: 實作實驗考點探討 -->
+            <section id="lab-discussion">
+                <h1 class="section-title"><i class="fa-solid fa-flask"></i> 5. 實作實驗考點探討</h1>
+                <div class="card">
+                    <p>在實際霍爾效應與 van der Pauw 實驗中，操作細節與物理環境的控制是決定實驗成敗的關鍵，也是期末考試的熱門考點：</p>
+                    
+                    <div class="alert error">
+                        <div class="alert-title"><i class="fa-solid fa-eye-slash"></i> 1. 為什麼實驗必須在「黑暗環境」下量測？</div>
+                        <div class="alert-content">
+                            <p>半導體材料對光線極為敏感。若在光照環境下量測：</p>
+                            <ul>
+                                <li>光子能量大於能隙時，會激發出大量的<strong>非平衡光生電子-電洞對</strong>。</li>
+                                <li>這會人為抬高材料中的載子濃度（即量測到的 $n$ 偏高），進而使電阻率 $\rho$ 顯著降低。</li>
+                                <li>此時計算出的霍爾遷移率 $\mu_H$ 也會偏離材料在熱平衡下的真實本徵參數。</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="alert warning">
+                        <div class="alert-title"><i class="fa-solid fa-plug"></i> 2. 歐姆接觸 (Ohmic Contact) 檢驗與判定</div>
+                        <div class="alert-content">
+                            <p>在製作四個探針接點時，半導體與金屬接觸介面可能形成肖特基勢壘 (Schottky Barrier) 導致整流效應，造成非線性阻抗。在量測前，必須透過 SourceMeter 掃描任意兩個電極間的 I-V 特性：</p>
+                            <ul>
+                                <li><strong>判定依據</strong>：I-V 曲線必須是<strong>通過原點的完美直線</strong>，代表該接觸符合歐姆定律，具備極低的定值接觸電阻。</li>
+                                <li>若 I-V 曲線呈現彎曲、二極體整流特徵或非對稱性，則說明接觸不良，會嚴重破壞 van der Pauw 量測的有效性。</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="alert">
+                        <div class="alert-title"><i class="fa-solid fa-fire-flame-simple"></i> 3. 恆定輸入電流 $I$ 的大小設定考量</div>
+                        <div class="alert-content">
+                            <p>量測時，輸入電流 $I$ 的設定並非越大越好：</p>
+                            <ul>
+                                <li><strong>電流過小</strong>：產生的霍爾電壓極其微弱，容易被系統的雜訊和直流偏置淹沒，降低訊噪比。</li>
+                                <li><strong>電流過大</strong>：大電流在樣品體電阻上會產生嚴重的<strong>焦耳熱效應 (Joule Heating)</strong>，導致樣品溫度上升。溫度升高會改變載子的本徵濃度與晶格散射機率，導致量測結果隨時間漂移。</li>
+                                <li><strong>實務建議</strong>：應先進行電流掃描，選擇一個在 I-V 線性範圍內、能產生足夠電壓訊號（數十微伏至數毫伏）且不引起樣品發熱的最佳中度電流。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SECTION 6: 互動工具箱 -->
+            <section id="calculators">
+                <h1 class="section-title"><i class="fa-solid fa-calculator"></i> 6. 霍爾效應互動工具箱</h1>
+                
+                <!-- 互動工具 1: Canvas 物理電荷偏轉模擬 -->
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-wave-square"></i> 霍爾效應物理電荷偏轉模擬器</div>
+                    <p>本工具模擬半導體薄膜在電流與垂直外加磁場下的微觀載子運動。您可以動態切換載子類型（電子或電洞）、改變電流方向與磁場極性，觀察洛倫茲力偏轉與穩態霍爾電場的建立過程。</p>
+                    
+                    <div class="calc-grid">
+                        <div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-circle-dot"></i> 載子導電型態</label>
+                                <select id="sim-carrier-type">
+                                    <option value="n-type" selected>n-type (帶負電電子 -e)</option>
+                                    <option value="p-type">p-type (帶正電電洞 +e)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="input-group">
+                                <div class="slider-label-row">
+                                    <label><i class="fa-solid fa-arrows-left-right"></i> 輸入電流 $I$ 方向與大小</label>
+                                    <span class="slider-value" id="sim-current-val">+5 mA</span>
+                                </div>
+                                <input type="range" id="sim-current" min="-10" max="10" step="1" value="5">
+                            </div>
+                            
+                            <div class="input-group">
+                                <div class="slider-label-row">
+                                    <label><i class="fa-solid fa-arrows-up-down"></i> 垂直磁場 $B$ 極性與強度</label>
+                                    <span class="slider-value" id="sim-field-val">+0.5 Tesla</span>
+                                </div>
+                                <input type="range" id="sim-field" min="-1.5" max="1.5" step="0.1" value="0.5">
+                            </div>
+                            
+                            <div class="alert" style="margin-top: 1rem; padding: 1rem;">
+                                <div class="alert-title" style="font-size: 0.85rem;"><i class="fa-solid fa-circle-info"></i> 物理受力即時解析</div>
+                                <div class="alert-content" style="font-size: 0.85rem;" id="sim-physics-log">
+                                    載子正受到洛倫茲力偏轉中...
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="calc-result">
+                            <div class="canvas-wrapper">
+                                <canvas id="hall-sim-canvas"></canvas>
+                            </div>
+                            
+                            <div style="margin-top: 1.5rem;">
+                                <div class="result-item">
+                                    <span>洛倫茲力 ($F_L = q \cdot v_d \times B$)</span>
+                                    <span class="result-val" id="res-sim-lorentz">-</span>
+                                </div>
+                                <div class="result-item">
+                                    <span>霍爾電場平衡極性</span>
+                                    <span class="result-val" id="res-sim-polarity" style="color: var(--success); font-weight: bold;">-</span>
+                                </div>
+                                <div class="result-item">
+                                    <span>霍爾電壓 ($V_H$) 讀數</span>
+                                    <span class="result-val" id="res-sim-vh" style="font-size: 1.25rem;">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 互動工具 2: van der Pauw 超越方程式求解器 -->
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-square-root-variable"></i> van der Pauw 片電阻與電阻率數值求解器</div>
+                    <p>輸入量測到的相鄰等效電阻 $R_A$ 與 $R_B$，系統將採用 **牛頓疊代法 (Newton-Raphson method)**，在毫秒內收斂求解出滿足超越方程式 $\exp(-\pi R_A / R_s) + \exp(-\pi R_B / R_s) = 1$ 的精確片電阻 $R_s$。</p>
+                    
+                    <div class="calc-grid">
+                        <div>
+                            <div class="input-group">
+                                <div class="slider-label-row">
+                                    <label>相鄰電阻 $R_A = R_{12,43}$ ($\Omega$)</label>
+                                    <span class="slider-value" id="calc-ra-val">100.0 Ω</span>
+                                </div>
+                                <input type="range" id="calc-ra" min="10" max="1000" step="1" value="100">
+                            </div>
+                            
+                            <div class="input-group">
+                                <div class="slider-label-row">
+                                    <label>相鄰電阻 $R_B = R_{23,14}$ ($\Omega$)</label>
+                                    <span class="slider-value" id="calc-rb-val">150.0 Ω</span>
+                                </div>
+                                <input type="range" id="calc-rb" min="10" max="1000" step="1" value="150">
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>薄膜厚度 $t$ (nm)</label>
+                                <input type="number" id="calc-thickness" min="1" max="10000" value="100">
+                            </div>
+                            
+                            <div class="alert" style="margin-top: 1rem; padding: 1rem; border-left-color: var(--success); background: rgba(16, 185, 129, 0.03);">
+                                <div class="alert-title" style="font-size: 0.85rem; color: var(--success);"><i class="fa-solid fa-circle-check"></i> 數值收斂狀態</div>
+                                <div class="alert-content" style="font-size: 0.85rem; color: var(--text-muted);" id="solver-status">
+                                    疊代已成功收斂。
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="calc-result">
+                            <div class="result-item">
+                                <span>輸入阻值比值 ($R_A / R_B$)</span>
+                                <span class="result-val" id="res-ratio">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span>片電阻 ($R_s$) [數值解]</span>
+                                <span class="result-val" id="res-rs" style="color: var(--gold-primary); font-size: 1.25rem;">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span>片電阻 ($R_s$) [對稱近似解]</span>
+                                <span class="result-val" id="res-rs-approx" style="text-decoration: line-through; opacity: 0.6;">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span>體電阻率 ($\rho = R_s \times t$)</span>
+                                <span class="result-val" id="res-rho" style="color: #10b981; font-weight: bold;">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 互動工具 3: 綜合電性分析儀 -->
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-chart-line"></i> 霍爾遷移率與載子特性分析儀</div>
+                    <p>輸入已求得的片電阻 $R_s$（或電阻率）、外加磁場 $B$、輸入電流 $I$ 以及量測到的霍爾電壓和 $V_{sum}$，即可直接導出載子濃度與遷移率參數。</p>
+                    
+                    <div class="calc-grid">
+                        <div>
+                            <div class="input-group">
+                                <label>片電阻 $R_s$ ($\Omega$/sq) — 可手動輸入</label>
+                                <input type="number" id="anal-rs" min="0.1" step="0.1" value="560">
+                            </div>
+                            <div class="input-group">
+                                <label>外加磁場 $B$ (Gauss)</label>
+                                <input type="number" id="anal-field" min="100" max="20000" value="5000">
+                            </div>
+                            <div class="input-group">
+                                <label>輸入恆定電流 $I$ (mA)</label>
+                                <input type="number" id="anal-current" min="0.01" step="0.01" value="1.0">
+                            </div>
+                            <div class="input-group">
+                                <label>八次量測電壓和 $V_{sum}$ (mV) — 可正可負</label>
+                                <input type="number" id="anal-vsum" step="0.1" value="44.8">
+                            </div>
+                            <div class="input-group">
+                                <label>薄膜厚度 $t$ (nm)</label>
+                                <input type="number" id="anal-thickness" min="1" value="80">
+                            </div>
+                        </div>
+                        
+                        <div class="calc-result">
+                            <div class="result-item">
+                                <span>淨霍爾電壓平均值 ($V_H$)</span>
+                                <span class="result-val" id="res-anal-vh">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span>載子電導型態 (Carrier Type)</span>
+                                <span class="result-val" id="res-anal-type" style="font-size: 1.15rem; font-weight: bold;">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span>片載子濃度 ($n_s$ 或 $p_s$)</span>
+                                <span class="result-val" id="res-anal-ns">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span>體載子濃度 ($n$ 或 $p$)</span>
+                                <span class="result-val" id="res-anal-n" style="color: var(--gold-primary); font-weight: bold;">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span>霍爾遷移率 ($\mu_H$)</span>
+                                <span class="result-val" id="res-anal-mu" style="color: var(--success); font-size: 1.25rem;">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SECTION 6: Redia 級 AI 網頁/論文閱讀艙 -->
+            <section id="web-reader">
+                <h1 class="section-title"><i class="fa-solid fa-book-open"></i> 6. Redia 級 AI 網頁/論文閱讀艙</h1>
+                <div class="card">
+                    <p>體驗 Redia 的核心功能：將艱澀擁擠的英文學術論文或網頁，無縫轉化為乾淨、精準的 **中英對照行級對齊** 視圖，並與內建 AI 閱讀助理直接問答，點擊 AI 回答的來源標記能即刻定位原文段落。</p>
+                    
+                    <!-- 輸入與控制器 -->
+                    <div class="calc-grid" style="margin-bottom: 2rem;">
+                        <div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-globe"></i> 輸入網頁 URL (模擬網頁提取)</label>
+                                <input type="text" id="reader-url" placeholder="https://arxiv.org/abs/2303.00001" style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--gold-border);">
+                            </div>
+                            
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-file-lines"></i> 貼上英文論文 / 網頁文字內容</label>
+                                <textarea id="reader-text" rows="5" placeholder="貼上任何英文學術段落，例如：The Hall effect is the production of a voltage difference across an electrical conductor..." style="width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--gold-border); border-radius: var(--border-radius); color: var(--text-primary); padding: 0.75rem; font-family: var(--font-sans); resize: vertical;"></textarea>
+                            </div>
+                            
+                            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                <input type="file" id="reader-file-upload" accept=".html,.htm,.txt" style="display: none;">
+                                <button class="btn-primary" id="reader-upload-btn" style="flex: 1; min-width: 130px;"><i class="fa-solid fa-cloud-arrow-up"></i> 貼上並解析</button>
+                                <button class="btn-secondary" id="reader-file-upload-btn" style="flex: 1; min-width: 130px;"><i class="fa-solid fa-file-code"></i> 上傳網頁/檔案</button>
+                                <button class="btn-secondary" id="reader-file-mock-btn" style="flex: 1; min-width: 130px;"><i class="fa-solid fa-file-pdf"></i> 模擬 PDF 上傳</button>
+                            </div>
+                        </div>
+                        
+                        <div class="calc-result" style="justify-content: flex-start;">
+                            <span class="parameter-badge" style="width: fit-content;"><i class="fa-solid fa-circle-play"></i> 一鍵載入經典論文示範</span>
+                            <p style="font-size: 0.9rem; margin-bottom: 1rem;">我們為您準備了霍爾效應量測的經典論文，點擊下方即可直接在右側閱讀沙盒中載入：</p>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <button class="btn-secondary" id="demo-hall-btn" style="text-align: left; padding: 0.75rem 1rem; font-size: 0.9rem;">
+                                    <i class="fa-solid fa-square-poll-vertical" style="color: var(--gold-primary); margin-right: 0.5rem;"></i>
+                                    <strong>Demo 1:</strong> 霍爾效應載子傳輸與聲子散射機制
+                                </button>
+                                <button class="btn-secondary" id="demo-vdp-btn" style="text-align: left; padding: 0.75rem 1rem; font-size: 0.9rem;">
+                                    <i class="fa-solid fa-shapes" style="color: var(--gold-primary); margin-right: 0.5rem;"></i>
+                                    <strong>Demo 2:</strong> van der Pauw 任意幾何薄膜片電阻推導
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Redia 閱讀器沙盒主體 -->
+                    <div class="reader-sandbox" id="reader-sandbox-view" style="display: none; border: 1px solid var(--gold-border); border-radius: var(--border-radius); overflow: hidden; background: #06070a; box-shadow: 0 8px 32px rgba(0,0,0,0.6); transition: var(--transition-smooth);">
+                        <!-- 閱讀器工具列 -->
+                        <div class="reader-toolbar" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.5rem; background: rgba(197, 168, 107, 0.05); border-bottom: 1px solid var(--gold-border);">
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="reader-mode-btn active" id="mode-bilingual-btn" style="background: rgba(197, 168, 107, 0.1); border: 1px solid var(--gold-border); color: var(--gold-primary); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">中英對照</button>
+                                <button class="reader-mode-btn" id="mode-original-btn" style="background: transparent; border: 1px solid transparent; color: var(--text-muted); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500;">僅顯示原文</button>
+                                <button class="reader-mode-btn" id="mode-summary-btn" style="background: transparent; border: 1px solid transparent; color: var(--text-muted); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500;">AI 智能大綱</button>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">字級：</span>
+                                <button id="font-dec-btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--gold-border); color: var(--text-primary); width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 0.75rem;">A-</button>
+                                <button id="font-inc-btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--gold-border); color: var(--text-primary); width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 0.75rem;">A+</button>
+                            </div>
+                        </div>
+
+                        <!-- 閱讀器雙欄內容與 AI Chat -->
+                        <div class="reader-content-grid" style="display: grid; grid-template-columns: 1.5fr 1fr; min-height: 400px; max-height: 550px;">
+                            <!-- 左欄：文章顯示區 -->
+                            <div class="reader-article-pane" id="reader-article-area" style="padding: 1.5rem 2rem; overflow-y: auto; border-right: 1px solid var(--gold-border); line-height: 1.8; font-size: 1rem; color: var(--text-primary);">
+                                <!-- 動態載入段落 -->
+                            </div>
+
+                            <!-- 右欄：AI 互動討論區 -->
+                            <div class="reader-chat-pane" style="display: flex; flex-direction: column; background: rgba(13, 15, 23, 0.5); overflow: hidden;">
+                                <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--gold-border); background: rgba(0,0,0,0.2); font-size: 0.85rem; font-weight: 600; color: var(--text-gold); display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-robot"></i> Redia AI 閱讀助理
+                                </div>
+                                
+                                <!-- 對話記錄 -->
+                                <div class="reader-chat-history" id="reader-chat-messages" style="flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; font-size: 0.9rem;">
+                                    <div class="chat-bubble-ai" style="align-self: flex-start; background: rgba(197, 168, 107, 0.06); border: 1px solid var(--gold-border); border-radius: 8px; padding: 0.75rem 1rem; max-width: 90%; color: var(--text-primary);">
+                                        您好！MJ。我已經成功載入了這篇學術文章。您可以隨時在下方對我提問，或者點擊下方的熱門追問來深入分析文章細節。
+                                    </div>
+                                </div>
+
+                                <!-- 快捷提問 -->
+                                <div class="reader-chat-quick-actions" id="reader-quick-questions" style="padding: 0.5rem 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.1);">
+                                    <!-- 動態生成問題按鈕 -->
+                                </div>
+
+                                <!-- 輸入框 -->
+                                <div class="reader-chat-input-row" style="padding: 0.75rem 1rem; border-top: 1px solid var(--gold-border); background: #06070a; display: flex; gap: 0.5rem;">
+                                    <input type="text" id="reader-chat-input" placeholder="向 AI 詢問關於這篇文章的任何問題..." style="flex: 1; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--gold-border); color: var(--text-primary); padding: 0.5rem 0.75rem; border-radius: var(--border-radius); font-size: 0.9rem; outline: none;">
+                                    <button class="btn-primary" id="reader-chat-send-btn" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;"><i class="fa-solid fa-paper-plane"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SECTION 7: 模擬考場 -->
+            <section id="quiz-section">
+                <h1 class="section-title"><i class="fa-solid fa-graduation-cap"></i> 7. 考試模擬考場</h1>
+                <div class="card">
+                    <p>本考場精選了 5 題關於霍爾效應與 van der Pauw 理論的期末考核心概念題。 MJ 可以進行自我檢測，作答完畢後將獲得詳細的解析回饋。</p>
+                    
+                    <div class="quiz-container">
+                        <!-- 進度條 -->
+                        <div class="quiz-progress">
+                            <span id="quiz-q-num">第 1 / 5 題</span>
+                            <span id="quiz-score-display">目前得分: 0 分</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="quiz-progress-bar"></div>
+                        </div>
+                        
+                        <!-- 問題內容 -->
+                        <div id="quiz-question-box">
+                            <div class="quiz-question" id="quiz-question-text">載入題目中...</div>
+                            <div class="quiz-options" id="quiz-options-container">
+                                <!-- 動態插入選項 -->
+                            </div>
+                        </div>
+                        
+                        <!-- 解析回饋 -->
+                        <div class="quiz-feedback" id="quiz-feedback-box">
+                            <div class="quiz-feedback-title" id="quiz-feedback-status">回答正確 / 錯誤</div>
+                            <p id="quiz-feedback-text">解析內容</p>
+                        </div>
+                        
+                        <!-- 導航按鈕 -->
+                        <div class="quiz-nav-row">
+                            <button class="btn-secondary" id="quiz-prev-btn" style="display: none;">上一題</button>
+                            <button class="btn-primary" id="quiz-next-btn">確認送出</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 頁尾 -->
+            <footer style="margin-top: 5rem; padding: 2rem 0; border-top: 1px solid var(--gold-border); text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+                <p>© 2026 Hall Effect Study Guide. Crafted under Obsidian Gold Design Standard.</p>
+            </footer>
+            
+        </main>
+    </div>
+</div>
+
+<!-- 載入應用邏輯腳本 -->
+<script src="app.js?v=1.0.1"></script>
+</body>
+</html>
