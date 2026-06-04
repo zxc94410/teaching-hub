@@ -418,10 +418,10 @@ function initHallSimulator() {
 
             // 霍爾電壓輸出
             // VH = R_H * I * B / t
-            const tSim = 100e-7; // 100nm
-            const nSim = 2e15;   // 載子濃度
+            const tSim = 1e-4; // 0.1 mm (物理量測樣品常用厚度)
+            const nSim = 2e21;   // 載子濃度 2e15 cm^-3 = 2e21 m^-3 (SI 制)
             const RH = 1 / (qVal * nSim);
-            const VhSim = (RH * (current * 1e-3) * field) / tSim * 1e3 * 35; // 加上尺度因子便於模擬
+            const VhSim = (RH * (current * 1e-3) * field) / tSim * 1e3; // 單位: mV // let 
             
             resVh.innerText = `${VhSim.toFixed(2)} mV`;
             resVh.style.color = VhSim >= 0 ? "var(--success)" : "var(--error)";
