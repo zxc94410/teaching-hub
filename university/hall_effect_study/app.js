@@ -194,6 +194,7 @@ function initHallSimulator() {
 
     let lastCanvasStyleWidth = 0;
     let lastCanvasStyleHeight = 0;
+    let FE_ratio = 0; // 電場力累積比例因子 (由 0 逐漸上升至 1) // let 
 
     // Retina 縮放與 dpr 設定 (防抖與防模糊)
     function setupCanvasDPR() {
@@ -224,14 +225,14 @@ function initHallSimulator() {
 
     // 粒子類別
     class Particle {
-        constructor(width, height, isElectron, currentDir) {
+        constructor(width, height, isElectron, vdDir) {
             this.canvasWidth = width;
             this.canvasHeight = height;
             this.isElectron = isElectron;
             this.radius = 4;
             
-            // 電子運動方向與電流相反；電洞與電流相同
-            this.dirX = isElectron ? -currentDir : currentDir;
+            // 漂移方向直接由速度正負 vdDir 決定
+            this.dirX = vdDir;
             
             this.reset();
             // 隨機初始位置
@@ -296,15 +297,16 @@ function initHallSimulator() {
     // 初始化粒子群
     function initParticles() {
         particles = []; // let 
+        FE_ratio = 0; // 每次重設參數時，電場力比率重設為 0 // let 
         const isElectron = typeSelect.value === "n-type";
-        const current = parseInt(currentInput.value);
-        const currentDir = current >= 0 ? 1 : -1;
+        const vd = parseInt(currentInput.value);
+        const vdDir = vd >= 0 ? 1 : -1;
 
         const w = canvas.width / (window.devicePixelRatio || 1);
         const h = canvas.height / (window.devicePixelRatio || 1);
 
         for (let i = 0; i < maxParticles; i++) {
-            particles.push(new Particle(w, h, isElectron, currentDir));
+            particles.push(new Particle(w, h, isElectron, vdDir));
         }
     }
 
@@ -338,17 +340,17 @@ function initHallSimulator() {
 
         // 3. 取得控制參數
         const carrier = typeSelect.value;
-        const current = parseInt(currentInput.value);
+        const vd = parseInt(currentInput.value); // 載子漂移速度 v_d
         const field = parseFloat(fieldInput.value);
 
-        currentVal.innerText = `${current >= 0 ? "+" : ""}${current} mA`;
+        currentVal.innerText = `${vd >= 0 ? "+" : ""}${vd} m/s`;
         fieldVal.innerText = `${field >= 0 ? "+" : ""}${field.toFixed(1)} Tesla`;
 
         // 4. 更新並繪製漂移電荷粒子
-        const speedMultiplier = Math.abs(current) / 5; // 電流大速度快
+        const speedMultiplier = Math.abs(vd) / 50; // 以 50 m/s 為基準速度
         particles.forEach(p => {
-            // 更新方向
-            p.dirX = p.isElectron ? (current >= 0 ? -1 : 1) : (current >= 0 ? 1 : -1);
+            // 漂移方向直接與漂移速度 vd 同向
+            p.dirX = vd >= 0 ? 1 : -1;
             p.speed = (Math.random() * 1.0 + 1.0) * (speedMultiplier || 0.1);
             
             p.update(field);
@@ -358,14 +360,7 @@ function initHallSimulator() {
         // 5. 計算物理公式響應
         // Lorentz Force Fy = q * vd * B
         const qVal = carrier === "n-type" ? -1.602e-19 : 1.602e-19;
-        const currentDir = current >= 0 ? 1 : -1;
-        const vdDir = carrier === "n-type" ? -currentDir : currentDir;
-        
-        // 力的方向分析 (洛倫茲力偏轉方向)
-        // FL = q * (v x B)
-        // v: vdDir (沿 x)，B: field (沿 z)
-        // FL_y = q * vdDir * field
-        const flSign = qVal * vdDir * field; 
+        const flSign = qVal * vd * field; 
         
         let forceDesc = "";
         let accumulationTop = "";
@@ -373,30 +368,34 @@ function initHallSimulator() {
         let polarityDesc = "";
         let voltageSign = 1;
 
-        if (current === 0 || field === 0) {
+        if (vd === 0 || field === 0) {
+            FE_ratio = 0; // let 
             forceDesc = "無受力（無電流或無磁場）。"; // let 
             resLorentz.innerText = "0 N";
             resPolarity.innerText = "無電場累積";
             resVh.innerText = "0.00 mV";
             resVh.style.color = "var(--text-muted)";
         } else {
-            // 洛倫茲力大小與強度
-            const forceMag = Math.abs(qVal * (vdDir * 1e2) * field); // 示意尺度
+            // 動態電場力累積比率，模擬電荷逐漸積聚之動態平衡過程
+            FE_ratio = FE_ratio + (1.0 - FE_ratio) * 0.02; // let 
+
+            // 洛倫茲力大小與強度 (隨著漂移速度 vd 實時線性改變！)
+            const forceMag = Math.abs(qVal * vd * field);
             resLorentz.innerText = `${forceMag.toExponential(3)} N`;
             
             // 判定電荷偏移流向
             if (flSign > 0) {
-                // 向上壁 (y 減小方向) 偏轉
+                // 向上壁偏轉
                 forceDesc = `載子受洛倫茲力<span style="color: var(--gold-primary);">向上壁偏轉</span>。`; // let 
                 accumulationTop = carrier === "n-type" ? "-" : "+"; // let 
                 accumulationBottom = carrier === "n-type" ? "+" : "-"; // let 
-                voltageSign = carrier === "n-type" ? -1 : 1; // n-type 上面是負，V_A - V_B 為負 // let 
+                voltageSign = carrier === "n-type" ? -1 : 1; // let 
             } else {
-                // 向下壁 (y 增大方向) 偏轉
+                // 向下壁偏轉
                 forceDesc = `載子受洛倫茲力<span style="color: var(--gold-primary);">向下壁偏轉</span>。`; // let 
                 accumulationTop = carrier === "n-type" ? "+" : "-"; // let 
                 accumulationBottom = carrier === "n-type" ? "-" : "+"; // let 
-                voltageSign = carrier === "n-type" ? 1 : -1; // n-type 下面是負，V_A - V_B 為正 // let 
+                voltageSign = carrier === "n-type" ? 1 : -1; // let 
             }
 
             // 繪製在壁上累積的靜電荷 (示意圖)
@@ -404,24 +403,23 @@ function initHallSimulator() {
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             
-            // 上壁電荷
+            // 上壁電荷 (數量隨 FE_ratio 動態漸進累積)
             ctx.fillStyle = accumulationTop === "+" ? "#10b981" : "#ef4444";
-            for (let i = 0; i < 8; i++) {
+            const visibleCharges = Math.floor(8 * FE_ratio);
+            for (let i = 0; i < visibleCharges; i++) {
                 ctx.fillText(accumulationTop, 40 + i * ((w - 80) / 7), 80);
             }
 
             // 下壁電荷
             ctx.fillStyle = accumulationBottom === "+" ? "#10b981" : "#ef4444";
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < visibleCharges; i++) {
                 ctx.fillText(accumulationBottom, 40 + i * ((w - 80) / 7), 160);
             }
 
             // 霍爾電壓輸出
-            // VH = R_H * I * B / t
-            const tSim = 1e-4; // 0.1 mm (物理量測樣品常用厚度)
-            const nSim = 2e21;   // 載子濃度 2e15 cm^-3 = 2e21 m^-3 (SI 制)
-            const RH = 1 / (qVal * nSim);
-            const VhSim = (RH * (current * 1e-3) * field) / tSim * 1e3; // 單位: mV // let 
+            // VH = vd * B * w * FE_ratio (穩態時 FE_ratio = 1, VH = vd * B * w)
+            const wSim = 1e-3; // 1 mm 寬度
+            const VhSim = (voltageSign * Math.abs(vd) * field * wSim) * 1e3 * FE_ratio; // 單位: mV // let 
             
             resVh.innerText = `${VhSim.toFixed(2)} mV`;
             resVh.style.color = VhSim >= 0 ? "var(--success)" : "var(--error)";
@@ -431,11 +429,63 @@ function initHallSimulator() {
             resPolarity.style.color = VhSim >= 0 ? "var(--success)" : "var(--error)";
         }
 
+        // 動態計算實時受力數值以在 physicsLog 中渲染 qvb = qe 漸變關係
+        const forceL = Math.abs(qVal * vd * field);
+        const forceE = forceL * FE_ratio;
+        let balanceFormula = "";
+
+        if (vd === 0 || field === 0) {
+            balanceFormula = `<div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem; border-top: 1px solid var(--gold-border); padding-top: 0.5rem;">無外加受力平衡機制。</div>`; // let 
+        } else if (FE_ratio < 0.95) {
+            const progressPercent = Math.round(FE_ratio * 100);
+            balanceFormula = /* let */ `
+                <div style="font-size: 0.82rem; margin-top: 0.6rem; border-top: 1px solid rgba(197, 168, 107, 0.15); padding-top: 0.6rem;">
+                    <div style="color: var(--gold-primary); font-weight: 600; margin-bottom: 0.3rem; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fa-solid fa-hourglass-half"></i> 載子偏轉積聚中 (非平衡態)</span>
+                        <span style="font-size: 0.75rem; color: var(--gold-primary);">${progressPercent}%</span>
+                    </div>
+                    <!-- 進度條 -->
+                    <div style="width: 100%; height: 4px; background: rgba(255, 255, 255, 0.05); border-radius: 2px; margin-bottom: 0.5rem; overflow: hidden;">
+                        <div style="width: ${progressPercent}%; height: 100%; background: linear-gradient(90deg, var(--gold-primary), var(--success)); border-radius: 2px;"></div>
+                    </div>
+                    <div style="font-family: monospace; line-height: 1.5; color: var(--text-secondary);">
+                        <div style="margin-bottom: 0.2rem;">公式關係：<span style="color: var(--error); font-weight: bold;">q · v<sub>d</sub> · B &gt; q · E<sub>H</sub></span></div>
+                        <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 0.5rem; padding-left: 0.4rem; border-left: 2px solid rgba(239, 68, 68, 0.4);">
+                            <span>左式 (q·v<sub>d</sub>·B):</span> <span><strong>${forceL.toExponential(3)} N</strong></span>
+                            <span>右式 (q·E<sub>H</sub>):</span> <span style="color: var(--text-muted);">${forceE.toExponential(3)} N</span>
+                        </div>
+                    </div>
+                </div>
+            `; // let 
+        } else {
+            balanceFormula = /* let */ `
+                <div style="font-size: 0.82rem; margin-top: 0.6rem; border-top: 1px solid rgba(197, 168, 107, 0.15); padding-top: 0.6rem;">
+                    <div style="color: var(--success); font-weight: 600; margin-bottom: 0.3rem; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fa-solid fa-circle-check"></i> 達到霍爾動態平衡 (穩態平衡)</span>
+                        <span style="font-size: 0.75rem; color: var(--success);">100%</span>
+                    </div>
+                    <!-- 進度條 -->
+                    <div style="width: 100%; height: 4px; background: rgba(255, 255, 255, 0.05); border-radius: 2px; margin-bottom: 0.5rem; overflow: hidden;">
+                        <div style="width: 100%; height: 100%; background: var(--success); border-radius: 2px;"></div>
+                    </div>
+                    <div style="font-family: monospace; line-height: 1.5; color: var(--text-secondary);">
+                        <div style="margin-bottom: 0.2rem;">平衡公式：<span style="color: var(--success); font-weight: bold;">q · E<sub>H</sub> = q · v<sub>d</sub> · B</span></div>
+                        <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 0.5rem; padding-left: 0.4rem; border-left: 2px solid var(--success);">
+                            <span>左式 (q·E<sub>H</sub>):</span> <span><strong>${forceE.toExponential(3)} N</strong></span>
+                            <span>右式 (q·v<sub>d</sub>·B):</span> <span><strong>${forceL.toExponential(3)} N</strong></span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; font-style: italic;">* 橫向受力完全抵消，後續載子恢復直線運動。</div>
+                    </div>
+                </div>
+            `; // let 
+        }
+
         physicsLog.innerHTML = `
             載子類型: <strong>${carrier}</strong> | 
             洛倫茲力偏轉: ${forceDesc}<br>
             上壁累積電荷: <strong style="color: ${accumulationTop === "+" ? "var(--success)" : "var(--error)"}">${accumulationTop || "無"}</strong> | 
             下壁累積電荷: <strong style="color: ${accumulationBottom === "+" ? "var(--success)" : "var(--error)"}">${accumulationBottom || "無"}</strong>
+            ${balanceFormula}
         `;
 
         // 循環渲染
