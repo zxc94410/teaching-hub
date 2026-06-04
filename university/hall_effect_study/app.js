@@ -256,8 +256,9 @@ function initHallSimulator() {
             const vx = this.dirX * this.speed;
             const Bz = fieldVal;
             
-            // 橫向受力偏轉，使偏轉偏移量 offsetY 逐漸累積
-            const forceY = q * vx * Bz * 1.8;
+            // 橫向受力應為淨橫向力：洛倫茲力與霍爾電場力的合力
+            // 隨著平衡電場建立，淨受力 forceY 會漸漸降為 0，使前進中的載子不再發生新的偏轉
+            const forceY = q * vx * Bz * 1.8 * (1.0 - FE_ratio);
             this.offsetY += forceY;
 
             // 限制最大偏置，防止自由載子超出上下薄膜管道壁（80 ~ 160，因此最大偏置為 30 像素）
