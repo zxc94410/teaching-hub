@@ -241,33 +241,34 @@ function initHallSimulator() {
 
         reset() {
             this.x = this.dirX > 0 ? 10 : this.canvasWidth - 10;
-            this.y = Math.random() * 60 + 90; // 電影區域高度
+            // 隨機分配基準高度 (90 ~ 150，確保粒子均勻分布在薄膜中間核心導體區)
+            this.baseY = Math.random() * 60 + 90; 
+            this.offsetY = 0; // 洛倫茲力偏轉引起的位移
             this.speed = Math.random() * 1.5 + 1.2;
-            this.offsetY = 0; // 洛倫茲力引起的偏移
         }
 
         update(fieldVal) {
             // 水平漂移
             this.x += this.dirX * this.speed;
 
-            // 洛倫茲力偏轉力 (沿 y 軸)
-            // Fy = q * (vx * Bz)
-            // 磁場 fieldVal 正負代表 Bz 方向
-            // vx = this.dirX * speed
-            // q: 電子為 -1，電洞為 +1
+            // 洛倫茲力偏轉 (沿 y 軸)
             const q = this.isElectron ? -1 : 1;
             const vx = this.dirX * this.speed;
             const Bz = fieldVal;
             
-            // 橫向合力應為：洛倫茲力 Fy_L 與霍爾電場力 Fy_E 的抵消
-            // 當達到平衡 (FE_ratio -> 1) 時，合力 Fy 趨近於 0，粒子便平行直線運動！
-            const forceY = q * vx * Bz * 1.8 * (1.0 - FE_ratio);
-            
-            this.y += forceY;
+            // 橫向受力偏轉，使偏轉偏移量 offsetY 逐漸累積
+            const forceY = q * vx * Bz * 1.8;
+            this.offsetY += forceY;
 
-            // 電流管道範圍限制 (高度 80px ~ 160px 之間為薄膜內部)
-            if (this.y < 80) this.y = 80;
-            if (this.y > 160) this.y = 160;
+            // 限制最大偏置，防止自由載子超出上下薄膜管道壁（80 ~ 160，因此最大偏置為 30 像素）
+            const maxOffset = 30;
+            if (this.offsetY > maxOffset) this.offsetY = maxOffset;
+            if (this.offsetY < -maxOffset) this.offsetY = -maxOffset;
+
+            // 實時 y 座標會受到 FE_ratio 的影響：
+            // 隨著平衡電場力 FE_ratio 上升，累積的偏置 offsetY 被電場力反向抵消 (1 - FE_ratio)，平滑地拉回中線！
+            // 當達到穩態 (FE_ratio -> 1) 時，不論在哪個位置，粒子都會以完美的直線 (y = baseY) 平行移動！
+            this.y = this.baseY + this.offsetY * (1.0 - FE_ratio);
 
             // 邊界判定
             if (this.dirX > 0 && this.x > this.canvasWidth - 10) {
@@ -277,7 +278,10 @@ function initHallSimulator() {
             }
         }
 
-        draw() {
+        draw(w) {
+            // 限制只在薄膜內部繪製粒子，防止跑出電極或薄膜外產生視覺毛邊
+            if (this.x < 20 || this.x > w - 20) return;
+
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             ctx.fillStyle = this.isElectron ? "#ef4444" : "#10b981"; // 紅色電子，綠色電洞
@@ -355,7 +359,7 @@ function initHallSimulator() {
             p.speed = (Math.random() * 1.0 + 1.0) * (speedMultiplier || 0.1);
             
             p.update(field);
-            p.draw();
+            p.draw(w);
         });
 
         // 5. 計算物理公式響應
