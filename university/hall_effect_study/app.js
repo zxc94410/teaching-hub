@@ -259,8 +259,9 @@ function initHallSimulator() {
             const vx = this.dirX * this.speed;
             const Bz = fieldVal;
             
-            // 橫向洛倫茲力受力方向與強度
-            const forceY = q * vx * Bz * 1.8;
+            // 橫向合力應為：洛倫茲力 Fy_L 與霍爾電場力 Fy_E 的抵消
+            // 當達到平衡 (FE_ratio -> 1) 時，合力 Fy 趨近於 0，粒子便平行直線運動！
+            const forceY = q * vx * Bz * 1.8 * (1.0 - FE_ratio);
             
             this.y += forceY;
 
