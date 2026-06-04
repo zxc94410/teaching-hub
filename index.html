@@ -15,41 +15,80 @@
 <div class="portal-container">
     
     <header class="portal-header">
-        <h1 class="portal-title">MJ <span>Teaching Hub</span></h1>
-        <p class="portal-subtitle">互動式學習與光電物理量測教學網頁平台</p>
+        <h1 class="portal-title">MJ <span>Learning Shelf</span></h1>
+        <p class="portal-subtitle">曜石金光電物理與幾何互動學習圖書館</p>
     </header>
     
     <main class="portal-grid">
         
-        <!-- 大分類：大學教學 -->
-        <div class="category-card" id="univ-card">
-            <i class="fa-solid fa-graduation-cap card-icon"></i>
-            <h2 class="card-title">大學教學區</h2>
-            <p class="card-desc">涵蓋大專院校光電工程、半導體元件特性量測及物理效應等專業領域的互動式教學與複習指南。</p>
-            
-            <!-- 子項目連結列表 -->
-            <div class="sublinks-container">
-                <a href="university/solar_cell_study/index.html" class="sublink-item">
-                    <span><i class="fa-solid fa-solar-panel"></i> 太陽能電池原理與量測實務</span>
-                    <i class="fa-solid fa-chevron-right"></i>
-                </a>
+        <!-- 書籍 1：霍爾效應 -->
+        <a href="university/hall_effect_study/index.html" class="book-container">
+            <div class="book">
+                <div class="book-spine"></div>
+                <div class="book-cover">
+                    <span class="book-badge">Univ Physics</span>
+                    <h3 class="book-title">霍爾效應與<br>van der Pauw<br>量測原理</h3>
+                    <div class="book-pattern">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                </div>
+                <div class="book-pages"></div>
+                <div class="book-back"></div>
             </div>
-        </div>
+            <div class="book-details">
+                <h4 class="book-meta-title">霍爾效應與 van der Pauw</h4>
+                <p class="book-desc">電荷受力偏轉動態 Canvas 模擬器與薄膜片電阻牛頓疊代超越方程求解器。</p>
+                <div class="book-btn">
+                    <i class="fa-solid fa-book-open"></i> 翻開書籍學習
+                </div>
+            </div>
+        </a>
         
-        <!-- 大分類：國高中教學 -->
-        <div class="category-card" id="k12-card">
-            <i class="fa-solid fa-shapes card-icon"></i>
-            <h2 class="card-title">國高中教學區</h2>
-            <p class="card-desc">針對中學數學、幾何空間概念等核心學科設計的直觀視覺化教學，降低學習門檻並提升空間邏輯。</p>
-            
-            <!-- 子項目連結列表 -->
-            <div class="sublinks-container">
-                <a href="k12/three-view/index.html" class="sublink-item">
-                    <span><i class="fa-solid fa-cubes"></i> 空間幾何三視圖教學網頁</span>
-                    <i class="fa-solid fa-chevron-right"></i>
-                </a>
+        <!-- 書籍 2：太陽能電池 -->
+        <a href="university/solar_cell_study/index.html" class="book-container">
+            <div class="book">
+                <div class="book-spine"></div>
+                <div class="book-cover">
+                    <span class="book-badge">Semiconductor</span>
+                    <h3 class="book-title">太陽能電池<br>元件物理與<br>量測實務</h3>
+                    <div class="book-pattern">
+                        <i class="fa-solid fa-solar-panel"></i>
+                    </div>
+                </div>
+                <div class="book-pages"></div>
+                <div class="book-back"></div>
             </div>
-        </div>
+            <div class="book-details">
+                <h4 class="book-meta-title">太陽能電池量測實務</h4>
+                <p class="book-desc">半導體 PN 接面能帶特性模擬與太陽能電池 J-V 特性阻抗匹配分析儀。</p>
+                <div class="book-btn">
+                    <i class="fa-solid fa-book-open"></i> 翻開書籍學習
+                </div>
+            </div>
+        </a>
+        
+        <!-- 書籍 3：三視圖 -->
+        <a href="k12/three-view/index.html" class="book-container">
+            <div class="book">
+                <div class="book-spine"></div>
+                <div class="book-cover">
+                    <span class="book-badge">K-12 Math</span>
+                    <h3 class="book-title">空間幾何與<br>三視圖透視法<br>虛擬教具</h3>
+                    <div class="book-pattern">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+                </div>
+                <div class="book-pages"></div>
+                <div class="book-back"></div>
+            </div>
+            <div class="book-details">
+                <h4 class="book-meta-title">幾何空間三視圖</h4>
+                <p class="book-desc">直觀三維方塊搭建，配合正交投影射線與遮擋分析，培養空間邏輯思維。</p>
+                <div class="book-btn">
+                    <i class="fa-solid fa-book-open"></i> 翻開書籍學習
+                </div>
+            </div>
+        </a>
         
     </main>
     
@@ -59,31 +98,5 @@
     
 </div>
 
-<!-- 簡單的卡片展開與連結防干擾 JavaScript -->
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const cards = document.querySelectorAll(".category-card");
-        
-        cards.forEach(card => {
-            // 預設展開所有卡片，使用戶一目了然
-            card.classList.add("expanded");
-            
-            card.addEventListener("click", (e) => {
-                // 如果點選的是子項目連結本身，不進行卡片折疊
-                if (e.target.closest(".sublink-item")) {
-                    return;
-                }
-                
-                // 折疊/展開切換效果
-                const isExpanded = card.classList.contains("expanded"); // let 
-                if (isExpanded) {
-                    card.classList.remove("expanded"); // let 
-                } else {
-                    card.classList.add("expanded"); // let 
-                }
-            });
-        });
-    });
-</script>
 </body>
 </html>
