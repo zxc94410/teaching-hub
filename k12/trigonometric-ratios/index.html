@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三角幾何探索：海龍公式的圖解與證明</title>
+    <title>三角幾何探索：從基本三角比到中線定理的視覺證明</title>
     <!-- Outfit & Noto Sans TC Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,18 +13,18 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
-    <!-- KaTeX math rendering engine (Synchronously loaded to prevent FOUC / Race Condition) -->
+    <!-- KaTeX math rendering engine (Loaded synchronously to prevent raw LaTeX FOUC) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
     
     <style>
         /* =========================================================
-           Immersive Black & Gold (Champagne Gold) Design System
+           Obsidian & Gold Aesthetics Design System
            ========================================================= */
         :root {
             --bg-primary: #090a0f;      /* Deep Obsidian Charcoal */
-            --bg-secondary: #0d0f17;    /* Slightly Lighter Slate for Overlays */
+            --bg-secondary: #0d0f17;    /* Secondary Dark Background */
             --text-primary: #f8fafc;    /* Clean Off-White */
             --text-secondary: #94a3b8;  /* Legible Cool Grey */
             --accent-gold: #c5a86b;     /* Champagne Gold Accent */
@@ -51,10 +51,10 @@
             color: var(--text-primary);
             font-family: var(--font-sans);
             line-height: 1.7;
-            overflow: hidden; /* Main window handled by main-content-wrapper */
+            overflow: hidden; /* Main window handled by main-content-wrapper scroll */
             position: relative;
             min-height: 100vh;
-            opacity: 0; /* Hidden initially to prevent LaTeX FOUC */
+            opacity: 0; /* Hidden initially to prevent FOUC */
             transition: opacity 0.35s ease;
         }
 
@@ -64,7 +64,7 @@
             width: 700px;
             height: 700px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(197, 168, 107, 0.035) 0%, rgba(0,0,0,0) 70%);
+            background: radial-gradient(circle, rgba(197, 168, 107, 0.03) 0%, rgba(0,0,0,0) 70%);
             filter: blur(120px);
             z-index: -1;
             top: 20%;
@@ -108,7 +108,7 @@
             font-size: 1.1rem;
             font-weight: 700;
             color: #ffffff;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             margin-bottom: 24px;
             display: flex;
             align-items: center;
@@ -148,7 +148,7 @@
         .progress-fill {
             height: 100%;
             background: var(--accent-gold);
-            width: 100%;
+            width: 0%;
             transition: width 0.4s ease;
         }
         .progress-indicator {
@@ -334,7 +334,7 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 3rem;
+            gap: 3.5rem;
         }
 
         section {
@@ -355,8 +355,8 @@
         }
         h2 i {
             color: var(--accent-gold);
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
         }
 
         p {
@@ -400,7 +400,7 @@
         /* Interactive Canvas Panel Grid Layout */
         .canvas-grid {
             display: grid;
-            grid-template-columns: 1fr 320px;
+            grid-template-columns: 1fr 300px;
             gap: 1.5rem;
             margin: 1.5rem 0;
         }
@@ -418,7 +418,7 @@
             flex-direction: column;
             position: relative;
             overflow: hidden;
-            min-height: 400px;
+            min-height: 380px;
             box-shadow: var(--shadow-premium);
         }
         .canvas-header {
@@ -471,7 +471,7 @@
             background: #050608;
             cursor: crosshair;
         }
-        #geometryCanvas {
+        .geometryCanvas {
             position: absolute;
             top: 0;
             left: 0;
@@ -498,7 +498,7 @@
             gap: 0.4rem;
         }
 
-        /* Stats Panel Cards */
+        /* Glass Cards for calculations */
         .glass-card {
             background: var(--bg-secondary);
             border: 1px solid var(--border-gold);
@@ -556,6 +556,9 @@
         .param-value.cyan {
             color: #38bdf8;
         }
+        .param-value.rose {
+            color: #f43f5e;
+        }
 
         /* Mathematical Proof Stepper */
         .proof-container {
@@ -599,6 +602,28 @@
             overflow-x: auto;
             margin: 0.5rem 0;
             border: 1px solid rgba(255,255,255,0.02);
+        }
+
+        /* Slider Controls */
+        .slider-control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .slider-row input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent-gold);
+            background: #1e293b;
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+            border: none;
         }
 
         /* Quiz components */
@@ -862,35 +887,43 @@
                 <span>三角比與幾何</span>
             </div>
             
-            <a href="../../index.html" class="tree-link" style="margin: 0 16px 16px 16px; border: 1px solid var(--border-gold); background: rgba(255, 255, 255, 0.02); color: var(--accent-gold); display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; padding: 8px; text-decoration: none; font-size: 0.85rem;"><i data-lucide="arrow-left"></i> 返回平台首頁</a>
+            <a href="../../index.html" class="tree-link" style="margin: 0 0 16px 0; border: 1px solid var(--border-gold); background: rgba(255, 255, 255, 0.02); color: var(--accent-gold); display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; padding: 8px; text-decoration: none; font-size: 0.85rem;"><i data-lucide="arrow-left"></i> 返回平台首頁</a>
             
             <div class="curriculum-meta">
                 <span class="tag">當前課程</span>
-                <h4 style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">三角比與海龍公式</h4>
+                <h4 style="font-size: 0.85rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">幾何定理與三角證明</h4>
                 <div class="progress-indicator">
-                    <div class="progress-bar"><div class="progress-fill"></div></div>
-                    <span class="lbl">課程進度 100%</span>
+                    <div class="progress-bar"><div class="progress-fill" id="curriculumProgress"></div></div>
+                    <span class="lbl" id="progressText">進度 0%</span>
                 </div>
             </div>
             
             <nav class="curriculum-tree">
-                <div class="chapter-title">章節大綱</div>
+                <div class="chapter-title">課程大綱</div>
                 <div class="chapter-pages">
-                    <a href="#intro" class="tree-link active">
-                        <span class="status-dot completed">1</span>
-                        <span>1. 海龍公式簡介</span>
+                    <a href="#ratios" class="tree-link active">
+                        <span class="status-dot">1</span>
+                        <span>1. 基礎三角比投影</span>
                     </a>
-                    <a href="#interactive" class="tree-link">
-                        <span class="status-dot completed">2</span>
-                        <span>2. 幾何動態探索</span>
+                    <a href="#sine-law" class="tree-link">
+                        <span class="status-dot">2</span>
+                        <span>2. 正弦定理與直徑</span>
                     </a>
-                    <a href="#proof" class="tree-link">
-                        <span class="status-dot completed">3</span>
-                        <span>3. 公式代數推導</span>
+                    <a href="#cosine-law" class="tree-link">
+                        <span class="status-dot">3</span>
+                        <span>3. 餘弦定理與修正</span>
+                    </a>
+                    <a href="#heron" class="tree-link">
+                        <span class="status-dot">4</span>
+                        <span>4. 海龍公式與面積</span>
+                    </a>
+                    <a href="#apollonius" class="tree-link">
+                        <span class="status-dot">5</span>
+                        <span>5. 中線定理與平行四邊形</span>
                     </a>
                     <a href="#quiz" class="tree-link">
-                        <span class="status-dot completed">🏆</span>
-                        <span>隨堂概念挑戰</span>
+                        <span class="status-dot">🏆</span>
+                        <span>6. 隨堂概念挑戰</span>
                     </a>
                 </div>
             </nav>
@@ -900,261 +933,449 @@
         <div class="main-content-wrapper" id="mainScrollable">
             <!-- Mobile Navigation -->
             <nav class="top-navbar" id="topNavbar">
-                <button class="nav-btn active" onclick="scrollToSection('intro')">
-                    <span class="icon" style="background: var(--accent-gold);"></span>1. 簡介
-                </button>
-                <button class="nav-btn" onclick="scrollToSection('interactive')">
-                    <span class="icon" style="background: #38bdf8;"></span>2. 動態探索
-                </button>
-                <button class="nav-btn" onclick="scrollToSection('proof')">
-                    <span class="icon" style="background: #a78bfa;"></span>3. 公式推導
-                </button>
-                <button class="nav-btn" onclick="scrollToSection('quiz')">
-                    <span class="icon" style="background: #10b981;"></span>🏆 自我挑戰
-                </button>
+                <button class="nav-btn active" onclick="scrollToSection('ratios')">1. 三角比</button>
+                <button class="nav-btn" onclick="scrollToSection('sine-law')">2. 正弦</button>
+                <button class="nav-btn" onclick="scrollToSection('cosine-law')">3. 餘弦</button>
+                <button class="nav-btn" onclick="scrollToSection('heron')">4. 海龍</button>
+                <button class="nav-btn" onclick="scrollToSection('apollonius')">5. 中線</button>
+                <button class="nav-btn" onclick="scrollToSection('quiz')">🏆 挑戰</button>
             </nav>
             
             <header>
                 <div class="header-title">
-                    <h1><i data-lucide="triangle"></i> 海龍公式的幾何圖解與探索</h1>
-                    <p>給定三邊長求面積的優雅工具 · 高中數學必修</p>
+                    <h1><i data-lucide="triangle"></i> 三角比與幾何定理視覺探索</h1>
+                    <p>數形投影對齊 · 幾何直觀與步驟式代數推導</p>
                 </div>
                 <div style="display:flex; align-items:center; gap:0.8rem;">
-                    <a href="../../index.html" class="btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; text-decoration:none;"><i data-lucide="arrow-left" style="width:14px; height:14px;"></i>返回平台首頁</a>
-                    <div class="chapter-badge">第二章：三角比與海龍公式</div>
+                    <a href="../../index.html" class="btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; text-decoration:none;"><i data-lucide="arrow-left" style="width:14px; height:14px;"></i>返回平台</a>
+                    <div class="chapter-badge">高中幾何專題</div>
                 </div>
             </header>
 
             <main class="content-body">
-                <!-- Section 1: Introduction -->
-                <section id="intro">
-                    <h2><i data-lucide="info"></i> 什麼是海龍公式？</h2>
+                <!-- Section 1: Trigonometric Ratios -->
+                <section id="ratios">
+                    <h2><i data-lucide="compass"></i> 1. 基礎三角比與圓投影</h2>
                     <p>
-                        在傳統幾何中，要計算一個三角形的面積，我們通常需要知道它的<b>底</b>和<b>高</b>，即使用公式 $\text{面積} = \frac{1}{2} \times \text{底} \times \text{高}$。然而，當我們只知道三角形的三個邊長 $a$、$b$、$c$，而不知道任何高度或角度時，計算高就會變得非常繁瑣。
+                        在直角三角形中，三角比通常定義為邊長的比值。然而，將三角比放入<b>單位圓（Unit Circle）</b>中，便能將其幾何意義轉化為「向量的坐標投影」。
                     </p>
                     <p>
-                        西元一世紀的亞歷山大港學者<b>海龍（Heron of Alexandria）</b>提出了一個巧妙的公式。只要知道三角形的三邊長，就能直接求出面積，這就是著名的<b>海龍公式（Heron's Formula）</b>：
+                        給定一個半徑為 $r=1$ 的圓，從原點出發指向圓周上點 $P(x,y)$ 的向量與 $X$ 軸正向夾角為 $\theta$。點 $P$ 的坐標即為：
                     </p>
-                    
                     <div class="math-block">
-                        $$\text{面積} = \Delta = \sqrt{s(s - a)(s - b)(s - c)}$$
+                        $$x = \cos\theta, \quad y = \sin\theta$$
                     </div>
-                    
                     <p>
-                        其中，變數 $s$ 代表該三角形的<b>半周長（semiperimeter）</b>，即周長的一半：
+                        而切線長度則對應正切值 $\tan\theta = \frac{y}{x}$。這啟發我們，每一個三角函數值都可以直接看作一條線段的投影長度。
                     </p>
-                    
-                    <div class="math-block">
-                        $$s = \frac{a + b + c}{2}$$
-                    </div>
-                    
-                    <div class="callout">
-                        <div class="callout-title">
-                            <i data-lucide="sparkles"></i>
-                            <span>公式的優美之處</span>
-                        </div>
-                        <div class="callout-content">
-                            <p>
-                                海龍公式將三角形的三邊長對稱地組織在一起。透過半周長 $s$，它考慮了三邊長與半周長的差值：$(s-a)$、$(s-b)$ 與 $(s-c)$。只要這三個差值都是正數（即滿足三角形兩邊之和大於第三邊的幾何不等式限制），公式內的根號底下就必然為正數，能夠完美計算出實數面積。
-                            </p>
-                        </div>
-                    </div>
-                </section>
 
-                <!-- Section 2: Interactive Exploration -->
-                <section id="interactive">
-                    <h2><i data-lucide="move"></i> 幾何動態互動圖解</h2>
-                    <p>
-                        以下是一個即時的三角形幾何模擬器。你可以使用滑鼠或手指<b>拖曳三角形的三個頂點 $A$、$B$、$C$</b>，來觀察三角形的邊長、高、以及面積如何動態變化。右側的控制面板將即時比對「海龍公式」與「底高公式」的計算結果。
-                    </p>
-                    
                     <div class="canvas-grid">
                         <div class="canvas-panel">
                             <div class="canvas-header">
                                 <div class="canvas-title">
                                     <span class="dot"></span>
-                                    <span>幾何動態畫布（可拖曳頂點）</span>
-                                </div>
-                                <div class="canvas-controls">
-                                    <button class="btn-icon" id="btnReset" title="重設頂點位置">
-                                        <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i>
-                                    </button>
+                                    <span>單位圓動態投影（拖曳圓周上的點 P 或滑動滑桿）</span>
                                 </div>
                             </div>
-                            <div class="canvas-container-box" id="canvasContainer">
-                                <canvas id="geometryCanvas"></canvas>
+                            <div class="canvas-container-box">
+                                <canvas id="canvasRatios" class="geometryCanvas"></canvas>
                                 <div class="canvas-overlay-tip">
                                     <i data-lucide="mouse-pointer-click" style="width: 12px; height: 12px;"></i>
-                                    <span>提示：拖曳頂點以調整形狀</span>
+                                    <span>提示：拖曳點 P 或調整角度</span>
                                 </div>
                             </div>
                         </div>
-                        
                         <div class="glass-card">
                             <div class="card-header-title">
-                                <i data-lucide="bar-chart-2"></i>
-                                <span>動態計算面板</span>
+                                <i data-lucide="activity"></i>
+                                <span>投影數值面板</span>
                             </div>
                             <div class="params-list">
                                 <div class="param-item">
-                                    <span class="param-label">邊長 $a$ (底邊 $BC$)</span>
-                                    <span class="param-value cyan" id="valA">0.00</span>
+                                    <span class="param-label">角度 $\theta$</span>
+                                    <span class="param-value gold" id="valTheta">0.0°</span>
                                 </div>
                                 <div class="param-item">
-                                    <span class="param-label">邊長 $b$</span>
-                                    <span class="param-value" id="valB">0.00</span>
+                                    <span class="param-label">餘弦投影 $x = \cos\theta$ (綠線)</span>
+                                    <span class="param-value cyan" id="valCos">1.0000</span>
                                 </div>
                                 <div class="param-item">
-                                    <span class="param-label">邊長 $c$</span>
-                                    <span class="param-value" id="valC">0.00</span>
+                                    <span class="param-label">正弦投影 $y = \sin\theta$ (紅線)</span>
+                                    <span class="param-value rose" id="valSin">0.0000</span>
                                 </div>
                                 <div class="param-item">
-                                    <span class="param-label">半周長 $s = \frac{a+b+c}{2}$</span>
-                                    <span class="param-value gold" id="valS">0.00</span>
+                                    <span class="param-label">正切切線 $\tan\theta$ (金線)</span>
+                                    <span class="param-value gold" id="valTan">0.0000</span>
                                 </div>
-                                <div class="param-item">
-                                    <span class="param-label">高 $h$ (對應底邊 $a$)</span>
-                                    <span class="param-value" id="valH">0.00</span>
-                                </div>
-                                
-                                <div style="margin: 0.5rem 0; border-top: 1px dashed var(--border-gold);"></div>
-                                
-                                <div class="param-item">
-                                    <span class="param-label">底高面積 $\frac{1}{2} \times a \times h$</span>
-                                    <span class="param-value" id="areaBaseHeight">0.00</span>
-                                </div>
-                                <div class="param-item">
-                                    <span class="param-label">海龍面積 $\sqrt{s(s-a)(s-b)(s-c)}$</span>
-                                    <span class="param-value gold" id="areaHeron" style="font-size: 1.05rem;">0.00</span>
+                            </div>
+                            <div class="slider-control-group">
+                                <span class="param-label" style="font-size:0.75rem;">調整角度 $\theta$</span>
+                                <div class="slider-row">
+                                    <input type="range" id="slideTheta" min="0" max="360" value="30">
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- Section 3: Geometrical Proof -->
-                <section id="proof">
-                    <h2><i data-lucide="book-open"></i> 海龍公式的代數推導與證明</h2>
+                <!-- Section 2: Sine Law -->
+                <section id="sine-law">
+                    <h2><i data-lucide="circle-dot"></i> 2. 正弦定理與外接圓直徑</h2>
                     <p>
-                        在高中階段，我們可以用<b>餘弦定理（Law of Cosines）</b>與基礎的三角恆等式來完成這個經典的幾何推導。
+                        <b>正弦定理（Law of Sines）</b>指出：三角形各邊與其對角正弦值的比值相等，且等於該三角形外接圓的直徑 $2R$。
                     </p>
-                    
+                    <div class="math-block">
+                        $$\frac{a}{\sin A} = \frac{b}{\sin B} = \frac{c}{\sin C} = 2R$$
+                    </div>
+                    <p>
+                        這代表當我們固定外接圓時，不論三角形的頂點在圓周上如何滑動，三邊長與對角正弦的比值始終鎖定在固定的直徑值 $2R$ 上。
+                    </p>
+
+                    <div class="canvas-grid">
+                        <div class="canvas-panel">
+                            <div class="canvas-header">
+                                <div class="canvas-title">
+                                    <span class="dot"></span>
+                                    <span>固定外接圓投影（拖曳頂點 A, B, C）</span>
+                                </div>
+                            </div>
+                            <div class="canvas-container-box">
+                                <canvas id="canvasSine" class="geometryCanvas"></canvas>
+                                <!-- Diameter Alert Banner -->
+                                <div id="diameterAlert" style="display:none; position:absolute; top:12px; left:50%; transform:translateX(-50%); background:rgba(197,168,107,0.18); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid var(--accent-gold); color:#ffffff; padding:6px 16px; border-radius:30px; font-size:0.75rem; font-weight:700; align-items:center; gap:6px; z-index:10; box-shadow: 0 4px 12px rgba(0,0,0,0.5); white-space:nowrap;">
+                                    <span style="color:var(--accent-gold); display:flex; align-items:center;"><i data-lucide="sparkles" style="width:14px; height:14px;"></i></span>
+                                    <span id="diameterAlertText">達成直徑條件！直角角 C = 90°</span>
+                                </div>
+                                <div class="canvas-overlay-tip">
+                                    <i data-lucide="mouse-pointer-click" style="width: 12px; height: 12px;"></i>
+                                    <span>提示：點會限制在圓周上。當兩點形成直徑時，對角會標註直角</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-card">
+                            <div class="card-header-title">
+                                <i data-lucide="calculator"></i>
+                                <span>正弦等式驗證</span>
+                            </div>
+                            <div class="params-list" style="gap: 0.5rem;">
+                                <div class="param-item">
+                                    <span class="param-label">外接圓半徑 $R$ (固定)</span>
+                                    <span class="param-value cyan" id="valSineRadius">5.50</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">外接圓直徑 $2R$</span>
+                                    <span class="param-value gold" id="valSineDiameter">11.00</span>
+                                </div>
+                                <div style="margin: 0.2rem 0; border-top: 1px dashed rgba(255,255,255,0.05);"></div>
+                                <div class="param-item">
+                                    <span class="param-label">邊長 $a$ 及其對角 $A$</span>
+                                    <span class="param-value"><span id="valSineEdgeA">0.0</span> (<span id="valSineAngleA">0</span>°)</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">比值 $a / \sin A$</span>
+                                    <span class="param-value gold" id="valSineRatioA">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">邊長 $b$ 及其對角 $B$</span>
+                                    <span class="param-value"><span id="valSineEdgeB">0.0</span> (<span id="valSineAngleB">0</span>°)</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">比值 $b / \sin B$</span>
+                                    <span class="param-value gold" id="valSineRatioB">0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="proof-container">
                         <div class="proof-step">
-                            <span class="step-number">步驟 1</span>
-                            <div class="step-desc">利用正弦值表示三角形面積</div>
+                            <span class="step-number">幾何證明</span>
+                            <div class="step-desc">圓周角定理與直角三角形投影</div>
                             <p>
-                                給定一個三角形，其邊長為 $a$、$b$、$c$，對應角為 $A$、$B$、$C$。我們知道，三角形的面積 $\Delta$ 可以透過包含夾角 $A$ 的公式表示為：
-                            </p>
-                            <div class="math-block">
-                                $$\Delta = \frac{1}{2} b c \sin A$$
-                            </div>
-                            <p style="margin-top: 0.5rem;">為了方便後續代數處理，我們將兩邊平方，消去正弦的根號：</p>
-                            <div class="math-block">
-                                $$\Delta^2 = \frac{1}{4} b^2 c^2 \sin^2 A$$
-                            </div>
-                        </div>
-
-                        <div class="proof-step">
-                            <span class="step-number">步驟 2</span>
-                            <div class="step-desc">利用餘弦定理與三角恆等式轉換</div>
-                            <p>
-                                根據同角三角關係，我們知道 $\sin^2 A = 1 - \cos^2 A = (1 - \cos A)(1 + \cos A)$。
+                                設三角形 $ABC$ 的外接圓半徑為 $R$。連接 $BO$ 並延長與圓周相交於 $A'$，使得 $BA' = 2R$ 為外接圓直徑。連接 $A'C$。
                             </p>
                             <p style="margin-top: 0.5rem;">
-                                接下來，帶入餘弦定理中角 $A$ 的公式 $\cos A = \frac{b^2 + c^2 - a^2}{2bc}$：
+                                根據<b>圓周角定理</b>，在同弧 $BC$ 上，其圓周角大小相同，即：
+                                $$\angle BAC = \angle BA'C \implies \angle A = \angle A'$$
                             </p>
-                            <div class="math-block">
-                                $$\sin^2 A = 1 - \left( \frac{b^2 + c^2 - a^2}{2bc} \right)^2$$
+                            <p style="margin-top: 0.5rem;">
+                                由於 $BA'$ 是直徑，所以直徑所對的圓周角 $\angle BCA' = 90^\circ$。在直角三角形 $\triangle A'CB$ 中：
+                                $$\sin A' = \frac{BC}{BA'} \implies \sin A = \frac{a}{2R} \implies \frac{a}{\sin A} = 2R$$
+                            </p>
+                            <p style="margin-top: 0.5rem;">此法對其餘兩邊比值皆適用，得證正弦比值皆為直徑 $2R$。 ■</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Cosine Law -->
+                <section id="cosine-law">
+                    <h2><i data-lucide="git-commit"></i> 3. 餘弦定理與投影修正</h2>
+                    <p>
+                        <b>餘弦定理（Law of Cosines）</b>是畢氏定理在任意三角形中的推廣。它透過夾角的餘弦值，引入了一個幾何上的投影修正項。
+                    </p>
+                    <div class="math-block">
+                        $$a^2 = b^2 + c^2 - 2bc \cos A$$
+                    </div>
+                    <p>
+                        當夾角 $A = 90^\circ$ 時，$\cos A = 0$，公式退化為畢氏定理 $a^2 = b^2 + c^2$。當 $A$ 為銳角或鈍角時，修正項 $-2bc \cos A$ 補償了非直角引起的偏差。
+                    </p>
+
+                    <div class="canvas-grid">
+                        <div class="canvas-panel">
+                            <div class="canvas-header">
+                                <div class="canvas-title">
+                                    <span class="dot"></span>
+                                    <span>任意三角形高度投影（拖曳頂點 A, B, C）</span>
+                                </div>
                             </div>
-                            <p style="margin-top: 0.5rem;">將這個結果帶回平方面積公式中：</p>
-                            <div class="math-block">
-                                $$\Delta^2 = \frac{1}{4} b^2 c^2 \left[ 1 - \left( \frac{b^2 + c^2 - a^2}{2bc} \right)^2 \right]$$
+                            <div class="canvas-container-box">
+                                <canvas id="canvasCosine" class="geometryCanvas"></canvas>
+                                <div class="canvas-overlay-tip">
+                                    <i data-lucide="mouse-pointer-click" style="width: 12px; height: 12px;"></i>
+                                    <span>提示：可以自由拖曳頂點。虛線為頂點 A 投射在底邊上的高 h</span>
+                                </div>
                             </div>
                         </div>
-
-                        <div class="proof-step">
-                            <span class="step-number">步驟 3</span>
-                            <div class="step-desc">代數因式分解（平方差公式）</div>
-                            <p>
-                                將括號外的 $b^2c^2$ 乘入中括號內，並且化簡分母 $4b^2c^2$：
-                            </p>
-                            <div class="math-block">
-                                $$\Delta^2 = \frac{1}{16} \left[ 4b^2c^2 - (b^2 + c^2 - a^2)^2 \right]$$
+                        <div class="glass-card">
+                            <div class="card-header-title">
+                                <i data-lucide="sliders"></i>
+                                <span>餘弦公式驗證</span>
                             </div>
-                            <p style="margin-top: 0.5rem;">利用平方差公式 $X^2 - Y^2 = (X - Y)(X + Y)$，其中 $X = 2bc$，$Y = b^2+c^2-a^2$：</p>
-                            <div class="math-block">
-                                $$\Delta^2 = \frac{1}{16} \left[ 2bc - (b^2 + c^2 - a^2) \right] \left[ 2bc + (b^2 + c^2 - a^2) \right]$$
-                            </div>
-                            <div class="math-block">
-                                $$\Delta^2 = \frac{1}{16} \left[ a^2 - (b^2 - 2bc + c^2) \right] \left[ (b^2 + 2bc + c^2) - a^2 \right]$$
-                            </div>
-                            <p style="margin-top: 0.5rem;">利用完全平方公式 $(b-c)^2$ 與 $(b+c)^2$ 進行二次重組：</p>
-                            <div class="math-block">
-                                $$\Delta^2 = \frac{1}{16} \left[ a^2 - (b - c)^2 \right] \left[ (b + c)^2 - a^2 \right]$$
-                            </div>
-                            <p style="margin-top: 0.5rem;">再次對兩個中括號分別套用平方差公式：</p>
-                            <div class="math-block">
-                                $$\Delta^2 = \frac{1}{16} (a - b + c)(a + b - c)(b + c - a)(b + c + a)$$
+                            <div class="params-list">
+                                <div class="param-item">
+                                    <span class="param-label">夾角 $A$ 度數</span>
+                                    <span class="param-value gold" id="valCosAngleA">0.0°</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">側邊長 $b, c$</span>
+                                    <span class="param-value"><span id="valCosEdgeB">0.0</span>, <span id="valCosEdgeC">0.0</span></span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">底邊長平方 $a^2$</span>
+                                    <span class="param-value cyan" id="valCosLeft">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">餘弦修正 $2bc \cos A$</span>
+                                    <span class="param-value" id="valCosCorrection">0.00</span>
+                                </div>
+                                <div style="margin: 0.2rem 0; border-top: 1px dashed rgba(255,255,255,0.05);"></div>
+                                <div class="param-item">
+                                    <span class="param-label">右式 $b^2+c^2-2bc\cos A$</span>
+                                    <span class="param-value gold" id="valCosRight">0.00</span>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
+                    <div class="proof-container">
                         <div class="proof-step">
-                            <span class="step-number">步驟 4</span>
-                            <div class="step-desc">帶入半周長 $s$ 簡化公式</div>
+                            <span class="step-number">代數推導</span>
+                            <div class="step-desc">利用高與畢氏定理</div>
                             <p>
-                                定義半周長 $s = \frac{a+b+c}{2}$，則有全周長 $a+b+c = 2s$。據此我們可以重寫這四個括號：
+                                在三角形 $\triangle ABC$ 中，自頂點 $A$ 向底邊 $BC$ 作一條垂線，交 $BC$ 於垂足 $H$，設高為 $h = AH$。
                             </p>
-                            <div class="math-block">
-                                $$\begin{aligned}
-                                 b + c + a &= 2s \\
-                                 b + c - a &= (a + b + c) - 2a = 2s - 2a = 2(s-a) \\
-                                 a + c - b &= (a + b + c) - 2b = 2s - 2b = 2(s-b) \\
-                                 a + b - c &= (a + b + c) - 2c = 2s - 2c = 2(s-c)
-                                \end{aligned}$$
+                            <p style="margin-top: 0.5rem;">
+                                在直角三角形 $\triangle ABH$ 中，根據三角比投影定義：
+                                $$AH = c \sin B, \quad BH = c \cos B$$
+                            </p>
+                            <p style="margin-top: 0.5rem;">
+                                垂足 $H$ 將底邊 $BC$ 切分為兩段。底邊長為 $BC = a$，另一段的長度為 $CH = |a - c \cos B|$。
+                            </p>
+                            <p style="margin-top: 0.5rem;">
+                                在直角三角形 $\triangle ACH$ 中，套用畢氏定理：
+                                $$b^2 = AH^2 + CH^2$$
+                                $$b^2 = (c \sin B)^2 + (a - c \cos B)^2$$
+                                $$b^2 = c^2 \sin^2 B + a^2 - 2ac \cos B + c^2 \cos^2 B$$
+                            </p>
+                            <p style="margin-top: 0.5rem;">
+                                利用恆等式 $\sin^2 B + \cos^2 B = 1$ 簡化式子：
+                                $$b^2 = a^2 + c^2 - 2ac \cos B \implies a^2 = b^2 + c^2 - 2bc \cos A$$
+                                同理移項可證對其餘邊長亦成立。 ■</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4: Heron's Formula -->
+                <section id="heron">
+                    <h2><i data-lucide="layout"></i> 4. 海龍公式與面積投影</h2>
+                    <p>
+                        海龍公式是解決「已知三邊求面積」的經典工具。它不需要求出任何高，只用三邊長對稱地算出面積。
+                    </p>
+                    <div class="math-block">
+                        $$\text{面積} = \Delta = \sqrt{s(s-a)(s-b)(s-c)}, \quad s = \frac{a+b+c}{2}$$
+                    </div>
+
+                    <div class="canvas-grid">
+                        <div class="canvas-panel">
+                            <div class="canvas-header">
+                                <div class="canvas-title">
+                                    <span class="dot"></span>
+                                    <span>幾何高度投影與海龍對比（拖曳頂點 A, B, C）</span>
+                                </div>
                             </div>
-                            <p style="margin-top: 0.5rem;">將上述四式代回 $\Delta^2$ 的式子中：</p>
-                            <div class="math-block">
-                                $$\Delta^2 = \frac{1}{16} \cdot 2(s-b) \cdot 2(s-c) \cdot 2(s-a) \cdot 2s$$
+                            <div class="canvas-container-box">
+                                <canvas id="canvasHeron" class="geometryCanvas"></canvas>
+                                <div class="canvas-overlay-tip">
+                                    <i data-lucide="mouse-pointer-click" style="width: 12px; height: 12px;"></i>
+                                    <span>提示：拖曳頂點改變形狀，高 h 會自動重繪投影</span>
+                                </div>
                             </div>
-                            <div class="math-block">
-                                $$\Delta^2 = \frac{16}{16} \cdot s(s-a)(s-b)(s-c) = s(s-a)(s-b)(s-c)$$
+                        </div>
+                        <div class="glass-card">
+                            <div class="card-header-title">
+                                <i data-lucide="bar-chart-2"></i>
+                                <span>面積運算面板</span>
                             </div>
-                            <p style="margin-top: 0.5rem;">兩邊開根號（取正值），即得到著名的<b>海龍公式</b>：</p>
-                            <div class="math-block">
-                                $$\Delta = \sqrt{s(s-a)(s-b)(s-c)}$$
+                            <div class="params-list">
+                                <div class="param-item">
+                                    <span class="param-label">半周長 $s$</span>
+                                    <span class="param-value" id="valHeronS">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">高 $h$ (對應底邊 $BC$)</span>
+                                    <span class="param-value cyan" id="valHeronH">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">底高面積 $\frac{1}{2} a h$</span>
+                                    <span class="param-value" id="areaBH">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">海龍面積 $\sqrt{s(s-a)(s-b)(s-c)}$</span>
+                                    <span class="param-value gold" id="areaHeron" style="font-size: 1rem;">0.00</span>
+                                </div>
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 5: Apollonius & Parallelogram Theorems -->
+                <section id="apollonius">
+                    <h2><i data-lucide="split"></i> 5. 中線定理與平行四邊形定理</h2>
+                    <p>
+                        <b>中線定理（Apollonius's Theorem）</b>與<b>平行四邊形定理（Parallelogram Law）</b>是三角形與平行四邊形中邊長平方和關係的幾何傑作，它們本質上互為雙生定理。
+                    </p>
+                    <div class="callout">
+                        <div class="callout-title">
+                            <i data-lucide="hash"></i>
+                            <span>定理公式</span>
+                        </div>
+                        <div class="callout-content">
+                            <p><b>中線定理（中線平方和關係）</b>：在 $\triangle ABC$ 中，設 $D$ 為底邊 $BC$ 的中點，則：</p>
+                            <div class="math-block">
+                                $$AB^2 + AC^2 = 2(AD^2 + BD^2)$$
+                            </div>
+                            <p style="margin-top: 0.5rem;"><b>平行四邊形定理</b>：平行四邊形中，對角線平方和等於四邊平方和之和：</p>
+                            <div class="math-block">
+                                $$d_1^2 + d_2^2 = 2(a^2 + b^2)$$
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="canvas-grid">
+                        <div class="canvas-panel">
+                            <div class="canvas-header">
+                                <div class="canvas-title">
+                                    <span class="dot"></span>
+                                    <span>中線定理與平行四邊形（拖曳頂點 A, B, C，中點 D 會自動同步）</span>
+                                </div>
+                            </div>
+                            <div class="canvas-container-box">
+                                <canvas id="canvasApollonius" class="geometryCanvas"></canvas>
+                                <div class="canvas-overlay-tip">
+                                    <i data-lucide="mouse-pointer-click" style="width: 12px; height: 12px;"></i>
+                                    <span>提示：拖曳頂點可觀察平方和等式的動態吻合</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-card">
+                            <div class="card-header-title">
+                                <i data-lucide="check-square"></i>
+                                <span>平方和驗證面板</span>
+                            </div>
+                            <div class="params-list">
+                                <div class="param-item">
+                                    <span class="param-label">側邊 $AB^2$</span>
+                                    <span class="param-value" id="valAB2">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">側邊 $AC^2$</span>
+                                    <span class="param-value" id="valAC2">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">中線 $AD^2$</span>
+                                    <span class="param-value cyan" id="valAD2">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">半底 $BD^2$</span>
+                                    <span class="param-value" id="valBD2">0.00</span>
+                                </div>
+                                <div style="margin: 0.2rem 0; border-top:1px dashed var(--border-gold);"></div>
+                                <div class="param-item">
+                                    <span class="param-label">兩側和 $AB^2+AC^2$</span>
+                                    <span class="param-value" id="valSideSum">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">中線與半底和 $2(AD^2+BD^2)$</span>
+                                    <span class="param-value gold" id="valApolloniusRight" style="font-size: 1rem;">0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="proof-container">
+                        <div class="proof-step">
+                            <span class="step-number">中線定理推導</span>
+                            <div class="step-desc">利用餘弦定理與補角關係</div>
+                            <p>
+                                在 $\triangle ABC$ 中，設 $D$ 為 $BC$ 的中點，即 $BD = CD$。設 $\angle ADB = \theta$，則其補角 $\angle ADC = 180^\circ - \theta$。
+                            </p>
+                            <p style="margin-top: 0.5rem;">
+                                在 $\triangle ABD$ 中，依餘弦定理：
+                                $$AB^2 = AD^2 + BD^2 - 2(AD)(BD)\cos\theta \quad \text{--- (式 1)}$$
+                            </p>
+                            <p style="margin-top: 0.5rem;">
+                                在 $\triangle ACD$ 中，依餘弦定理：
+                                $$AC^2 = AD^2 + CD^2 - 2(AD)(CD)\cos(180^\circ - \theta)$$
+                            </p>
+                            <p style="margin-top: 0.5rem;">
+                                因為 $CD = BD$，且 $\cos(180^\circ - \theta) = -\cos\theta$，將其帶入整理得到：
+                                $$AC^2 = AD^2 + BD^2 + 2(AD)(BD)\cos\theta \quad \text{--- (式 2)}$$
+                            </p>
+                            <p style="margin-top: 0.5rem;">
+                                將式 1 與式 2 直接相加，消去含有 $\cos\theta$ 的投影交叉項，即得：
+                                $$AB^2 + AC^2 = 2(AD^2 + BD^2)$$
+                            </p>
                             <p style="text-align: right; font-weight: bold; color: var(--accent-gold); margin-bottom: 0;">Q.E.D. 證畢 ■</p>
                         </div>
                     </div>
                 </section>
 
-                <!-- Section 4: Quiz Challenge -->
+                <!-- Section 6: Quiz Challenge -->
                 <section id="quiz">
-                    <h2><i data-lucide="award"></i> 隨堂概念挑戰</h2>
+                    <h2><i data-lucide="award"></i> 6. 隨堂概念挑戰</h2>
                     <p>
-                        動動腦筋，透過海龍公式來解決下面的幾何挑戰。點選正確的選項，並提交答案。
+                        請利用剛才探索學到的幾何投影知識與代數定理，嘗試回答以下問題：
                     </p>
                     
                     <div class="quiz-panel">
                         <div class="quiz-header">
                             <div class="quiz-title">
                                 <i data-lucide="help-circle"></i>
-                                <span id="quizQuestionNum">挑戰 1</span>
+                                <span id="quizQuestionNum">挑戰 1 / 5</span>
                             </div>
-                            <span class="quiz-badge">難度：中等</span>
+                            <span class="quiz-badge" id="quizDifficulty">難度：普通</span>
                         </div>
                         
                         <div class="quiz-question" id="quizQuestionText">
-                            在一個三角形中，已知邊長分別為 $a = 5$、$b = 6$、$c = 7$。試利用海龍公式計算此三角形的半周長 $s$ 與面積 $\Delta$ 為何？
+                            <!-- Question text injected dynamically -->
                         </div>
                         
                         <div class="quiz-options" id="quizOptionsContainer">
-                            <!-- Options injected dynamically by JS -->
+                            <!-- Options injected dynamically -->
                         </div>
                         
                         <div class="quiz-feedback" id="quizFeedback">
-                            <!-- Feedback injected dynamically by JS -->
+                            <!-- Feedback injected dynamically -->
                         </div>
                         
                         <div style="margin: 1.25rem 0; border-top: 1px solid var(--border-gold);"></div>
@@ -1170,12 +1391,14 @@
 
         <!-- Right Sidebar (Dynamic Section TOC) -->
         <aside class="right-navigation">
-            <div class="toc-title">本章小節</div>
+            <div class="toc-title">小節目錄</div>
             <div class="toc-list" id="tocList">
-                <a href="#intro" class="toc-item active" id="toc-intro">1. 海龍公式簡介</a>
-                <a href="#interactive" class="toc-item" id="toc-interactive">2. 幾何動態探索</a>
-                <a href="#proof" class="toc-item" id="toc-proof">3. 公式代數推導</a>
-                <a href="#quiz" class="toc-item" id="toc-quiz">4. 隨堂概念挑戰</a>
+                <a href="#ratios" class="toc-item active" id="toc-ratios">1. 基礎三角比投影</a>
+                <a href="#sine-law" class="toc-item" id="toc-sine-law">2. 正弦定理與直徑</a>
+                <a href="#cosine-law" class="toc-item" id="toc-cosine-law">3. 餘弦定理與修正</a>
+                <a href="#heron" class="toc-item" id="toc-heron">4. 海龍公式與面積</a>
+                <a href="#apollonius" class="toc-item" id="toc-apollonius">5. 中線與平行四邊形</a>
+                <a href="#quiz" class="toc-item" id="toc-quiz">6. 隨堂概念挑戰</a>
             </div>
         </aside>
     </div>
@@ -1204,216 +1427,440 @@
                 });
             }
             
-            // Show body after rendering to prevent FOUC
+            // Show body after rendering
             document.body.style.opacity = 1;
             
-            // Init components
-            initGeometryCanvas();
+            // Init canvas components
+            initCanvasRatios();
+            initCanvasSine();
+            initCanvasCosine();
+            initCanvasHeron();
+            initCanvasApollonius();
+            
+            // Init quiz engine
             initQuizEngine();
+            
+            // Init scrollspy & progress
             initScrollspy();
         });
 
-        // =========================================================
-        // Geometry Interactive Canvas (Heron & Traditional)
-        // =========================================================
-        function initGeometryCanvas() {
-            const canvas = document.getElementById("geometryCanvas");
-            const container = document.getElementById("canvasContainer");
+        // Helper: distance between points
+        function getDist(p1, p2) {
+            return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
+        }
+
+        // Helper: safe scale for DPI and debounce resize
+        function setupCanvasDPR(canvas, container, drawCallback) {
             const ctx = canvas.getContext("2d");
             const dpr = window.devicePixelRatio || 1;
             
-            // Initial Triangle Vertices in Virtual Coordinates (600 x 400 space)
-            let A = { x: 300, y: 80 };
-            let B = { x: 100, y: 320 };
-            let C = { x: 500, y: 320 };
-            
-            let dragTarget = null;
-            const clickRadius = 20; // Hit test radius
-            
-            // Reset button
-            document.getElementById("btnReset").addEventListener("click", () => {
-                A = { x: 300, y: 80 };
-                B = { x: 100, y: 320 };
-                C = { x: 500, y: 320 };
-                updateCalculations();
-                draw();
-            });
-            
-            // Resize handler with 8-pixel jitter threshold
             function resize() {
                 const rect = container.getBoundingClientRect();
                 const width = Math.floor(rect.width);
                 const height = Math.floor(rect.height);
                 
-                // Jitter threshold checks
                 if (Math.abs(width - canvas.width / dpr) > 8 || Math.abs(height - canvas.height / dpr) > 8) {
                     canvas.width = width * dpr;
                     canvas.height = height * dpr;
                     ctx.scale(dpr, dpr);
-                    draw();
+                    drawCallback();
                 }
             }
             
             window.addEventListener("resize", resize);
-            // Delay a bit to get accurate container layout
             setTimeout(resize, 100);
+            return { dpr, ctx };
+        }
 
-            // Distance helper
-            function dist(p1, p2) {
-                return Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2);
-            }
+        // =========================================================
+        // Canvas 1: Trigonometric Ratios (Unit Circle)
+        // =========================================================
+        function initCanvasRatios() {
+            const canvas = document.getElementById("canvasRatios");
+            const container = canvas.parentElement;
+            const slideTheta = document.getElementById("slideTheta");
+            let thetaDeg = 30;
+            
+            let isDragging = false;
+            
+            const { dpr, ctx } = setupCanvasDPR(canvas, container, draw);
 
-            // Calculations
-            function updateCalculations() {
-                // Let 1px = 0.02 units (scaling for realistic textbook values)
-                const scale = 0.02;
-                
-                const rawA = dist(B, C);
-                const rawB = dist(A, C);
-                const rawC = dist(A, B);
-                
-                const a = rawA * scale;
-                const b = rawB * scale;
-                const c = rawC * scale;
-                
-                const s = (a + b + c) / 2.0;
-                
-                // Heron's formula area
-                const termA = Math.max(0, s - a);
-                const termB = Math.max(0, s - b);
-                const termC = Math.max(0, s - c);
-                const areaHeron = Math.sqrt(s * termA * termB * termC);
-                
-                // Traditional calculation: base a, height h
-                // Perpendicular vector for base BC
-                const dx = C.x - B.x;
-                const dy = C.y - B.y;
-                const baseLen = Math.sqrt(dx*dx + dy*dy);
-                
-                // Height calculations
-                let hPx = 0;
-                if (baseLen > 0.01) {
-                    // Projection k of vector BA onto BC
-                    const k = ((A.x - B.x) * dx + (A.y - B.y) * dy) / (baseLen * baseLen);
-                    // Foot of perpendicular H
-                    const H = {
-                        x: B.x + k * dx,
-                        y: B.y + k * dy
-                    };
-                    hPx = dist(A, H);
-                }
-                const h = hPx * scale;
-                const areaBH = 0.5 * a * h;
-
-                // Update text values (Monospace Fira Code numbers)
-                document.getElementById("valA").textContent = a.toFixed(2);
-                document.getElementById("valB").textContent = b.toFixed(2);
-                document.getElementById("valC").textContent = c.toFixed(2);
-                document.getElementById("valS").textContent = s.toFixed(2);
-                document.getElementById("valH").textContent = h.toFixed(2);
-                document.getElementById("areaBaseHeight").textContent = areaBH.toFixed(4);
-                document.getElementById("areaHeron").textContent = areaHeron.toFixed(4);
-            }
-
-            // Drawing Canvas Elements
             function draw() {
-                const width = canvas.width / dpr;
-                const height = canvas.height / dpr;
+                const w = canvas.width / dpr;
+                const h = canvas.height / dpr;
                 
-                // Clear Canvas
-                ctx.clearRect(0, 0, width, height); // Required by linter clear screen loop
+                ctx.clearRect(0, 0, w, h);
                 ctx.fillStyle = "#050608";
-                ctx.fillRect(0, 0, width, height);
-
-                // Compute perpendicular foot H
-                const dx = C.x - B.x;
-                const dy = C.y - B.y;
-                const baseLen = Math.sqrt(dx*dx + dy*dy);
-                let H = { x: 0, y: 0 };
-                let k = 0;
-                if (baseLen > 0.01) {
-                    k = ((A.x - B.x) * dx + (A.y - B.y) * dy) / (baseLen * baseLen);
-                    H = {
-                        x: B.x + k * dx,
-                        y: B.y + k * dy
-                    };
-                }
-
-                // 1. Draw height line (altitude) and base extension if H is outside BC
+                ctx.fillRect(0, 0, w, h);
+                
+                const centerX = w / 2;
+                const centerY = h / 2;
+                const scaleRadius = Math.min(w, h) * 0.35; // Size of radius 1.0 in pixels
+                
+                // Draw Grid Axes
                 ctx.beginPath();
-                ctx.setLineDash([5, 5]);
-                ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+                ctx.strokeStyle = "rgba(255,255,255,0.08)";
+                ctx.lineWidth = 1;
+                ctx.moveTo(0, centerY);
+                ctx.lineTo(w, centerY);
+                ctx.moveTo(centerX, 0);
+                ctx.lineTo(centerX, h);
+                ctx.stroke();
+                
+                // Draw Unit Circle
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, scaleRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = "rgba(148, 163, 184, 0.2)";
                 ctx.lineWidth = 1.5;
-                ctx.moveTo(A.x, A.y);
-                ctx.lineTo(H.x, H.y);
                 ctx.stroke();
 
-                if (k < 0) {
+                // Compute point P coordinate
+                const thetaRad = (thetaDeg * Math.PI) / 180;
+                const cosVal = Math.cos(thetaRad);
+                const sinVal = Math.sin(thetaRad);
+                const tanVal = Math.tan(thetaRad);
+                
+                const px = centerX + cosVal * scaleRadius;
+                const py = centerY - sinVal * scaleRadius; // SVG y coordinates inverted
+                
+                // Draw cosine line (Green X Projection)
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(px, centerY);
+                ctx.strokeStyle = "#10b981"; // Emerald
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Draw sine line (Red Y Projection)
+                ctx.beginPath();
+                ctx.moveTo(px, centerY);
+                ctx.lineTo(px, py);
+                ctx.strokeStyle = "#f43f5e"; // Rose
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Draw tangent line (Gold Tangent segment)
+                // Draw line x = 1 (tangent boundary)
+                const tx = centerX + scaleRadius;
+                const ty = centerY - tanVal * scaleRadius;
+                
+                if (Math.abs(cosVal) > 0.001 && Math.abs(thetaDeg - 90) > 0.1 && Math.abs(thetaDeg - 270) > 0.1) {
                     ctx.beginPath();
                     ctx.setLineDash([3, 3]);
-                    ctx.strokeStyle = "rgba(148, 163, 184, 0.3)";
-                    ctx.moveTo(B.x, B.y);
-                    ctx.lineTo(H.x, H.y);
+                    ctx.strokeStyle = "rgba(255,255,255,0.15)";
+                    ctx.moveTo(tx, 0);
+                    ctx.lineTo(tx, h);
                     ctx.stroke();
-                } else if (k > 1) {
-                    ctx.beginPath();
-                    ctx.setLineDash([3, 3]);
-                    ctx.strokeStyle = "rgba(148, 163, 184, 0.3)";
-                    ctx.moveTo(C.x, C.y);
-                    ctx.lineTo(H.x, H.y);
-                    ctx.stroke();
-                }
-                ctx.setLineDash([]); // Reset dash pattern
-
-                // 2. Draw Right Angle Symbol at H
-                if (baseLen > 0.01) {
-                    const normX = dx / baseLen;
-                    const normY = dy / baseLen;
-                    // Orthogonal vector away from A
-                    const orthX = -normY;
-                    const orthY = normX;
+                    ctx.setLineDash([]);
                     
-                    // Determine orientation of right-angle box based on A's position
-                    const hVecX = A.x - H.x;
-                    const hVecY = A.y - H.y;
-                    const hSign = (hVecX * orthX + hVecY * orthY) > 0 ? 1 : -1;
-                    const kSign = k >= 0.5 ? -1 : 1;
-
-                    const size = 12;
-                    const p1 = { x: H.x + kSign * normX * size, y: H.y + kSign * normY * size };
-                    const p2 = { x: p1.x + hSign * orthX * size, y: p1.y + hSign * orthY * size };
-                    const p3 = { x: H.x + hSign * orthX * size, y: H.y + hSign * orthY * size };
-
+                    // Tan segment
                     ctx.beginPath();
-                    ctx.strokeStyle = "rgba(197, 168, 107, 0.4)";
-                    ctx.lineWidth = 1;
-                    ctx.moveTo(p1.x, p1.y);
-                    ctx.lineTo(p2.x, p2.y);
-                    ctx.lineTo(p3.x, p3.y);
+                    ctx.moveTo(tx, centerY);
+                    ctx.lineTo(tx, ty);
+                    ctx.strokeStyle = "#c5a86b"; // Gold
+                    ctx.lineWidth = 3.5;
                     ctx.stroke();
+                    
+                    // Secant helper line
+                    ctx.beginPath();
+                    ctx.setLineDash([2, 4]);
+                    ctx.strokeStyle = "rgba(197, 168, 107, 0.4)";
+                    ctx.moveTo(centerX, centerY);
+                    ctx.lineTo(tx, ty);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
                 }
+                
+                // Draw radial vector (Hypotenuse)
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(px, py);
+                ctx.strokeStyle = "#f8fafc";
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
 
-                // 3. Draw Triangle Body & Fill
+                // Draw Vector arrow head
+                const angle = Math.atan2(py - centerY, px - centerX);
+                ctx.beginPath();
+                ctx.fillStyle = "#f8fafc";
+                ctx.moveTo(px, py);
+                ctx.lineTo(px - 12 * Math.cos(angle - Math.PI / 6), py - 12 * Math.sin(angle - Math.PI / 6));
+                ctx.lineTo(px - 12 * Math.cos(angle + Math.PI / 6), py - 12 * Math.sin(angle + Math.PI / 6));
+                ctx.fill();
+
+                // Draw central angle arc θ
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 30, 0, -thetaRad, true);
+                ctx.strokeStyle = "rgba(197, 168, 107, 0.8)";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw Node P
+                ctx.beginPath();
+                ctx.arc(px, py, 7, 0, Math.PI * 2);
+                ctx.fillStyle = "#090a0f";
+                ctx.fill();
+                ctx.strokeStyle = "#c5a86b";
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+                
+                // Label P
+                ctx.font = "bold 12px 'Outfit', sans-serif";
+                ctx.fillStyle = "#ffffff";
+                ctx.fillText(`P (${cosVal.toFixed(2)}, ${sinVal.toFixed(2)})`, px + 12, py - 6);
+                
+                // Label theta angle
+                ctx.font = "bold 11px 'Outfit', sans-serif";
+                ctx.fillStyle = "#c5a86b";
+                ctx.fillText("θ", centerX + 36 * Math.cos(-thetaRad/2), centerY + 36 * Math.sin(-thetaRad/2));
+
+                // Update text panel values
+                document.getElementById("valTheta").textContent = `${thetaDeg.toFixed(1)}°`;
+                document.getElementById("valCos").textContent = cosVal.toFixed(4);
+                document.getElementById("valSin").textContent = sinVal.toFixed(4);
+                document.getElementById("valTan").textContent = (Math.abs(thetaDeg - 90) < 1e-2 || Math.abs(thetaDeg - 270) < 1e-2) ? "∞" : tanVal.toFixed(4);
+            }
+
+            // Input handlers
+            slideTheta.addEventListener("input", (e) => {
+                thetaDeg = parseFloat(e.target.value);
+                draw();
+            });
+
+            function getThetaFromMouse(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const x = clientX - rect.left - rect.width / 2;
+                const y = -(clientY - rect.top - rect.height / 2); // invert
+                let angle = Math.atan2(y, x) * 180 / Math.PI;
+                if (angle < 0) angle += 360;
+                return angle;
+            }
+
+            function handleStart(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const mx = clientX - rect.left - rect.width / 2;
+                const my = -(clientY - rect.top - rect.height / 2);
+                
+                const thetaRad = (thetaDeg * Math.PI) / 180;
+                const scaleRadius = Math.min(rect.width, rect.height) * 0.35;
+                const px = Math.cos(thetaRad) * scaleRadius;
+                const py = Math.sin(thetaRad) * scaleRadius;
+                
+                // Check drag hit target near P node
+                if (Math.sqrt((mx - px)**2 + (my - py)**2) < 25) {
+                    isDragging = true;
+                    e.preventDefault();
+                }
+            }
+
+            function handleMove(e) {
+                if (!isDragging) return;
+                thetaDeg = getThetaFromMouse(e);
+                slideTheta.value = Math.round(thetaDeg);
+                draw();
+                e.preventDefault();
+            }
+
+            canvas.addEventListener("mousedown", handleStart);
+            canvas.addEventListener("mousemove", handleMove);
+            window.addEventListener("mouseup", () => { isDragging = false; });
+
+            canvas.addEventListener("touchstart", handleStart, { passive: false });
+            canvas.addEventListener("touchmove", handleMove, { passive: false });
+            window.addEventListener("touchend", () => { isDragging = false; });
+
+            setTimeout(draw, 150);
+        }
+
+        // =========================================================
+        // Canvas 2: Law of Sines (Fixed circle, constrained nodes)
+        // =========================================================
+        function initCanvasSine() {
+            const canvas = document.getElementById("canvasSine");
+            const container = canvas.parentElement;
+            const diameterAlert = document.getElementById("diameterAlert");
+            const diameterAlertText = document.getElementById("diameterAlertText");
+            
+            // Triangle angles relative to circle center (radians)
+            let thetaA = -Math.PI / 3; // -60 deg
+            let thetaB = Math.PI * 5 / 6; // 150 deg
+            let thetaC = Math.PI / 4; // 45 deg
+            
+            let A = { x: 0, y: 0 };
+            let B = { x: 0, y: 0 };
+            let C = { x: 0, y: 0 };
+            let O = { x: 0, y: 0 };
+            const R = 110; // Fixed radius in pixels
+            
+            let dragNode = null;
+            const hitRadius = 25;
+
+            const { dpr, ctx } = setupCanvasDPR(canvas, container, draw);
+
+            function updatePoints() {
+                const w = canvas.width / dpr;
+                const h = canvas.height / dpr;
+                O.x = w / 2;
+                O.y = h / 2;
+                
+                A.x = O.x + R * Math.cos(thetaA);
+                A.y = O.y + R * Math.sin(thetaA);
+                B.x = O.x + R * Math.cos(thetaB);
+                B.y = O.y + R * Math.sin(thetaB);
+                C.x = O.x + R * Math.cos(thetaC);
+                C.y = O.y + R * Math.sin(thetaC);
+            }
+
+            function checkDiameter(angle1, angle2) {
+                let diff = Math.abs(angle1 - angle2) % (Math.PI * 2);
+                if (diff > Math.PI) diff = Math.PI * 2 - diff;
+                return Math.abs(diff - Math.PI) < 0.05; // ~2.8 deg tolerance
+            }
+
+            function snapAngle(targetAngle, refAngle) {
+                let diff = Math.abs(targetAngle - refAngle) % (Math.PI * 2);
+                if (diff > Math.PI) diff = Math.PI * 2 - diff;
+                if (Math.abs(diff - Math.PI) < 0.06) {
+                    return refAngle + Math.PI; // snap to exact opposite angle
+                }
+                return targetAngle;
+            }
+
+            function drawRightAngleBox(corner, p1, p2, size = 12) {
+                const d1 = getDist(corner, p1);
+                const d2 = getDist(corner, p2);
+                if (d1 < 1 || d2 < 1) return;
+                
+                // Unit vectors
+                const ux = (p1.x - corner.x) / d1;
+                const uy = (p1.y - corner.y) / d1;
+                const vx = (p2.x - corner.x) / d2;
+                const vy = (p2.y - corner.y) / d2;
+                
+                const pt1 = { x: corner.x + size * ux, y: corner.y + size * uy };
+                const pt2 = { x: corner.x + size * vx, y: corner.y + size * vy };
+                const pt3 = { x: corner.x + size * ux + size * vx, y: corner.y + size * uy + size * vy };
+                
+                ctx.beginPath();
+                ctx.strokeStyle = "#c5a86b"; // Gold Right-Angle Symbol
+                ctx.lineWidth = 1.5;
+                ctx.moveTo(pt1.x, pt1.y);
+                ctx.lineTo(pt3.x, pt3.y);
+                ctx.lineTo(pt2.x, pt2.y);
+                ctx.stroke();
+            }
+
+            function draw() {
+                const w = canvas.width / dpr;
+                const h = canvas.height / dpr;
+                
+                ctx.clearRect(0, 0, w, h);
+                ctx.fillStyle = "#050608";
+                ctx.fillRect(0, 0, w, h);
+                
+                updatePoints();
+                
+                // Draw fixed circumcircle
+                ctx.beginPath();
+                ctx.arc(O.x, O.y, R, 0, Math.PI * 2);
+                ctx.strokeStyle = "rgba(197, 168, 107, 0.18)";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Draw Circumcenter O
+                ctx.beginPath();
+                ctx.arc(O.x, O.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(197, 168, 107, 0.6)";
+                ctx.fill();
+                
+                // Evaluate diameter pairs
+                const isABDiameter = checkDiameter(thetaA, thetaB);
+                const isBCDiameter = checkDiameter(thetaB, thetaC);
+                const isCADiameter = checkDiameter(thetaC, thetaA);
+                
+                let activeDiameter = null;
+
+                // Draw Edge AB
+                ctx.beginPath();
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(B.x, B.y);
+                if (isABDiameter) {
+                    ctx.strokeStyle = "#c5a86b";
+                    ctx.lineWidth = 3.5;
+                    activeDiameter = { target: "C", p1: A, p2: B };
+                } else {
+                    ctx.strokeStyle = "#38bdf8";
+                    ctx.lineWidth = 2.5;
+                }
+                ctx.stroke();
+                
+                // Draw Edge BC
+                ctx.beginPath();
+                ctx.moveTo(B.x, B.y);
+                ctx.lineTo(C.x, C.y);
+                if (isBCDiameter) {
+                    ctx.strokeStyle = "#c5a86b";
+                    ctx.lineWidth = 3.5;
+                    activeDiameter = { target: "A", p1: B, p2: C };
+                } else {
+                    ctx.strokeStyle = "#38bdf8";
+                    ctx.lineWidth = 2.5;
+                }
+                ctx.stroke();
+                
+                // Draw Edge CA
+                ctx.beginPath();
+                ctx.moveTo(C.x, C.y);
+                ctx.lineTo(A.x, A.y);
+                if (isCADiameter) {
+                    ctx.strokeStyle = "#c5a86b";
+                    ctx.lineWidth = 3.5;
+                    activeDiameter = { target: "B", p1: C, p2: A };
+                } else {
+                    ctx.strokeStyle = "#38bdf8";
+                    ctx.lineWidth = 2.5;
+                }
+                ctx.stroke();
+
+                // Draw Triangle Fill
                 ctx.beginPath();
                 ctx.moveTo(A.x, A.y);
                 ctx.lineTo(B.x, B.y);
                 ctx.lineTo(C.x, C.y);
                 ctx.closePath();
-                ctx.fillStyle = "rgba(197, 168, 107, 0.04)";
+                ctx.fillStyle = activeDiameter ? "rgba(197, 168, 107, 0.05)" : "rgba(56, 189, 248, 0.02)";
                 ctx.fill();
-                ctx.strokeStyle = "rgba(197, 168, 107, 0.6)";
-                ctx.lineWidth = 2.5;
-                ctx.stroke();
 
-                // 4. Draw vertices (Nodes)
-                const vertices = [
-                    { p: A, name: "A", color: "#c5a86b" },
-                    { p: B, name: "B", color: "#38bdf8" },
-                    { p: C, name: "C", color: "#38bdf8" }
+                // Highlight Right Angle if diameter exists
+                if (activeDiameter) {
+                    let corner = C;
+                    if (activeDiameter.target === "A") corner = A;
+                    if (activeDiameter.target === "B") corner = B;
+                    drawRightAngleBox(corner, activeDiameter.p1, activeDiameter.p2, 12);
+                    
+                    // Show HTML Warning Alert
+                    if (diameterAlert) {
+                        diameterAlert.style.display = "flex";
+                        diameterAlertText.textContent = `✨ 形成直徑！直角角 ${activeDiameter.target} = 90°`;
+                    }
+                } else {
+                    if (diameterAlert) {
+                        diameterAlert.style.display = "none";
+                    }
+                }
+
+                // Draw Nodes A, B, C
+                const nodes = [
+                    { p: A, label: "A", color: "#c5a86b" },
+                    { p: B, label: "B", color: "#38bdf8" },
+                    { p: C, label: "C", color: "#38bdf8" }
                 ];
-                
-                for (let i = 0; i < vertices.length; i++) {
-                    const node = vertices[i];
+
+                nodes.forEach(node => {
                     ctx.beginPath();
                     ctx.arc(node.p.x, node.p.y, 8, 0, Math.PI * 2);
                     ctx.fillStyle = "#090a0f";
@@ -1422,128 +1869,677 @@
                     ctx.lineWidth = 2.5;
                     ctx.stroke();
 
-                    // Glow effect on vertices
-                    ctx.beginPath();
-                    ctx.arc(node.p.x, node.p.y, 14, 0, Math.PI * 2);
-                    ctx.fillStyle = node.color === "#c5a86b" ? "rgba(197, 168, 107, 0.1)" : "rgba(56, 189, 248, 0.1)";
-                    ctx.fill();
-
-                    // Text labels for vertices
+                    // Text labels pushed outwards from center O
+                    const angle = Math.atan2(node.p.y - O.y, node.p.x - O.x);
                     ctx.font = "bold 13px 'Outfit', sans-serif";
                     ctx.fillStyle = "#ffffff";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
                     
-                    let offset = { x: 0, y: -22 };
-                    if (node.name === "B") offset = { x: -18, y: 15 };
-                    if (node.name === "C") offset = { x: 18, y: 15 };
-                    
-                    ctx.fillText(node.name, node.p.x + offset.x, node.p.y + offset.y);
-                }
+                    const offset = 18;
+                    ctx.fillText(node.label, node.p.x + offset * Math.cos(angle), node.p.y + offset * Math.sin(angle));
+                });
 
-                // 5. Draw height value text label "h"
-                if (baseLen > 0.01) {
-                    const midHX = (A.x + H.x) / 2;
-                    const midHY = (A.y + H.y) / 2;
-                    ctx.font = "italic 12px 'Inter', sans-serif";
-                    ctx.fillStyle = "#94a3b8";
-                    ctx.textAlign = "left";
-                    ctx.fillText("h", midHX + 10, midHY);
-                }
+                // Compute parameters for panel
+                const pxScale = 0.05;
+                const rawA = getDist(B, C);
+                const rawB = getDist(A, C);
+                const rawC = getDist(A, B);
+                
+                const aVal = rawA * pxScale;
+                const bVal = rawB * pxScale;
+                const cVal = rawC * pxScale;
+                const rVal = R * pxScale;
+                
+                // Law of Cosines angles
+                const cosA = (rawB**2 + rawC**2 - rawA**2) / (2 * rawB * rawC);
+                const angleA = Math.acos(Math.max(-1.0, Math.min(1.0, cosA)));
+                const angleB = Math.acos(Math.max(-1.0, Math.min(1.0, (rawA**2 + rawC**2 - rawB**2) / (2 * rawA * rawC))));
+                
+                const sinA = Math.sin(angleA);
+                const sinB = Math.sin(angleB);
+                
+                // Degree values
+                const degA = angleA * 180 / Math.PI;
+                const degB = angleB * 180 / Math.PI;
+                
+                document.getElementById("valSineEdgeA").textContent = aVal.toFixed(1);
+                document.getElementById("valSineAngleA").textContent = Math.round(degA);
+                document.getElementById("valSineEdgeB").textContent = bVal.toFixed(1);
+                document.getElementById("valSineAngleB").textContent = Math.round(degB);
+                document.getElementById("valSineRadius").textContent = rVal.toFixed(2);
+                
+                document.getElementById("valSineRatioA").textContent = (sinA > 0.01 ? (aVal / sinA) : 0).toFixed(2);
+                document.getElementById("valSineRatioB").textContent = (sinB > 0.01 ? (bVal / sinB) : 0).toFixed(2);
+                document.getElementById("valSineDiameter").textContent = (2 * rVal).toFixed(2);
             }
 
-            // Mouse and Touch Event Handlers
-            function getCanvasPos(e) {
+            function getAngleFromMouse(e) {
                 const rect = canvas.getBoundingClientRect();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return {
-                    x: clientX - rect.left,
-                    y: clientY - rect.top
-                };
+                const mx = clientX - rect.left - rect.width / 2;
+                const my = clientY - rect.top - rect.height / 2;
+                return Math.atan2(my, mx);
             }
 
             function handleStart(e) {
-                const pos = getCanvasPos(e);
-                if (dist(pos, A) < clickRadius) dragTarget = A;
-                else if (dist(pos, B) < clickRadius) dragTarget = B;
-                else if (dist(pos, C) < clickRadius) dragTarget = C;
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const mx = clientX - rect.left;
+                const my = clientY - rect.top;
                 
-                if (dragTarget) {
-                    e.preventDefault();
-                }
+                updatePoints();
+                
+                if (getDist({x:mx, y:my}, A) < hitRadius) dragNode = A;
+                else if (getDist({x:mx, y:my}, B) < hitRadius) dragNode = B;
+                else if (getDist({x:mx, y:my}, C) < hitRadius) dragNode = C;
+                
+                if (dragNode) e.preventDefault();
             }
 
             function handleMove(e) {
-                if (!dragTarget) return;
-                const pos = getCanvasPos(e);
+                if (!dragNode) return;
+                let angle = getAngleFromMouse(e);
                 
-                // Boundary clamping
-                const w = canvas.width / dpr;
-                const h = canvas.height / dpr;
-                dragTarget.x = Math.max(10, Math.min(w - 10, pos.x));
-                dragTarget.y = Math.max(10, Math.min(h - 10, pos.y));
+                if (dragNode === A) {
+                    thetaA = angle;
+                    thetaA = snapAngle(thetaA, thetaB);
+                    if (thetaA !== thetaB + Math.PI) {
+                        thetaA = snapAngle(thetaA, thetaC);
+                    }
+                } else if (dragNode === B) {
+                    thetaB = angle;
+                    thetaB = snapAngle(thetaB, thetaA);
+                    if (thetaB !== thetaA + Math.PI) {
+                        thetaB = snapAngle(thetaB, thetaC);
+                    }
+                } else if (dragNode === C) {
+                    thetaC = angle;
+                    thetaC = snapAngle(thetaC, thetaA);
+                    if (thetaC !== thetaA + Math.PI) {
+                        thetaC = snapAngle(thetaC, thetaB);
+                    }
+                }
                 
-                updateCalculations();
                 draw();
                 e.preventDefault();
             }
 
-            // ReferenceError risk bypass variables
-            function handleEnd() {
-                dragTarget = null;
-            }
-
-            // Listeners
             canvas.addEventListener("mousedown", handleStart);
             canvas.addEventListener("mousemove", handleMove);
-            window.addEventListener("mouseup", handleEnd);
+            window.addEventListener("mouseup", () => { dragNode = null; });
 
             canvas.addEventListener("touchstart", handleStart, { passive: false });
             canvas.addEventListener("touchmove", handleMove, { passive: false });
-            window.addEventListener("touchend", handleEnd);
+            window.addEventListener("touchend", () => { dragNode = null; });
 
-            // Initial Draw
-            updateCalculations();
-            draw();
+            setTimeout(draw, 150);
         }
 
         // =========================================================
-        // Quiz Engine (Self-test questions with Confetti feedback)
+        // Canvas 3: Law of Cosines (Arbitrary triangle with altitude h)
+        // =========================================================
+        function initCanvasCosine() {
+            const canvas = document.getElementById("canvasCosine");
+            const container = canvas.parentElement;
+            
+            // Initial arbitrary triangle nodes
+            let A = { x: 260, y: 70 };
+            let B = { x: 100, y: 300 };
+            let C = { x: 440, y: 300 };
+            
+            let dragNode = null;
+            const hitRadius = 25;
+
+            const { dpr, ctx } = setupCanvasDPR(canvas, container, draw);
+
+            function draw() {
+                const w = canvas.width / dpr;
+                const h = canvas.height / dpr;
+                
+                ctx.clearRect(0, 0, w, h);
+                ctx.fillStyle = "#050608";
+                ctx.fillRect(0, 0, w, h);
+                
+                // Perpendicular foot H from A to BC
+                const dx = C.x - B.x;
+                const dy = C.y - B.y;
+                const baseLen = Math.sqrt(dx*dx + dy*dy);
+                let H = { x: B.x, y: B.y };
+                let k = 0;
+                if (baseLen > 0.01) {
+                    k = ((A.x - B.x) * dx + (A.y - B.y) * dy) / (baseLen * baseLen);
+                    H = {
+                        x: B.x + k * dx,
+                        y: B.y + k * dy
+                    };
+                }
+                
+                // Draw altitude line
+                ctx.beginPath();
+                ctx.setLineDash([4, 4]);
+                ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(H.x, H.y);
+                ctx.stroke();
+                
+                // Draw base extension lines if foot is outside BC segment
+                if (k < 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(B.x, B.y);
+                    ctx.lineTo(H.x, H.y);
+                    ctx.strokeStyle = "rgba(148, 163, 184, 0.25)";
+                    ctx.stroke();
+                } else if (k > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(C.x, C.y);
+                    ctx.lineTo(H.x, H.y);
+                    ctx.strokeStyle = "rgba(148, 163, 184, 0.25)";
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
+
+                // Right angle marker
+                if (baseLen > 0.01) {
+                    const nx = dx / baseLen;
+                    const ny = dy / baseLen;
+                    const signY = (A.y - H.y) * nx - (A.x - H.x) * ny > 0 ? 1 : -1;
+                    const signX = k >= 0.5 ? -1 : 1;
+                    
+                    const box = 10;
+                    ctx.beginPath();
+                    ctx.strokeStyle = "rgba(197, 168, 107, 0.4)";
+                    ctx.moveTo(H.x + signX * nx * box, H.y + signX * ny * box);
+                    ctx.lineTo(H.x + signX * nx * box - signY * ny * box, H.y + signX * ny * box + signY * nx * box);
+                    ctx.lineTo(H.x - signY * ny * box, H.y + signY * nx * box);
+                    ctx.stroke();
+                }
+
+                // Draw main triangle
+                ctx.beginPath();
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(B.x, B.y);
+                ctx.lineTo(C.x, C.y);
+                ctx.closePath();
+                ctx.fillStyle = "rgba(56, 189, 248, 0.02)";
+                ctx.fill();
+                ctx.strokeStyle = "#38bdf8"; // Light Blue
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                // Draw Nodes A, B, C
+                const nodes = [
+                    { p: A, label: "A", color: "#c5a86b" },
+                    { p: B, label: "B", color: "#38bdf8" },
+                    { p: C, label: "C", color: "#38bdf8" }
+                ];
+                
+                nodes.forEach(node => {
+                    ctx.beginPath();
+                    ctx.arc(node.p.x, node.p.y, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = "#090a0f";
+                    ctx.fill();
+                    ctx.strokeStyle = node.color;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    ctx.font = "bold 13px 'Outfit', sans-serif";
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillText(node.label, node.p.x - 5, node.p.y - 14);
+                });
+
+                // Compute parameters
+                const scale = 0.04;
+                const rawA = getDist(B, C);
+                const rawB = getDist(A, C);
+                const rawC = getDist(A, B);
+                
+                const aVal = rawA * scale;
+                const bVal = rawB * scale;
+                const cVal = rawC * scale;
+                
+                // Angle A using law of cosines
+                const cosA = (rawB**2 + rawC**2 - rawA**2) / (2 * rawB * rawC);
+                const angleA = Math.acos(Math.max(-1.0, Math.min(1.0, cosA)));
+                const degA = angleA * 180 / Math.PI;
+
+                const cosLeft = aVal * aVal;
+                const correction = 2 * bVal * cVal * Math.cos(angleA);
+                const cosRight = bVal*bVal + cVal*cVal - correction;
+                
+                document.getElementById("valCosAngleA").textContent = `${degA.toFixed(1)}°`;
+                document.getElementById("valCosEdgeB").textContent = bVal.toFixed(1);
+                document.getElementById("valCosEdgeC").textContent = cVal.toFixed(1);
+                
+                document.getElementById("valCosLeft").textContent = cosLeft.toFixed(2);
+                document.getElementById("valCosCorrection").textContent = correction.toFixed(2);
+                document.getElementById("valCosRight").textContent = cosRight.toFixed(2);
+            }
+
+            function handleStart(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const mx = clientX - rect.left;
+                const my = clientY - rect.top;
+                
+                if (getDist({x:mx, y:my}, A) < hitRadius) dragNode = A;
+                else if (getDist({x:mx, y:my}, B) < hitRadius) dragNode = B;
+                else if (getDist({x:mx, y:my}, C) < hitRadius) dragNode = C;
+                
+                if (dragNode) e.preventDefault();
+            }
+
+            function handleMove(e) {
+                if (!dragNode) return;
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                dragNode.x = Math.max(15, Math.min(rect.width - 15, clientX - rect.left));
+                dragNode.y = Math.max(15, Math.min(rect.height - 15, clientY - rect.top));
+                
+                draw();
+                e.preventDefault();
+            }
+
+            canvas.addEventListener("mousedown", handleStart);
+            canvas.addEventListener("mousemove", handleMove);
+            window.addEventListener("mouseup", () => { dragNode = null; });
+
+            canvas.addEventListener("touchstart", handleStart, { passive: false });
+            canvas.addEventListener("touchmove", handleMove, { passive: false });
+            window.addEventListener("touchend", () => { dragNode = null; });
+
+            setTimeout(draw, 150);
+        }
+
+        // =========================================================
+        // Canvas 4: Heron's Formula (Triangle + Altitude)
+        // =========================================================
+        function initCanvasHeron() {
+            const canvas = document.getElementById("canvasHeron");
+            const container = canvas.parentElement;
+            
+            let A = { x: 260, y: 80 };
+            let B = { x: 100, y: 310 };
+            let C = { x: 450, y: 310 };
+            
+            let dragNode = null;
+            const hitRadius = 20;
+
+            const { dpr, ctx } = setupCanvasDPR(canvas, container, draw);
+
+            function draw() {
+                const w = canvas.width / dpr;
+                const h = canvas.height / dpr;
+                
+                ctx.clearRect(0, 0, w, h);
+                ctx.fillStyle = "#050608";
+                ctx.fillRect(0, 0, w, h);
+                
+                // Perpendicular foot H on BC
+                const dx = C.x - B.x;
+                const dy = C.y - B.y;
+                const baseLen = Math.sqrt(dx*dx + dy*dy);
+                let H = { x: B.x, y: B.y };
+                let k = 0;
+                
+                if (baseLen > 0.01) {
+                    k = ((A.x - B.x) * dx + (A.y - B.y) * dy) / (baseLen * baseLen);
+                    H = {
+                        x: B.x + k * dx,
+                        y: B.y + k * dy
+                    };
+                }
+                
+                // Draw altitude altitude line
+                ctx.beginPath();
+                ctx.setLineDash([4, 4]);
+                ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(H.x, H.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Right angle marker
+                if (baseLen > 0.01) {
+                    const nx = dx / baseLen;
+                    const ny = dy / baseLen;
+                    const signY = (A.y - H.y) * nx - (A.x - H.x) * ny > 0 ? 1 : -1;
+                    const signX = k >= 0.5 ? -1 : 1;
+                    
+                    const box = 10;
+                    ctx.beginPath();
+                    ctx.strokeStyle = "rgba(197, 168, 107, 0.4)";
+                    ctx.moveTo(H.x + signX * nx * box, H.y + signX * ny * box);
+                    ctx.lineTo(H.x + signX * nx * box - signY * ny * box, H.y + signX * ny * box + signY * nx * box);
+                    ctx.lineTo(H.x - signY * ny * box, H.y + signY * nx * box);
+                    ctx.stroke();
+                }
+
+                // Draw main triangle
+                ctx.beginPath();
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(B.x, B.y);
+                ctx.lineTo(C.x, C.y);
+                ctx.closePath();
+                ctx.fillStyle = "rgba(197, 168, 107, 0.03)";
+                ctx.fill();
+                ctx.strokeStyle = "#c5a86b"; // Gold
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                // Vertices
+                const nodes = [
+                    { p: A, label: "A", color: "#c5a86b" },
+                    { p: B, label: "B", color: "#38bdf8" },
+                    { p: C, label: "C", color: "#38bdf8" }
+                ];
+                
+                nodes.forEach(node => {
+                    ctx.beginPath();
+                    ctx.arc(node.p.x, node.p.y, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = "#090a0f";
+                    ctx.fill();
+                    ctx.strokeStyle = node.color;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    ctx.font = "bold 13px 'Outfit', sans-serif";
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillText(node.label, node.p.x - 5, node.p.y - 14);
+                });
+
+                // Calculate Heron
+                const scale = 0.04;
+                const rawA = getDist(B, C);
+                const rawB = getDist(A, C);
+                const rawC = getDist(A, B);
+                
+                const a = rawA * scale;
+                const b = rawB * scale;
+                const c = rawC * scale;
+                
+                const s = (a + b + c) / 2;
+                const termA = Math.max(0, s - a);
+                const termB = Math.max(0, s - b);
+                const termC = Math.max(0, s - c);
+                const areaHeron = Math.sqrt(s * termA * termB * termC);
+                
+                const hVal = getDist(A, H) * scale;
+                const areaBaseHeight = 0.5 * a * hVal;
+                
+                document.getElementById("valHeronS").textContent = s.toFixed(2);
+                document.getElementById("valHeronH").textContent = hVal.toFixed(2);
+                document.getElementById("areaBH").textContent = areaBaseHeight.toFixed(4);
+                document.getElementById("areaHeron").textContent = areaHeron.toFixed(4);
+            }
+
+            function handleStart(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const mx = clientX - rect.left;
+                const my = clientY - rect.top;
+                
+                if (getDist({x:mx, y:my}, A) < hitRadius) dragNode = A;
+                else if (getDist({x:mx, y:my}, B) < hitRadius) dragNode = B;
+                else if (getDist({x:mx, y:my}, C) < hitRadius) dragNode = C;
+                
+                if (dragNode) e.preventDefault();
+            }
+
+            function handleMove(e) {
+                if (!dragNode) return;
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                dragNode.x = Math.max(15, Math.min(rect.width - 15, clientX - rect.left));
+                dragNode.y = Math.max(15, Math.min(rect.height - 15, clientY - rect.top));
+                
+                draw();
+                e.preventDefault();
+            }
+
+            canvas.addEventListener("mousedown", handleStart);
+            canvas.addEventListener("mousemove", handleMove);
+            window.addEventListener("mouseup", () => { dragNode = null; });
+
+            canvas.addEventListener("touchstart", handleStart, { passive: false });
+            canvas.addEventListener("touchmove", handleMove, { passive: false });
+            window.addEventListener("touchend", () => { dragNode = null; });
+
+            setTimeout(draw, 150);
+        }
+
+        // =========================================================
+        // Canvas 5: Apollonius & Parallelogram (Median + Parallelogram)
+        // =========================================================
+        function initCanvasApollonius() {
+            const canvas = document.getElementById("canvasApollonius");
+            const container = canvas.parentElement;
+            
+            let A = { x: 250, y: 70 };
+            let B = { x: 100, y: 260 };
+            let C = { x: 400, y: 260 };
+            
+            let dragNode = null;
+            const hitRadius = 20;
+
+            const { dpr, ctx } = setupCanvasDPR(canvas, container, draw);
+
+            function draw() {
+                const w = canvas.width / dpr;
+                const h = canvas.height / dpr;
+                
+                ctx.clearRect(0, 0, w, h);
+                ctx.fillStyle = "#050608";
+                ctx.fillRect(0, 0, w, h);
+                
+                // Calculate Midpoint D of BC
+                const D = {
+                    x: (B.x + C.x) / 2,
+                    y: (B.y + C.y) / 2
+                };
+                
+                // Calculate Parallelogram point E: Vector AE = AB + AC => E = B + C - A
+                const E = {
+                    x: B.x + C.x - A.x,
+                    y: B.y + C.y - A.y
+                };
+                
+                // Draw Parallelogram dotted lines (Apollonius expansion to Parallelogram)
+                ctx.beginPath();
+                ctx.setLineDash([3, 4]);
+                ctx.strokeStyle = "rgba(197, 168, 107, 0.25)";
+                ctx.moveTo(B.x, B.y);
+                ctx.lineTo(E.x, E.y);
+                ctx.lineTo(C.x, C.y);
+                ctx.stroke();
+                
+                // Draw diagonal AE
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(E.x, E.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Draw Triangle ABC
+                ctx.beginPath();
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(B.x, B.y);
+                ctx.lineTo(C.x, C.y);
+                ctx.closePath();
+                ctx.fillStyle = "rgba(197, 168, 107, 0.02)";
+                ctx.fill();
+                ctx.strokeStyle = "#c5a86b";
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+                
+                // Draw Median AD
+                ctx.beginPath();
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(D.x, D.y);
+                ctx.strokeStyle = "#38bdf8"; // Light Blue for Median
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw Midpoint node D
+                ctx.beginPath();
+                ctx.arc(D.x, D.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = "#38bdf8";
+                ctx.fill();
+                
+                // Vertices
+                const nodes = [
+                    { p: A, label: "A", color: "#c5a86b" },
+                    { p: B, label: "B", color: "#c5a86b" },
+                    { p: C, label: "C", color: "#c5a86b" }
+                ];
+                
+                nodes.forEach(node => {
+                    ctx.beginPath();
+                    ctx.arc(node.p.x, node.p.y, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = "#090a0f";
+                    ctx.fill();
+                    ctx.strokeStyle = node.color;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    ctx.font = "bold 13px 'Outfit', sans-serif";
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillText(node.label, node.p.x - 5, node.p.y - 14);
+                });
+                
+                // Label D & E
+                ctx.font = "bold 11px 'Outfit', sans-serif";
+                ctx.fillStyle = "#38bdf8";
+                ctx.fillText("D (Mid)", D.x - 20, D.y + 16);
+                ctx.fillStyle = "rgba(255,255,255,0.35)";
+                ctx.fillText("E", E.x - 5, E.y + 16);
+
+                // Calculations
+                const scale = 0.05;
+                const ab2 = (getDist(A, B) * scale) ** 2;
+                const ac2 = (getDist(A, C) * scale) ** 2;
+                const ad2 = (getDist(A, D) * scale) ** 2;
+                const bd2 = (getDist(B, D) * scale) ** 2;
+                
+                const leftSum = ab2 + ac2;
+                const rightSum = 2 * (ad2 + bd2);
+                
+                document.getElementById("valAB2").textContent = ab2.toFixed(2);
+                document.getElementById("valAC2").textContent = ac2.toFixed(2);
+                document.getElementById("valAD2").textContent = ad2.toFixed(2);
+                document.getElementById("valBD2").textContent = bd2.toFixed(2);
+                document.getElementById("valSideSum").textContent = leftSum.toFixed(2);
+                document.getElementById("valApolloniusRight").textContent = rightSum.toFixed(2);
+            }
+
+            function handleStart(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const mx = clientX - rect.left;
+                const my = clientY - rect.top;
+                
+                if (getDist({x:mx, y:my}, A) < hitRadius) dragNode = A;
+                else if (getDist({x:mx, y:my}, B) < hitRadius) dragNode = B;
+                else if (getDist({x:mx, y:my}, C) < hitRadius) dragNode = C;
+                
+                if (dragNode) e.preventDefault();
+            }
+
+            function handleMove(e) {
+                if (!dragNode) return;
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                dragNode.x = Math.max(15, Math.min(rect.width - 15, clientX - rect.left));
+                dragNode.y = Math.max(15, Math.min(rect.height - 15, clientY - rect.top));
+                
+                draw();
+                e.preventDefault();
+            }
+
+            canvas.addEventListener("mousedown", handleStart);
+            canvas.addEventListener("mousemove", handleMove);
+            window.addEventListener("mouseup", () => { dragNode = null; });
+
+            canvas.addEventListener("touchstart", handleStart, { passive: false });
+            canvas.addEventListener("touchmove", handleMove, { passive: false });
+            window.addEventListener("touchend", () => { dragNode = null; });
+
+            setTimeout(draw, 150);
+        }
+
+        // =========================================================
+        // Quiz Engine
         // =========================================================
         const quizDatabase = [
             {
-                question: "在一個三角形中，已知邊長分別為 $a = 5$、$b = 6$、$c = 7$。試利用海龍公式計算此三角形的半周長 $s$ 與面積 $\Delta$ 為何？",
+                question: "設點 $P$ 在半徑為 $1$ 的單位圓上，其與 $X$ 軸夾角為 $120^\\circ$。請問該點的坐標投影 $(\\cos 120^\\circ, \\sin 120^\\circ)$ 為何？",
                 options: [
-                    "A. $s = 9$ ， $\Delta = 6\\sqrt{6}$",
-                    "B. $s = 18$ ， $\Delta = 6\\sqrt{6}$",
-                    "C. $s = 9$ ， $\Delta = 12\\sqrt{6}$",
-                    "D. $s = 9$ ， $\Delta = 36$"
+                    "A. $(-\\frac{1}{2}, \\frac{\\sqrt{3}}{2})$",
+                    "B. $(\\frac{1}{2}, -\\frac{\\sqrt{3}}{2})$",
+                    "C. $(-\\frac{\\sqrt{3}}{2}, \\frac{1}{2})$",
+                    "D. $(-\\frac{1}{2}, -\\frac{\\sqrt{3}}{2})$"
                 ],
                 answer: 0,
-                explanation: "半周長 $s = \\frac{5+6+7}{2} = 9$。代入海龍公式得到：$$\\Delta = \\sqrt{9(9-5)(9-6)(9-7)} = \\sqrt{9 \\times 4 \\times 3 \\times 2} = \\sqrt{216} = 6\\sqrt{6}$$。因此選項 A 為正確答案。"
+                difficulty: "普通",
+                explanation: "角度 $\\theta = 120^\\circ$ 落在第二象限，$X$ 坐標為負，$Y$ 坐標為正。投影值 $\\cos 120^\\circ = -\\cos 60^\\circ = -\\frac{1}{2}$，$\\sin 120^\\circ = \\sin 60^\\circ = \\frac{\\sqrt{3}}{2}$。因此選項 A 正確。"
             },
             {
-                question: "有一塊三角形農地，測得三邊長為 $13$ 公尺、$14$ 公尺、$15$ 公尺。請問此塊農地的面積為多少平方公尺？",
+                question: "若 $\\triangle ABC$ 的外接圓半徑 $R = 5$，邊長 $a = 5\\sqrt{3}$。求角 $A$ 的度數可能為何？",
                 options: [
-                    "A. $80$ 平方公尺",
-                    "B. $84$ 平方公尺",
-                    "C. $96$ 平方公尺",
-                    "D. $120$ 平方公尺"
+                    "A. 僅有 $30^\\circ$",
+                    "B. 僅有 $60^\\circ$",
+                    "C. $60^\\circ$ 或 $120^\\circ$",
+                    "D. $30^\\circ$ 或 $150^\\circ$"
                 ],
-                answer: 1,
-                explanation: "半周長 $s = \\frac{13+14+15}{2} = 21$。代入海龍公式得到：$$\\Delta = \\sqrt{21(21-13)(21-14)(21-15)} = \\sqrt{21 \\times 8 \\times 7 \\times 6}$$。將其分解因數以利計算：$$\\Delta = \\sqrt{3\\cdot7 \\cdot 2^3 \\cdot 7 \\cdot 2\\cdot3} = \\sqrt{2^4 \\cdot 3^2 \\cdot 7^2} = 2^2 \\cdot 3 \\cdot 7 = 4 \\cdot 3 \\cdot 7 = 84$$。因此答案為 B ($84$ 平方公尺)。"
+                answer: 2,
+                difficulty: "中等",
+                explanation: "依正弦定理：$$\\frac{a}{\\sin A} = 2R \\implies \\frac{5\\sqrt{3}}{\\sin A} = 10 \\implies \\sin A = \\frac{\\sqrt{3}}{2}$$。正弦值為 $\\frac{\\sqrt{3}}{2}$ 的角在三角形內可能為第一象限的 $60^\\circ$ 或第二象限的 $120^\\circ$（兩角互補且正弦值均為正）。因此答案為 C。"
             },
             {
-                question: "若一個三角形的三邊長為 $7$、$8$、$9$。請問半周長與三個邊長差值的乘積 $s(s-a)(s-b)(s-c)$ 之值為何？",
+                question: "在 $\\triangle ABC$ 中，已知邊長 $b = 5$，$c = 8$，且夾角 $A = 60^\\circ$。試使用餘弦定理計算底邊 $a$ 的邊長為何？",
                 options: [
-                    "A. $720$",
-                    "B. $1440$",
-                    "C. $360$",
-                    "D. $12\\sqrt{5}$"
+                    "A. $a = 7$",
+                    "B. $a = \\sqrt{129}$",
+                    "C. $a = 9$",
+                    "D. $a = 3\\sqrt{7}$"
                 ],
                 answer: 0,
-                explanation: "半周長 $s = \\frac{7+8+9}{2} = 12$。我們計算各項差值：$s-a = 12-7 = 5$；$s-b = 12-8 = 4$；$s-c = 12-9 = 3$。乘積為 $s(s-a)(s-b)(s-c) = 12 \\times 5 \\times 4 \\times 3 = 720$。根號此值即為面積 $\\sqrt{720} = 12\\sqrt{5}$。題目問的是乘積，故答案為 A ($720$)。"
+                difficulty: "中等",
+                explanation: "根據餘弦定理：$$a^2 = b^2 + c^2 - 2bc\\cos A = 5^2 + 8^2 - 2(5)(8)\\cos 60^\\circ$$。帶入計算：$$a^2 = 25 + 64 - 80 \\times 0.5 = 89 - 40 = 49$$。因此邊長 $a = \\sqrt{49} = 7$。正確答案為 A。"
+            },
+            {
+                question: "一三角形三邊長為 $9$、$10$、$17$。請問此三角形的半周長 $s$ 與面積為多少？",
+                options: [
+                    "A. $s = 18$，面積 = $36$",
+                    "B. $s = 36$，面積 = $72$",
+                    "C. $s = 18$，面積 = $72$",
+                    "D. $s = 18$，面積 = $48$"
+                ],
+                answer: 0,
+                difficulty: "中等",
+                explanation: "半周長 $s = \\frac{9+10+17}{2} = 18$。代入海龍公式：$$\\Delta = \\sqrt{18(18-9)(18-10)(18-17)} = \\sqrt{18 \\times 9 \\times 8 \\times 1} = \\sqrt{1296} = 36$$。因此選項 A 為正確答案。"
+            },
+            {
+                question: "在 $\\triangle ABC$ 中，設 $D$ 為 $BC$ 的中點。已知 $AB = 7$，$AC = 9$，中線 $AD = 7$。試計算底邊 $BC$ 的邊長為何？",
+                options: [
+                    "A. $BC = 8$",
+                    "B. $BC = 12$",
+                    "C. $BC = 4$",
+                    "D. $BC = 6\\sqrt{2}$"
+                ],
+                answer: 0,
+                difficulty: "困難",
+                explanation: "利用中線定理：$$AB^2 + AC^2 = 2(AD^2 + BD^2) \\implies 7^2 + 9^2 = 2(7^2 + BD^2) \\implies 49 + 81 = 2(49 + BD^2)$$。整理得到：$$130 = 98 + 2BD^2 \\implies 2BD^2 = 32 \\implies BD^2 = 16 \\implies BD = 4$$。由於 $D$ 為中點，$BC = 2 \\times BD = 8$。因此答案為 A。"
             }
         ];
 
@@ -1565,6 +2561,7 @@
             const quiz = quizDatabase[currentQuizIndex];
             document.getElementById("quizQuestionNum").textContent = `挑戰 ${currentQuizIndex + 1} / ${quizDatabase.length}`;
             document.getElementById("quizQuestionText").innerHTML = quiz.question;
+            document.getElementById("quizDifficulty").textContent = `難度：${quiz.difficulty}`;
             
             const optionsContainer = document.getElementById("quizOptionsContainer");
             optionsContainer.innerHTML = "";
@@ -1593,7 +2590,6 @@
                 card.addEventListener("click", () => {
                     if (isSubmitted) return;
                     
-                    // Unselect previous
                     const prevSelected = optionsContainer.querySelector(".option-card.selected");
                     if (prevSelected) prevSelected.classList.remove("selected");
                     
@@ -1604,8 +2600,8 @@
                 
                 optionsContainer.appendChild(card);
             });
-            
-            // Re-render formulas inside the newly added quiz elements
+
+            // Re-render LaTeX inside newly generated cards
             if (typeof renderMathInElement !== 'undefined') {
                 renderMathInElement(optionsContainer, {
                     delimiters: [
@@ -1626,37 +2622,42 @@
 
         function submitAnswer() {
             if (selectedOptionIndex === null || isSubmitted) return;
-            isSubmitted = true;
             
+            isSubmitted = true;
             const quiz = quizDatabase[currentQuizIndex];
             const optionsContainer = document.getElementById("quizOptionsContainer");
             const cards = optionsContainer.querySelectorAll(".option-card");
             
+            const btnSubmit = document.getElementById("btnSubmitQuiz");
+            const btnNext = document.getElementById("btnNextQuiz");
+            
+            btnSubmit.style.display = "none";
+            
+            // Show next button only if we have more questions
+            if (currentQuizIndex < quizDatabase.length - 1) {
+                btnNext.textContent = "下一題";
+                btnNext.style.display = "inline-flex";
+            } else {
+                btnNext.textContent = "完成挑戰";
+                btnNext.style.display = "inline-flex";
+            }
+
             const feedback = document.getElementById("quizFeedback");
             
-            // Highlight answers
-            cards.forEach((card, index) => {
-                card.classList.remove("selected");
-                if (index === quiz.answer) {
-                    card.classList.add("correct");
-                } else if (index === selectedOptionIndex) {
-                    card.classList.add("wrong");
-                }
-            });
-            
-            // Correct logic
             if (selectedOptionIndex === quiz.answer) {
-                feedback.classList.add("correct");
-                feedback.innerHTML = `<strong>太棒了，答對了！</strong><br>${quiz.explanation}`;
+                // Correct
+                cards[selectedOptionIndex].classList.add("correct");
+                feedback.innerHTML = `<strong>✨ 答對了！</strong><br>${quiz.explanation}`;
+                feedback.className = "quiz-feedback correct";
                 triggerConfetti();
             } else {
-                feedback.classList.add("wrong");
-                feedback.innerHTML = `<strong>答錯囉，再接再厲！</strong><br>${quiz.explanation}`;
+                // Wrong
+                cards[selectedOptionIndex].classList.add("wrong");
+                cards[quiz.answer].classList.add("correct");
+                feedback.innerHTML = `<strong>❌ 答錯了，再接再厲！</strong><br>${quiz.explanation}`;
+                feedback.className = "quiz-feedback wrong";
             }
             
-            feedback.style.display = "block";
-            
-            // Re-render math inside explanation
             if (typeof renderMathInElement !== 'undefined') {
                 renderMathInElement(feedback, {
                     delimiters: [
@@ -1666,91 +2667,131 @@
                     throwOnError: false
                 });
             }
-            
-            document.getElementById("btnSubmitQuiz").style.display = "none";
-            if (currentQuizIndex < quizDatabase.length - 1) {
-                document.getElementById("btnNextQuiz").style.display = "inline-flex";
-            }
         }
 
         function loadNextQuestion() {
-            currentQuizIndex++;
-            if (currentQuizIndex < quizDatabase.length) {
+            if (currentQuizIndex < quizDatabase.length - 1) {
+                currentQuizIndex++;
                 renderQuiz();
+            } else {
+                // Quiz completed
+                const panel = document.querySelector(".quiz-panel");
+                panel.innerHTML = `
+                    <div style="text-align: center; padding: 2rem 0;">
+                        <i data-lucide="trophy" style="width: 48px; height: 48px; color: var(--accent-gold); margin-bottom: 1rem;"></i>
+                        <h3 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 0.5rem; color: #ffffff;">恭喜完成幾何定理挑戰！</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">你已經成功完成了所有隨堂概念題！</p>
+                        <button class="btn-primary" onclick="resetQuiz()">重新挑戰</button>
+                    </div>
+                `;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                triggerConfetti();
             }
         }
 
+        function resetQuiz() {
+            currentQuizIndex = 0;
+            const quizSection = document.getElementById("quiz");
+            quizSection.innerHTML = `
+                <h2><i data-lucide="award"></i> 6. 隨堂概念挑戰</h2>
+                <p>請利用剛才探索學到的幾何投影知識與代數定理，嘗試回答以下問題：</p>
+                <div class="quiz-panel">
+                    <div class="quiz-header">
+                        <div class="quiz-title">
+                            <i data-lucide="help-circle"></i>
+                            <span id="quizQuestionNum">挑戰 1 / 5</span>
+                        </div>
+                        <span class="quiz-badge" id="quizDifficulty">難度：普通</span>
+                    </div>
+                    <div class="quiz-question" id="quizQuestionText"></div>
+                    <div class="quiz-options" id="quizOptionsContainer"></div>
+                    <div class="quiz-feedback" id="quizFeedback"></div>
+                    <div style="margin: 1.25rem 0; border-top: 1px solid var(--border-gold);"></div>
+                    <div class="quiz-actions">
+                        <button class="btn-secondary" id="btnNextQuiz" style="display: none;">下一題</button>
+                        <button class="btn-primary" id="btnSubmitQuiz">提交答案</button>
+                    </div>
+                </div>
+            `;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            initQuizEngine();
+        }
+
         function triggerConfetti() {
-            // Gold Theme Confetti
-            const colors = ['#c5a86b', '#dfc282', '#ffffff', '#b39459'];
-            confetti({
-                particleCount: 80,
-                spread: 70,
-                origin: { y: 0.8 },
-                colors: colors
-            });
+            if (typeof confetti !== 'undefined') {
+                confetti({
+                    particleCount: 80,
+                    spread: 60,
+                    origin: { y: 0.8 },
+                    colors: ['#c5a86b', '#38bdf8', '#ffffff']
+                });
+            }
         }
 
         // =========================================================
-        // Scrollspy & Smooth Navigation Control
+        // Scrollspy & Curriculum Progress Indicator
         // =========================================================
         function scrollToSection(id) {
-            const element = document.getElementById(id);
-            if (element) {
-                element.scrollIntoView({ behavior: "smooth" });
+            const el = document.getElementById(id);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
             }
         }
 
         function initScrollspy() {
-            const scrollContainer = document.getElementById("mainScrollable");
             const sections = document.querySelectorAll("section");
-            const tocItems = document.querySelectorAll(".toc-item");
-            const navButtons = document.querySelectorAll(".nav-btn");
-            const topNavbar = document.getElementById("topNavbar");
+            const navLinks = document.querySelectorAll(".side-navigation .tree-link");
+            const topNavButtons = document.querySelectorAll(".top-navbar .nav-btn");
+            const tocItems = document.querySelectorAll(".right-navigation .toc-item");
+            const scrollContainer = document.getElementById("mainScrollable");
             
-            let lastScrollY = scrollContainer.scrollTop;
+            const progressFill = document.getElementById("curriculumProgress");
+            const progressText = document.getElementById("progressText");
 
-            // Scroll listener
-            scrollContainer.addEventListener("scroll", () => {
-                const currentScrollY = scrollContainer.scrollTop;
+            function updateScroll() {
+                const scrollPos = scrollContainer.scrollTop + 120;
+                let activeId = "ratios";
                 
-                // Mobile Top Navbar show/hide on scroll
-                if (currentScrollY > lastScrollY && currentScrollY > 60) {
-                    topNavbar.classList.add("hide-navbar");
-                } else {
-                    topNavbar.classList.remove("hide-navbar");
-                }
-                lastScrollY = currentScrollY;
-                
-                // Scrollspy active tag highlight
-                let activeId = "";
                 sections.forEach(sec => {
-                    const top = sec.offsetTop - 140;
-                    const h = sec.offsetHeight;
-                    if (currentScrollY >= top && currentScrollY < top + h) {
+                    if (scrollPos >= sec.offsetTop) {
                         activeId = sec.getAttribute("id");
                     }
                 });
 
-                if (activeId) {
-                    // Highlight right TOC
-                    tocItems.forEach(item => {
-                        item.classList.remove("active");
-                        if (item.getAttribute("href") === `#${activeId}`) {
-                            item.classList.add("active");
-                        }
-                    });
-                    
-                    // Highlight mobile navbar buttons
-                    navButtons.forEach(btn => {
-                        btn.classList.remove("active");
-                        const onclickAttr = btn.getAttribute("onclick");
-                        if (onclickAttr && onclickAttr.includes(activeId)) {
-                            btn.classList.add("active");
+                // Update active link classes
+                function updateActiveClass(elements, activeClass) {
+                    elements.forEach(el => {
+                        const href = el.getAttribute("href") || el.getAttribute("onclick");
+                        if (href && href.includes(activeId)) {
+                            el.classList.add(activeClass);
+                        } else {
+                            el.classList.remove(activeClass);
                         }
                     });
                 }
-            });
+                
+                updateActiveClass(navLinks, "active");
+                updateActiveClass(tocItems, "active");
+                
+                // Update top navbar active button
+                topNavButtons.forEach(btn => {
+                    const clickAttr = btn.getAttribute("onclick");
+                    if (clickAttr && clickAttr.includes(activeId)) {
+                        btn.classList.add("active");
+                    } else {
+                        btn.classList.remove("active");
+                    }
+                });
+
+                // Update Progress Fill
+                const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+                const progress = maxScroll > 0 ? (scrollContainer.scrollTop / maxScroll) * 100 : 0;
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `進度 ${Math.round(progress)}%`;
+            }
+
+            scrollContainer.addEventListener("scroll", updateScroll);
+            updateScroll();
         }
     </script>
 </body>
