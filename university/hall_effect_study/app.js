@@ -225,7 +225,7 @@ function initHallSimulator() {
 
     // 粒子類別
     class Particle {
-        constructor(width, height, isElectron, vdDir) {
+        constructor(width, height, isElectron, vdDir, isInitial = false) {
             this.canvasWidth = width;
             this.canvasHeight = height;
             this.isElectron = isElectron;
@@ -234,16 +234,23 @@ function initHallSimulator() {
             // 漂移方向直接由速度正負 vdDir 決定
             this.dirX = vdDir;
             
-            this.reset();
-            // 隨機初始位置
-            this.x = Math.random() * (width - 40) + 20;
+            this.reset(isInitial);
         }
 
-        reset() {
-            this.x = this.dirX > 0 ? 10 : this.canvasWidth - 10;
+        reset(isInitial = false) {
+            if (isInitial) {
+                // 如果是最初初始化/重置，把粒子散開在邊界外，形成陸續流入的視覺波浪
+                if (this.dirX > 0) {
+                    this.x = 20 - Math.random() * 400; // let 
+                } else {
+                    this.x = this.canvasWidth - 20 + Math.random() * 400; // let 
+                }
+            } else {
+                this.x = this.dirX > 0 ? 10 : this.canvasWidth - 10; // let 
+            }
+            
             // 隨機分配基準高度 (90 ~ 150，確保粒子均勻分布在薄膜中間核心導體區)
-            this.baseY = Math.random() * 60 + 90; 
-            this.offsetY = 0; // 洛倫茲力偏轉引起的位移
+            this.y = Math.random() * 60 + 90; 
             this.speed = Math.random() * 1.5 + 1.2;
         }
 
@@ -256,26 +263,28 @@ function initHallSimulator() {
             const vx = this.dirX * this.speed;
             const Bz = fieldVal;
             
-            // 橫向受力應為淨橫向力：洛倫茲力與霍爾電場力的合力
-            // 隨著平衡電場建立，淨受力 forceY 會漸漸降為 0，使前進中的載子不再發生新的偏轉
-            const forceY = q * vx * Bz * 1.8 * (1.0 - FE_ratio);
-            this.offsetY += forceY;
+            // 橫向淨力為：洛倫茲力與霍爾電場力的合力 (電位偏轉方向為 q * vx * Bz)
+            // 垂直運動速度由淨橫向力決定，外加微小熱抖動以模擬擴散與雜亂熱運動
+            const Fnet_y = q * vx * Bz * 1.5 * (1.0 - FE_ratio);
+            const thermalJitter = (Math.random() - 0.5) * 0.25;
+            const vy = Fnet_y + thermalJitter;
+            
+            // 積分更新 y 座標
+            this.y += vy; // let 
 
-            // 限制最大偏置，防止自由載子超出上下薄膜管道壁（80 ~ 160，因此最大偏置為 30 像素）
-            const maxOffset = 30;
-            if (this.offsetY > maxOffset) this.offsetY = maxOffset;
-            if (this.offsetY < -maxOffset) this.offsetY = -maxOffset;
-
-            // 實時 y 座標會受到 FE_ratio 的影響：
-            // 隨著平衡電場力 FE_ratio 上升，累積的偏置 offsetY 被電場力反向抵消 (1 - FE_ratio)，平滑地拉回中線！
-            // 當達到穩態 (FE_ratio -> 1) 時，不論在哪個位置，粒子都會以完美的直線 (y = baseY) 平行移動！
-            this.y = this.baseY + this.offsetY * (1.0 - FE_ratio);
+            // 限制最大偏置，防止自由載子超出上下薄膜管道壁（80 ~ 160）
+            if (this.y < 80) {
+                this.y = 80; // let 
+            }
+            if (this.y > 160) {
+                this.y = 160; // let 
+            }
 
             // 邊界判定
             if (this.dirX > 0 && this.x > this.canvasWidth - 10) {
-                this.reset();
+                this.reset(false); // 重置時從入口正常出現，不需再 staggered
             } else if (this.dirX < 0 && this.x < 10) {
-                this.reset();
+                this.reset(false);
             }
         }
 
@@ -301,7 +310,7 @@ function initHallSimulator() {
     }
 
     // 初始化粒子群
-    function initParticles() {
+    function initParticles(isInitial = false) {
         particles = []; // let 
         FE_ratio = 0; // 每次重設參數時，電場力比率重設為 0 // let 
         const isElectron = typeSelect.value === "n-type";
@@ -312,7 +321,7 @@ function initHallSimulator() {
         const h = canvas.height / (window.devicePixelRatio || 1);
 
         for (let i = 0; i < maxParticles; i++) {
-            particles.push(new Particle(w, h, isElectron, vdDir));
+            particles.push(new Particle(w, h, isElectron, vdDir, isInitial));
         }
     }
 
@@ -366,7 +375,7 @@ function initHallSimulator() {
         // 5. 計算物理公式響應
         // Lorentz Force Fy = q * vd * B
         const qVal = carrier === "n-type" ? -1.602e-19 : 1.602e-19;
-        const flSign = qVal * vd * field; 
+        const flSign = -qVal * vd * field; 
         
         let forceDesc = "";
         let accumulationTop = "";
@@ -383,7 +392,7 @@ function initHallSimulator() {
             resVh.style.color = "var(--text-muted)";
         } else {
             // 動態電場力累積比率，模擬電荷逐漸積聚之動態平衡過程
-            FE_ratio = FE_ratio + (1.0 - FE_ratio) * 0.02; // let 
+            FE_ratio = FE_ratio + (1.0 - FE_ratio) * 0.006; // let 
 
             // 洛倫茲力大小與強度 (隨著漂移速度 vd 實時線性改變！)
             const forceMag = Math.abs(qVal * vd * field);
@@ -498,19 +507,39 @@ function initHallSimulator() {
         animationFrameId = requestAnimationFrame(drawSimulator); // let 
     }
 
-    // 監聽重置粒子
+    // 溫和重置函數，當拖動滑桿時，重置電場力比率與偏置，但保留粒子目前在通道中的 X 座標（以防頻繁消失）
+    function resetSimulationTransient(isInitial = false) {
+        FE_ratio = 0; // let 
+        if (isInitial) {
+            initParticles(true);
+        } else {
+            particles.forEach(p => {
+                p.hitWall = false;
+                p.offsetY = 0;
+            });
+        }
+    }
+
+    // 監聽重置與參數更新
     typeSelect.addEventListener("change", () => {
-        initParticles();
+        resetSimulationTransient(true);
     });
     currentInput.addEventListener("input", () => {
-        initParticles();
+        resetSimulationTransient(false);
     });
     fieldInput.addEventListener("input", () => {
-        initParticles();
+        resetSimulationTransient(false);
     });
 
-    // 首次初始化並播放
-    initParticles();
+    const resetBtn = document.getElementById("sim-reset-btn");
+    if (resetBtn) {
+        resetBtn.addEventListener("click", () => {
+            resetSimulationTransient(true);
+        });
+    }
+
+    // 首次初始化並播放 (初始時粒子 staggered 流入)
+    initParticles(true);
     drawSimulator();
 }
 
@@ -1253,4 +1282,3 @@ function initWebReader() {
         }
     });
 }
-
