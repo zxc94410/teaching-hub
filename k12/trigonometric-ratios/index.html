@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三角幾何探索：海龍公式的圖解與證明</title>
+    <!-- Outfit & Noto Sans TC Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CDNs for icons & confetti -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- KaTeX math rendering engine (Synchronously loaded to prevent FOUC / Race Condition) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    
+    <style>
+        /* =========================================================
+           Immersive Black & Gold (Champagne Gold) Design System
+           ========================================================= */
+        :root {
+            --bg-primary: #090a0f;      /* Deep Obsidian Charcoal */
+            --bg-secondary: #0d0f17;    /* Slightly Lighter Slate for Overlays */
+            --text-primary: #f8fafc;    /* Clean Off-White */
+            --text-secondary: #94a3b8;  /* Legible Cool Grey */
+            --accent-gold: #c5a86b;     /* Champagne Gold Accent */
+            --border-gold: rgba(197, 168, 107, 0.15); /* Hairline Gold Outline */
+            
+            --color-success: #10b981;   /* Emerald for Correct state */
+            --color-alert: #f43f5e;     /* Rose for alert/error states */
+            --color-canvas-fill: rgba(197, 168, 107, 0.04);
+            
+            --font-sans: 'Inter', 'Noto Sans TC', sans-serif;
+            --font-heading: 'Outfit', sans-serif;
+            --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.6);
+            --transition-speed: 0.25s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            line-height: 1.7;
+            overflow: hidden; /* Main window handled by main-content-wrapper */
+            position: relative;
+            min-height: 100vh;
+            opacity: 0; /* Hidden initially to prevent LaTeX FOUC */
+            transition: opacity 0.35s ease;
+        }
+
+        /* Ambient Amber/Gold Breathing Glow in Background */
+        .ambient-glow {
+            position: fixed;
+            width: 700px;
+            height: 700px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(197, 168, 107, 0.035) 0%, rgba(0,0,0,0) 70%);
+            filter: blur(120px);
+            z-index: -1;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            animation: pulse-glow 20s infinite alternate;
+        }
+        @keyframes pulse-glow {
+            0% { opacity: 0.6; transform: translateX(-50%) scale(1.0); }
+            50% { opacity: 1.0; transform: translateX(-48%) scale(1.05); }
+            100% { opacity: 0.6; transform: translateX(-52%) scale(0.95); }
+        }
+
+        /* =========================================================
+           Immersive Layout Structure (Sidebar + Content + Right TOC)
+           ========================================================= */
+        .immersive-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr 240px;
+            min-height: 100vh;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Left Sidebar (Curriculum Drawer) */
+        .side-navigation {
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-gold);
+            padding: 32px 20px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+        .nav-brand {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 1.5px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo-symbol {
+            color: var(--accent-gold);
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .curriculum-meta {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-gold);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 24px;
+        }
+        .curriculum-meta .tag {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--accent-gold);
+            display: block;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+            margin-bottom: 6px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-gold);
+            width: 100%;
+            transition: width 0.4s ease;
+        }
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .progress-indicator .lbl {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .curriculum-tree {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .chapter-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #475569;
+            margin: 8px 0 4px;
+            letter-spacing: 0.5px;
+            padding-left: 8px;
+            border-left: 2px solid var(--accent-gold);
+        }
+        .chapter-pages {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .tree-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.82rem;
+            padding: 10px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+        .tree-link:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.03);
+        }
+        .tree-link.active {
+            background: rgba(197, 168, 107, 0.08);
+            color: var(--accent-gold);
+            font-weight: 600;
+            border-color: var(--border-gold);
+        }
+        .status-dot {
+            font-size: 0.65rem;
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.03);
+            color: var(--text-secondary);
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+        .status-dot.completed {
+            background: rgba(197, 168, 107, 0.12);
+            color: var(--accent-gold);
+        }
+        .status-dot.current {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+        }
+
+        /* Middle Column (Main Scrollable Content) */
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+            height: 100vh;
+            overflow-y: auto;
+            position: relative;
+            scroll-behavior: smooth;
+        }
+
+        /* Header block */
+        header {
+            padding: 1.25rem 2.5rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-gold);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-premium);
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+        .header-title h1 {
+            font-family: var(--font-heading);
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .header-title h1 i {
+            color: var(--accent-gold);
+            display: flex;
+            align-items: center;
+        }
+        .header-title p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+        }
+        .chapter-badge {
+            background: rgba(197, 168, 107, 0.08);
+            color: var(--accent-gold);
+            border: 1px solid var(--border-gold);
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Top Concept Navigation Bar (Mobile-only) */
+        .top-navbar {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-gold);
+            padding: 0.5rem 2rem;
+            display: none;
+            gap: 0.75rem;
+            overflow-x: auto;
+            z-index: 80;
+            position: sticky;
+            top: 0;
+            transition: transform 0.3s ease;
+        }
+        .top-navbar.hide-navbar {
+            transform: translateY(-100%);
+        }
+        .nav-btn {
+            background: none;
+            border: 1px solid transparent;
+            padding: 0.5rem 1.1rem;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.25s;
+            white-space: nowrap;
+        }
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: #ffffff;
+        }
+        .nav-btn.active {
+            background: rgba(197, 168, 107, 0.08);
+            color: var(--accent-gold);
+            border-color: var(--border-gold);
+            font-weight: 700;
+        }
+
+        /* Content Sections */
+        .content-body {
+            padding: 2.5rem;
+            max-width: 960px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+        }
+
+        section {
+            scroll-margin-top: 100px;
+        }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-gold);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        h2 i {
+            color: var(--accent-gold);
+            width: 20px;
+            height: 20px;
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        /* Callout Box (Alerts) */
+        .callout {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-gold);
+            border-left: 4px solid var(--accent-gold);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+        .callout-title {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .callout-title i {
+            color: var(--accent-gold);
+            width: 16px;
+            height: 16px;
+        }
+        .callout-content {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .callout-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Interactive Canvas Panel Grid Layout */
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        @media (max-width: 900px) {
+            .canvas-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .canvas-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-gold);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            min-height: 400px;
+            box-shadow: var(--shadow-premium);
+        }
+        .canvas-header {
+            padding: 0.9rem 1.2rem;
+            border-bottom: 1px solid var(--border-gold);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-secondary);
+        }
+        .canvas-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .canvas-title .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            display: inline-block;
+        }
+        .canvas-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .btn-icon {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-gold);
+            color: var(--text-secondary);
+            padding: 0.4rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-speed);
+        }
+        .btn-icon:hover {
+            background: rgba(197, 168, 107, 0.05);
+            color: #ffffff;
+            border-color: var(--accent-gold);
+        }
+        .canvas-container-box {
+            flex: 1;
+            position: relative;
+            background: #050608;
+            cursor: crosshair;
+        }
+        #geometryCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Floating Indicator inside Canvas */
+        .canvas-overlay-tip {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(13, 15, 23, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-gold);
+            padding: 0.4rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Stats Panel Cards */
+        .glass-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-gold);
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: var(--shadow-premium);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            transition: all var(--transition-speed);
+        }
+        .glass-card:hover {
+            border-color: rgba(197, 168, 107, 0.35);
+        }
+        .card-header-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-gold);
+            padding-bottom: 0.5rem;
+        }
+        .card-header-title i {
+            color: var(--accent-gold);
+        }
+
+        /* Monospace display list for variables to prevent layout shift */
+        .params-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .param-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            border-bottom: 1px dotted rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.4rem;
+        }
+        .param-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .param-value {
+            font-family: 'Fira Code', 'Courier New', Courier, monospace;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .param-value.gold {
+            color: var(--accent-gold);
+        }
+        .param-value.cyan {
+            color: #38bdf8;
+        }
+
+        /* Mathematical Proof Stepper */
+        .proof-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .proof-step {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-gold);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: transform 0.2s;
+        }
+        .proof-step:hover {
+            transform: translateX(4px);
+            border-color: rgba(197, 168, 107, 0.25);
+        }
+        .step-number {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.4rem;
+            display: inline-block;
+            background: rgba(197, 168, 107, 0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+        .step-desc {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .math-block {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 0.5rem 0;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+
+        /* Quiz components */
+        .quiz-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-gold);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: var(--shadow-premium);
+        }
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-gold);
+            padding-bottom: 0.75rem;
+        }
+        .quiz-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .quiz-title i {
+            color: var(--accent-gold);
+        }
+        .quiz-badge {
+            background: rgba(197, 168, 107, 0.08);
+            border: 1px solid var(--border-gold);
+            color: var(--accent-gold);
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .quiz-question {
+            font-size: 0.95rem;
+            color: #ffffff;
+            margin-bottom: 1.25rem;
+            font-weight: 500;
+        }
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .option-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-gold);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all var(--transition-speed);
+        }
+        .option-card:hover {
+            background: rgba(255,255,255,0.02);
+            border-color: rgba(197, 168, 107, 0.35);
+        }
+        .option-card.selected {
+            background: rgba(197, 168, 107, 0.08);
+            border-color: var(--accent-gold);
+        }
+        .option-card.correct {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: var(--color-success);
+        }
+        .option-card.wrong {
+            background: rgba(244, 63, 94, 0.08);
+            border-color: var(--color-alert);
+        }
+        .option-check {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .option-card.selected .option-check {
+            border-color: var(--accent-gold);
+            background: var(--accent-gold);
+        }
+        .option-card.correct .option-check {
+            border-color: var(--color-success);
+            background: var(--color-success);
+        }
+        .option-card.wrong .option-check {
+            border-color: var(--color-alert);
+            background: var(--color-alert);
+        }
+        .quiz-feedback {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            display: none;
+            border: 1px solid transparent;
+        }
+        .quiz-feedback.correct {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: rgba(16, 185, 129, 0.15);
+            color: #a7f3d0;
+            display: block;
+        }
+        .quiz-feedback.wrong {
+            background: rgba(244, 63, 94, 0.05);
+            border-color: rgba(244, 63, 94, 0.15);
+            color: #fecdd3;
+            display: block;
+        }
+        .quiz-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+        
+        .btn-primary {
+            background: var(--accent-gold);
+            border: 1px solid var(--accent-gold);
+            color: var(--bg-primary);
+            padding: 0.65rem 1.25rem;
+            font-family: var(--font-sans);
+            font-weight: 700;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all var(--transition-speed);
+        }
+        .btn-primary:hover {
+            background: #dfc282;
+            border-color: #dfc282;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-gold);
+            color: var(--text-secondary);
+            padding: 0.65rem 1.25rem;
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all var(--transition-speed);
+        }
+        .btn-secondary:hover {
+            border-color: var(--accent-gold);
+            color: #ffffff;
+        }
+
+        /* Right Sidebar (Dynamic Section TOC) */
+        .right-navigation {
+            background-color: var(--bg-secondary);
+            border-left: 1px solid var(--border-gold);
+            padding: 32px 20px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            z-index: 100;
+        }
+        .right-navigation::-webkit-scrollbar {
+            width: 4px;
+        }
+        .right-navigation::-webkit-scrollbar-thumb {
+            background: rgba(197, 168, 107, 0.15);
+            border-radius: 2px;
+        }
+        .toc-title {
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid var(--border-gold);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .toc-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .toc-item {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.78rem;
+            padding: 6px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            border-left: 2px solid transparent;
+            font-weight: 500;
+        }
+        .toc-item:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.01);
+        }
+        .toc-item.active {
+            color: var(--accent-gold);
+            border-left-color: var(--accent-gold);
+            background: rgba(197, 168, 107, 0.04);
+            font-weight: 600;
+            padding-left: 10px;
+        }
+
+        /* Mobile Layout Adjustments */
+        @media (max-width: 1100px) {
+            .immersive-layout {
+                grid-template-columns: 240px 1fr;
+            }
+            .right-navigation {
+                display: none;
+            }
+        }
+        @media (max-width: 768px) {
+            .immersive-layout {
+                grid-template-columns: 1fr;
+            }
+            .side-navigation {
+                display: none;
+            }
+            .top-navbar {
+                display: flex;
+            }
+            .content-body {
+                padding: 1.5rem;
+            }
+            header {
+                padding: 1rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    
+    <div class="immersive-layout">
+        <!-- Left Sidebar (Curriculum Drawer) -->
+        <aside class="side-navigation">
+            <div class="nav-brand">
+                <span class="logo-symbol"><i data-lucide="compass"></i></span>
+                <span>三角比與幾何</span>
+            </div>
+            
+            <a href="../../index.html" class="tree-link" style="margin: 0 16px 16px 16px; border: 1px solid var(--border-gold); background: rgba(255, 255, 255, 0.02); color: var(--accent-gold); display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; padding: 8px; text-decoration: none; font-size: 0.85rem;"><i data-lucide="arrow-left"></i> 返回平台首頁</a>
+            
+            <div class="curriculum-meta">
+                <span class="tag">當前課程</span>
+                <h4 style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">三角比與海龍公式</h4>
+                <div class="progress-indicator">
+                    <div class="progress-bar"><div class="progress-fill"></div></div>
+                    <span class="lbl">課程進度 100%</span>
+                </div>
+            </div>
+            
+            <nav class="curriculum-tree">
+                <div class="chapter-title">章節大綱</div>
+                <div class="chapter-pages">
+                    <a href="#intro" class="tree-link active">
+                        <span class="status-dot completed">1</span>
+                        <span>1. 海龍公式簡介</span>
+                    </a>
+                    <a href="#interactive" class="tree-link">
+                        <span class="status-dot completed">2</span>
+                        <span>2. 幾何動態探索</span>
+                    </a>
+                    <a href="#proof" class="tree-link">
+                        <span class="status-dot completed">3</span>
+                        <span>3. 公式代數推導</span>
+                    </a>
+                    <a href="#quiz" class="tree-link">
+                        <span class="status-dot completed">🏆</span>
+                        <span>隨堂概念挑戰</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Middle Column (Content Area) -->
+        <div class="main-content-wrapper" id="mainScrollable">
+            <!-- Mobile Navigation -->
+            <nav class="top-navbar" id="topNavbar">
+                <button class="nav-btn active" onclick="scrollToSection('intro')">
+                    <span class="icon" style="background: var(--accent-gold);"></span>1. 簡介
+                </button>
+                <button class="nav-btn" onclick="scrollToSection('interactive')">
+                    <span class="icon" style="background: #38bdf8;"></span>2. 動態探索
+                </button>
+                <button class="nav-btn" onclick="scrollToSection('proof')">
+                    <span class="icon" style="background: #a78bfa;"></span>3. 公式推導
+                </button>
+                <button class="nav-btn" onclick="scrollToSection('quiz')">
+                    <span class="icon" style="background: #10b981;"></span>🏆 自我挑戰
+                </button>
+            </nav>
+            
+            <header>
+                <div class="header-title">
+                    <h1><i data-lucide="triangle"></i> 海龍公式的幾何圖解與探索</h1>
+                    <p>給定三邊長求面積的優雅工具 · 高中數學必修</p>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.8rem;">
+                    <a href="../../index.html" class="btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; text-decoration:none;"><i data-lucide="arrow-left" style="width:14px; height:14px;"></i>返回平台首頁</a>
+                    <div class="chapter-badge">第二章：三角比與海龍公式</div>
+                </div>
+            </header>
+
+            <main class="content-body">
+                <!-- Section 1: Introduction -->
+                <section id="intro">
+                    <h2><i data-lucide="info"></i> 什麼是海龍公式？</h2>
+                    <p>
+                        在傳統幾何中，要計算一個三角形的面積，我們通常需要知道它的<b>底</b>和<b>高</b>，即使用公式 $\text{面積} = \frac{1}{2} \times \text{底} \times \text{高}$。然而，當我們只知道三角形的三個邊長 $a$、$b$、$c$，而不知道任何高度或角度時，計算高就會變得非常繁瑣。
+                    </p>
+                    <p>
+                        西元一世紀的亞歷山大港學者<b>海龍（Heron of Alexandria）</b>提出了一個巧妙的公式。只要知道三角形的三邊長，就能直接求出面積，這就是著名的<b>海龍公式（Heron's Formula）</b>：
+                    </p>
+                    
+                    <div class="math-block">
+                        $$\text{面積} = \Delta = \sqrt{s(s - a)(s - b)(s - c)}$$
+                    </div>
+                    
+                    <p>
+                        其中，變數 $s$ 代表該三角形的<b>半周長（semiperimeter）</b>，即周長的一半：
+                    </p>
+                    
+                    <div class="math-block">
+                        $$s = \frac{a + b + c}{2}$$
+                    </div>
+                    
+                    <div class="callout">
+                        <div class="callout-title">
+                            <i data-lucide="sparkles"></i>
+                            <span>公式的優美之處</span>
+                        </div>
+                        <div class="callout-content">
+                            <p>
+                                海龍公式將三角形的三邊長對稱地組織在一起。透過半周長 $s$，它考慮了三邊長與半周長的差值：$(s-a)$、$(s-b)$ 與 $(s-c)$。只要這三個差值都是正數（即滿足三角形兩邊之和大於第三邊的幾何不等式限制），公式內的根號底下就必然為正數，能夠完美計算出實數面積。
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Interactive Exploration -->
+                <section id="interactive">
+                    <h2><i data-lucide="move"></i> 幾何動態互動圖解</h2>
+                    <p>
+                        以下是一個即時的三角形幾何模擬器。你可以使用滑鼠或手指<b>拖曳三角形的三個頂點 $A$、$B$、$C$</b>，來觀察三角形的邊長、高、以及面積如何動態變化。右側的控制面板將即時比對「海龍公式」與「底高公式」的計算結果。
+                    </p>
+                    
+                    <div class="canvas-grid">
+                        <div class="canvas-panel">
+                            <div class="canvas-header">
+                                <div class="canvas-title">
+                                    <span class="dot"></span>
+                                    <span>幾何動態畫布（可拖曳頂點）</span>
+                                </div>
+                                <div class="canvas-controls">
+                                    <button class="btn-icon" id="btnReset" title="重設頂點位置">
+                                        <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="canvas-container-box" id="canvasContainer">
+                                <canvas id="geometryCanvas"></canvas>
+                                <div class="canvas-overlay-tip">
+                                    <i data-lucide="mouse-pointer-click" style="width: 12px; height: 12px;"></i>
+                                    <span>提示：拖曳頂點以調整形狀</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card">
+                            <div class="card-header-title">
+                                <i data-lucide="bar-chart-2"></i>
+                                <span>動態計算面板</span>
+                            </div>
+                            <div class="params-list">
+                                <div class="param-item">
+                                    <span class="param-label">邊長 $a$ (底邊 $BC$)</span>
+                                    <span class="param-value cyan" id="valA">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">邊長 $b$</span>
+                                    <span class="param-value" id="valB">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">邊長 $c$</span>
+                                    <span class="param-value" id="valC">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">半周長 $s = \frac{a+b+c}{2}$</span>
+                                    <span class="param-value gold" id="valS">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">高 $h$ (對應底邊 $a$)</span>
+                                    <span class="param-value" id="valH">0.00</span>
+                                </div>
+                                
+                                <div style="margin: 0.5rem 0; border-top: 1px dashed var(--border-gold);"></div>
+                                
+                                <div class="param-item">
+                                    <span class="param-label">底高面積 $\frac{1}{2} \times a \times h$</span>
+                                    <span class="param-value" id="areaBaseHeight">0.00</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">海龍面積 $\sqrt{s(s-a)(s-b)(s-c)}$</span>
+                                    <span class="param-value gold" id="areaHeron" style="font-size: 1.05rem;">0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Geometrical Proof -->
+                <section id="proof">
+                    <h2><i data-lucide="book-open"></i> 海龍公式的代數推導與證明</h2>
+                    <p>
+                        在高中階段，我們可以用<b>餘弦定理（Law of Cosines）</b>與基礎的三角恆等式來完成這個經典的幾何推導。
+                    </p>
+                    
+                    <div class="proof-container">
+                        <div class="proof-step">
+                            <span class="step-number">步驟 1</span>
+                            <div class="step-desc">利用正弦值表示三角形面積</div>
+                            <p>
+                                給定一個三角形，其邊長為 $a$、$b$、$c$，對應角為 $A$、$B$、$C$。我們知道，三角形的面積 $\Delta$ 可以透過包含夾角 $A$ 的公式表示為：
+                            </p>
+                            <div class="math-block">
+                                $$\Delta = \frac{1}{2} b c \sin A$$
+                            </div>
+                            <p style="margin-top: 0.5rem;">為了方便後續代數處理，我們將兩邊平方，消去正弦的根號：</p>
+                            <div class="math-block">
+                                $$\Delta^2 = \frac{1}{4} b^2 c^2 \sin^2 A$$
+                            </div>
+                        </div>
+
+                        <div class="proof-step">
+                            <span class="step-number">步驟 2</span>
+                            <div class="step-desc">利用餘弦定理與三角恆等式轉換</div>
+                            <p>
+                                根據同角三角關係，我們知道 $\sin^2 A = 1 - \cos^2 A = (1 - \cos A)(1 + \cos A)$。
+                            </p>
+                            <p style="margin-top: 0.5rem;">
+                                接下來，帶入餘弦定理中角 $A$ 的公式 $\cos A = \frac{b^2 + c^2 - a^2}{2bc}$：
+                            </p>
+                            <div class="math-block">
+                                $$\sin^2 A = 1 - \left( \frac{b^2 + c^2 - a^2}{2bc} \right)^2$$
+                            </div>
+                            <p style="margin-top: 0.5rem;">將這個結果帶回平方面積公式中：</p>
+                            <div class="math-block">
+                                $$\Delta^2 = \frac{1}{4} b^2 c^2 \left[ 1 - \left( \frac{b^2 + c^2 - a^2}{2bc} \right)^2 \right]$$
+                            </div>
+                        </div>
+
+                        <div class="proof-step">
+                            <span class="step-number">步驟 3</span>
+                            <div class="step-desc">代數因式分解（平方差公式）</div>
+                            <p>
+                                將括號外的 $b^2c^2$ 乘入中括號內，並且化簡分母 $4b^2c^2$：
+                            </p>
+                            <div class="math-block">
+                                $$\Delta^2 = \frac{1}{16} \left[ 4b^2c^2 - (b^2 + c^2 - a^2)^2 \right]$$
+                            </div>
+                            <p style="margin-top: 0.5rem;">利用平方差公式 $X^2 - Y^2 = (X - Y)(X + Y)$，其中 $X = 2bc$，$Y = b^2+c^2-a^2$：</p>
+                            <div class="math-block">
+                                $$\Delta^2 = \frac{1}{16} \left[ 2bc - (b^2 + c^2 - a^2) \right] \left[ 2bc + (b^2 + c^2 - a^2) \right]$$
+                            </div>
+                            <div class="math-block">
+                                $$\Delta^2 = \frac{1}{16} \left[ a^2 - (b^2 - 2bc + c^2) \right] \left[ (b^2 + 2bc + c^2) - a^2 \right]$$
+                            </div>
+                            <p style="margin-top: 0.5rem;">利用完全平方公式 $(b-c)^2$ 與 $(b+c)^2$ 進行二次重組：</p>
+                            <div class="math-block">
+                                $$\Delta^2 = \frac{1}{16} \left[ a^2 - (b - c)^2 \right] \left[ (b + c)^2 - a^2 \right]$$
+                            </div>
+                            <p style="margin-top: 0.5rem;">再次對兩個中括號分別套用平方差公式：</p>
+                            <div class="math-block">
+                                $$\Delta^2 = \frac{1}{16} (a - b + c)(a + b - c)(b + c - a)(b + c + a)$$
+                            </div>
+                        </div>
+
+                        <div class="proof-step">
+                            <span class="step-number">步驟 4</span>
+                            <div class="step-desc">帶入半周長 $s$ 簡化公式</div>
+                            <p>
+                                定義半周長 $s = \frac{a+b+c}{2}$，則有全周長 $a+b+c = 2s$。據此我們可以重寫這四個括號：
+                            </p>
+                            <div class="math-block">
+                                $$\begin{aligned}
+                                 b + c + a &= 2s \\
+                                 b + c - a &= (a + b + c) - 2a = 2s - 2a = 2(s-a) \\
+                                 a + c - b &= (a + b + c) - 2b = 2s - 2b = 2(s-b) \\
+                                 a + b - c &= (a + b + c) - 2c = 2s - 2c = 2(s-c)
+                                \end{aligned}$$
+                            </div>
+                            <p style="margin-top: 0.5rem;">將上述四式代回 $\Delta^2$ 的式子中：</p>
+                            <div class="math-block">
+                                $$\Delta^2 = \frac{1}{16} \cdot 2(s-b) \cdot 2(s-c) \cdot 2(s-a) \cdot 2s$$
+                            </div>
+                            <div class="math-block">
+                                $$\Delta^2 = \frac{16}{16} \cdot s(s-a)(s-b)(s-c) = s(s-a)(s-b)(s-c)$$
+                            </div>
+                            <p style="margin-top: 0.5rem;">兩邊開根號（取正值），即得到著名的<b>海龍公式</b>：</p>
+                            <div class="math-block">
+                                $$\Delta = \sqrt{s(s-a)(s-b)(s-c)}$$
+                            </div>
+                            <p style="text-align: right; font-weight: bold; color: var(--accent-gold); margin-bottom: 0;">Q.E.D. 證畢 ■</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4: Quiz Challenge -->
+                <section id="quiz">
+                    <h2><i data-lucide="award"></i> 隨堂概念挑戰</h2>
+                    <p>
+                        動動腦筋，透過海龍公式來解決下面的幾何挑戰。點選正確的選項，並提交答案。
+                    </p>
+                    
+                    <div class="quiz-panel">
+                        <div class="quiz-header">
+                            <div class="quiz-title">
+                                <i data-lucide="help-circle"></i>
+                                <span id="quizQuestionNum">挑戰 1</span>
+                            </div>
+                            <span class="quiz-badge">難度：中等</span>
+                        </div>
+                        
+                        <div class="quiz-question" id="quizQuestionText">
+                            在一個三角形中，已知邊長分別為 $a = 5$、$b = 6$、$c = 7$。試利用海龍公式計算此三角形的半周長 $s$ 與面積 $\Delta$ 為何？
+                        </div>
+                        
+                        <div class="quiz-options" id="quizOptionsContainer">
+                            <!-- Options injected dynamically by JS -->
+                        </div>
+                        
+                        <div class="quiz-feedback" id="quizFeedback">
+                            <!-- Feedback injected dynamically by JS -->
+                        </div>
+                        
+                        <div style="margin: 1.25rem 0; border-top: 1px solid var(--border-gold);"></div>
+                        
+                        <div class="quiz-actions">
+                            <button class="btn-secondary" id="btnNextQuiz" style="display: none;">下一題</button>
+                            <button class="btn-primary" id="btnSubmitQuiz">提交答案</button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- Right Sidebar (Dynamic Section TOC) -->
+        <aside class="right-navigation">
+            <div class="toc-title">本章小節</div>
+            <div class="toc-list" id="tocList">
+                <a href="#intro" class="toc-item active" id="toc-intro">1. 海龍公式簡介</a>
+                <a href="#interactive" class="toc-item" id="toc-interactive">2. 幾何動態探索</a>
+                <a href="#proof" class="toc-item" id="toc-proof">3. 公式代數推導</a>
+                <a href="#quiz" class="toc-item" id="toc-quiz">4. 隨堂概念挑戰</a>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Hidden Canvas for Confetti -->
+    <canvas id="confetti-canvas" style="display: none;"></canvas>
+
+    <script>
+        // =========================================================
+        // DOM Loading and Initialization
+        // =========================================================
+        document.addEventListener("DOMContentLoaded", () => {
+            // Initialize lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            
+            // Render LaTeX using KaTeX
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+            
+            // Show body after rendering to prevent FOUC
+            document.body.style.opacity = 1;
+            
+            // Init components
+            initGeometryCanvas();
+            initQuizEngine();
+            initScrollspy();
+        });
+
+        // =========================================================
+        // Geometry Interactive Canvas (Heron & Traditional)
+        // =========================================================
+        function initGeometryCanvas() {
+            const canvas = document.getElementById("geometryCanvas");
+            const container = document.getElementById("canvasContainer");
+            const ctx = canvas.getContext("2d");
+            const dpr = window.devicePixelRatio || 1;
+            
+            // Initial Triangle Vertices in Virtual Coordinates (600 x 400 space)
+            let A = { x: 300, y: 80 };
+            let B = { x: 100, y: 320 };
+            let C = { x: 500, y: 320 };
+            
+            let dragTarget = null;
+            const clickRadius = 20; // Hit test radius
+            
+            // Reset button
+            document.getElementById("btnReset").addEventListener("click", () => {
+                A = { x: 300, y: 80 };
+                B = { x: 100, y: 320 };
+                C = { x: 500, y: 320 };
+                updateCalculations();
+                draw();
+            });
+            
+            // Resize handler with 8-pixel jitter threshold
+            function resize() {
+                const rect = container.getBoundingClientRect();
+                const width = Math.floor(rect.width);
+                const height = Math.floor(rect.height);
+                
+                // Jitter threshold checks
+                if (Math.abs(width - canvas.width / dpr) > 8 || Math.abs(height - canvas.height / dpr) > 8) {
+                    canvas.width = width * dpr;
+                    canvas.height = height * dpr;
+                    ctx.scale(dpr, dpr);
+                    draw();
+                }
+            }
+            
+            window.addEventListener("resize", resize);
+            // Delay a bit to get accurate container layout
+            setTimeout(resize, 100);
+
+            // Distance helper
+            function dist(p1, p2) {
+                return Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2);
+            }
+
+            // Calculations
+            function updateCalculations() {
+                // Let 1px = 0.02 units (scaling for realistic textbook values)
+                const scale = 0.02;
+                
+                const rawA = dist(B, C);
+                const rawB = dist(A, C);
+                const rawC = dist(A, B);
+                
+                const a = rawA * scale;
+                const b = rawB * scale;
+                const c = rawC * scale;
+                
+                const s = (a + b + c) / 2.0;
+                
+                // Heron's formula area
+                const termA = Math.max(0, s - a);
+                const termB = Math.max(0, s - b);
+                const termC = Math.max(0, s - c);
+                const areaHeron = Math.sqrt(s * termA * termB * termC);
+                
+                // Traditional calculation: base a, height h
+                // Perpendicular vector for base BC
+                const dx = C.x - B.x;
+                const dy = C.y - B.y;
+                const baseLen = Math.sqrt(dx*dx + dy*dy);
+                
+                // Height calculations
+                let hPx = 0;
+                if (baseLen > 0.01) {
+                    // Projection k of vector BA onto BC
+                    const k = ((A.x - B.x) * dx + (A.y - B.y) * dy) / (baseLen * baseLen);
+                    // Foot of perpendicular H
+                    const H = {
+                        x: B.x + k * dx,
+                        y: B.y + k * dy
+                    };
+                    hPx = dist(A, H);
+                }
+                const h = hPx * scale;
+                const areaBH = 0.5 * a * h;
+
+                // Update text values (Monospace Fira Code numbers)
+                document.getElementById("valA").textContent = a.toFixed(2);
+                document.getElementById("valB").textContent = b.toFixed(2);
+                document.getElementById("valC").textContent = c.toFixed(2);
+                document.getElementById("valS").textContent = s.toFixed(2);
+                document.getElementById("valH").textContent = h.toFixed(2);
+                document.getElementById("areaBaseHeight").textContent = areaBH.toFixed(4);
+                document.getElementById("areaHeron").textContent = areaHeron.toFixed(4);
+            }
+
+            // Drawing Canvas Elements
+            function draw() {
+                const width = canvas.width / dpr;
+                const height = canvas.height / dpr;
+                
+                // Clear Canvas
+                ctx.clearRect(0, 0, width, height); // Required by linter clear screen loop
+                ctx.fillStyle = "#050608";
+                ctx.fillRect(0, 0, width, height);
+
+                // Compute perpendicular foot H
+                const dx = C.x - B.x;
+                const dy = C.y - B.y;
+                const baseLen = Math.sqrt(dx*dx + dy*dy);
+                let H = { x: 0, y: 0 };
+                let k = 0;
+                if (baseLen > 0.01) {
+                    k = ((A.x - B.x) * dx + (A.y - B.y) * dy) / (baseLen * baseLen);
+                    H = {
+                        x: B.x + k * dx,
+                        y: B.y + k * dy
+                    };
+                }
+
+                // 1. Draw height line (altitude) and base extension if H is outside BC
+                ctx.beginPath();
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+                ctx.lineWidth = 1.5;
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(H.x, H.y);
+                ctx.stroke();
+
+                if (k < 0) {
+                    ctx.beginPath();
+                    ctx.setLineDash([3, 3]);
+                    ctx.strokeStyle = "rgba(148, 163, 184, 0.3)";
+                    ctx.moveTo(B.x, B.y);
+                    ctx.lineTo(H.x, H.y);
+                    ctx.stroke();
+                } else if (k > 1) {
+                    ctx.beginPath();
+                    ctx.setLineDash([3, 3]);
+                    ctx.strokeStyle = "rgba(148, 163, 184, 0.3)";
+                    ctx.moveTo(C.x, C.y);
+                    ctx.lineTo(H.x, H.y);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]); // Reset dash pattern
+
+                // 2. Draw Right Angle Symbol at H
+                if (baseLen > 0.01) {
+                    const normX = dx / baseLen;
+                    const normY = dy / baseLen;
+                    // Orthogonal vector away from A
+                    const orthX = -normY;
+                    const orthY = normX;
+                    
+                    // Determine orientation of right-angle box based on A's position
+                    const hVecX = A.x - H.x;
+                    const hVecY = A.y - H.y;
+                    const hSign = (hVecX * orthX + hVecY * orthY) > 0 ? 1 : -1;
+                    const kSign = k >= 0.5 ? -1 : 1;
+
+                    const size = 12;
+                    const p1 = { x: H.x + kSign * normX * size, y: H.y + kSign * normY * size };
+                    const p2 = { x: p1.x + hSign * orthX * size, y: p1.y + hSign * orthY * size };
+                    const p3 = { x: H.x + hSign * orthX * size, y: H.y + hSign * orthY * size };
+
+                    ctx.beginPath();
+                    ctx.strokeStyle = "rgba(197, 168, 107, 0.4)";
+                    ctx.lineWidth = 1;
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.lineTo(p3.x, p3.y);
+                    ctx.stroke();
+                }
+
+                // 3. Draw Triangle Body & Fill
+                ctx.beginPath();
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(B.x, B.y);
+                ctx.lineTo(C.x, C.y);
+                ctx.closePath();
+                ctx.fillStyle = "rgba(197, 168, 107, 0.04)";
+                ctx.fill();
+                ctx.strokeStyle = "rgba(197, 168, 107, 0.6)";
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                // 4. Draw vertices (Nodes)
+                const vertices = [
+                    { p: A, name: "A", color: "#c5a86b" },
+                    { p: B, name: "B", color: "#38bdf8" },
+                    { p: C, name: "C", color: "#38bdf8" }
+                ];
+                
+                for (let i = 0; i < vertices.length; i++) {
+                    const node = vertices[i];
+                    ctx.beginPath();
+                    ctx.arc(node.p.x, node.p.y, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = "#090a0f";
+                    ctx.fill();
+                    ctx.strokeStyle = node.color;
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+
+                    // Glow effect on vertices
+                    ctx.beginPath();
+                    ctx.arc(node.p.x, node.p.y, 14, 0, Math.PI * 2);
+                    ctx.fillStyle = node.color === "#c5a86b" ? "rgba(197, 168, 107, 0.1)" : "rgba(56, 189, 248, 0.1)";
+                    ctx.fill();
+
+                    // Text labels for vertices
+                    ctx.font = "bold 13px 'Outfit', sans-serif";
+                    ctx.fillStyle = "#ffffff";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    
+                    let offset = { x: 0, y: -22 };
+                    if (node.name === "B") offset = { x: -18, y: 15 };
+                    if (node.name === "C") offset = { x: 18, y: 15 };
+                    
+                    ctx.fillText(node.name, node.p.x + offset.x, node.p.y + offset.y);
+                }
+
+                // 5. Draw height value text label "h"
+                if (baseLen > 0.01) {
+                    const midHX = (A.x + H.x) / 2;
+                    const midHY = (A.y + H.y) / 2;
+                    ctx.font = "italic 12px 'Inter', sans-serif";
+                    ctx.fillStyle = "#94a3b8";
+                    ctx.textAlign = "left";
+                    ctx.fillText("h", midHX + 10, midHY);
+                }
+            }
+
+            // Mouse and Touch Event Handlers
+            function getCanvasPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            }
+
+            function handleStart(e) {
+                const pos = getCanvasPos(e);
+                if (dist(pos, A) < clickRadius) dragTarget = A;
+                else if (dist(pos, B) < clickRadius) dragTarget = B;
+                else if (dist(pos, C) < clickRadius) dragTarget = C;
+                
+                if (dragTarget) {
+                    e.preventDefault();
+                }
+            }
+
+            function handleMove(e) {
+                if (!dragTarget) return;
+                const pos = getCanvasPos(e);
+                
+                // Boundary clamping
+                const w = canvas.width / dpr;
+                const h = canvas.height / dpr;
+                dragTarget.x = Math.max(10, Math.min(w - 10, pos.x));
+                dragTarget.y = Math.max(10, Math.min(h - 10, pos.y));
+                
+                updateCalculations();
+                draw();
+                e.preventDefault();
+            }
+
+            // ReferenceError risk bypass variables
+            function handleEnd() {
+                dragTarget = null;
+            }
+
+            // Listeners
+            canvas.addEventListener("mousedown", handleStart);
+            canvas.addEventListener("mousemove", handleMove);
+            window.addEventListener("mouseup", handleEnd);
+
+            canvas.addEventListener("touchstart", handleStart, { passive: false });
+            canvas.addEventListener("touchmove", handleMove, { passive: false });
+            window.addEventListener("touchend", handleEnd);
+
+            // Initial Draw
+            updateCalculations();
+            draw();
+        }
+
+        // =========================================================
+        // Quiz Engine (Self-test questions with Confetti feedback)
+        // =========================================================
+        const quizDatabase = [
+            {
+                question: "在一個三角形中，已知邊長分別為 $a = 5$、$b = 6$、$c = 7$。試利用海龍公式計算此三角形的半周長 $s$ 與面積 $\Delta$ 為何？",
+                options: [
+                    "A. $s = 9$ ， $\Delta = 6\\sqrt{6}$",
+                    "B. $s = 18$ ， $\Delta = 6\\sqrt{6}$",
+                    "C. $s = 9$ ， $\Delta = 12\\sqrt{6}$",
+                    "D. $s = 9$ ， $\Delta = 36$"
+                ],
+                answer: 0,
+                explanation: "半周長 $s = \\frac{5+6+7}{2} = 9$。代入海龍公式得到：$$\\Delta = \\sqrt{9(9-5)(9-6)(9-7)} = \\sqrt{9 \\times 4 \\times 3 \\times 2} = \\sqrt{216} = 6\\sqrt{6}$$。因此選項 A 為正確答案。"
+            },
+            {
+                question: "有一塊三角形農地，測得三邊長為 $13$ 公尺、$14$ 公尺、$15$ 公尺。請問此塊農地的面積為多少平方公尺？",
+                options: [
+                    "A. $80$ 平方公尺",
+                    "B. $84$ 平方公尺",
+                    "C. $96$ 平方公尺",
+                    "D. $120$ 平方公尺"
+                ],
+                answer: 1,
+                explanation: "半周長 $s = \\frac{13+14+15}{2} = 21$。代入海龍公式得到：$$\\Delta = \\sqrt{21(21-13)(21-14)(21-15)} = \\sqrt{21 \\times 8 \\times 7 \\times 6}$$。將其分解因數以利計算：$$\\Delta = \\sqrt{3\\cdot7 \\cdot 2^3 \\cdot 7 \\cdot 2\\cdot3} = \\sqrt{2^4 \\cdot 3^2 \\cdot 7^2} = 2^2 \\cdot 3 \\cdot 7 = 4 \\cdot 3 \\cdot 7 = 84$$。因此答案為 B ($84$ 平方公尺)。"
+            },
+            {
+                question: "若一個三角形的三邊長為 $7$、$8$、$9$。請問半周長與三個邊長差值的乘積 $s(s-a)(s-b)(s-c)$ 之值為何？",
+                options: [
+                    "A. $720$",
+                    "B. $1440$",
+                    "C. $360$",
+                    "D. $12\\sqrt{5}$"
+                ],
+                answer: 0,
+                explanation: "半周長 $s = \\frac{7+8+9}{2} = 12$。我們計算各項差值：$s-a = 12-7 = 5$；$s-b = 12-8 = 4$；$s-c = 12-9 = 3$。乘積為 $s(s-a)(s-b)(s-c) = 12 \\times 5 \\times 4 \\times 3 = 720$。根號此值即為面積 $\\sqrt{720} = 12\\sqrt{5}$。題目問的是乘積，故答案為 A ($720$)。"
+            }
+        ];
+
+        let currentQuizIndex = 0;
+        let selectedOptionIndex = null;
+        let isSubmitted = false;
+
+        function initQuizEngine() {
+            const btnSubmit = document.getElementById("btnSubmitQuiz");
+            const btnNext = document.getElementById("btnNextQuiz");
+            
+            btnSubmit.addEventListener("click", submitAnswer);
+            btnNext.addEventListener("click", loadNextQuestion);
+            
+            renderQuiz();
+        }
+
+        function renderQuiz() {
+            const quiz = quizDatabase[currentQuizIndex];
+            document.getElementById("quizQuestionNum").textContent = `挑戰 ${currentQuizIndex + 1} / ${quizDatabase.length}`;
+            document.getElementById("quizQuestionText").innerHTML = quiz.question;
+            
+            const optionsContainer = document.getElementById("quizOptionsContainer");
+            optionsContainer.innerHTML = "";
+            
+            selectedOptionIndex = null;
+            isSubmitted = false;
+            
+            const btnSubmit = document.getElementById("btnSubmitQuiz");
+            const btnNext = document.getElementById("btnNextQuiz");
+            btnSubmit.style.display = "inline-flex";
+            btnSubmit.disabled = true;
+            btnNext.style.display = "none";
+            
+            const feedback = document.getElementById("quizFeedback");
+            feedback.style.display = "none";
+            feedback.className = "quiz-feedback";
+
+            quiz.options.forEach((optText, index) => {
+                const card = document.createElement("div");
+                card.className = "option-card";
+                card.innerHTML = `
+                    <div class="option-check"></div>
+                    <span class="option-text">${optText}</span>
+                `;
+                
+                card.addEventListener("click", () => {
+                    if (isSubmitted) return;
+                    
+                    // Unselect previous
+                    const prevSelected = optionsContainer.querySelector(".option-card.selected");
+                    if (prevSelected) prevSelected.classList.remove("selected");
+                    
+                    card.classList.add("selected");
+                    selectedOptionIndex = index;
+                    btnSubmit.disabled = false;
+                });
+                
+                optionsContainer.appendChild(card);
+            });
+            
+            // Re-render formulas inside the newly added quiz elements
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(optionsContainer, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+                renderMathInElement(document.getElementById("quizQuestionText"), {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+
+        function submitAnswer() {
+            if (selectedOptionIndex === null || isSubmitted) return;
+            isSubmitted = true;
+            
+            const quiz = quizDatabase[currentQuizIndex];
+            const optionsContainer = document.getElementById("quizOptionsContainer");
+            const cards = optionsContainer.querySelectorAll(".option-card");
+            
+            const feedback = document.getElementById("quizFeedback");
+            
+            // Highlight answers
+            cards.forEach((card, index) => {
+                card.classList.remove("selected");
+                if (index === quiz.answer) {
+                    card.classList.add("correct");
+                } else if (index === selectedOptionIndex) {
+                    card.classList.add("wrong");
+                }
+            });
+            
+            // Correct logic
+            if (selectedOptionIndex === quiz.answer) {
+                feedback.classList.add("correct");
+                feedback.innerHTML = `<strong>太棒了，答對了！</strong><br>${quiz.explanation}`;
+                triggerConfetti();
+            } else {
+                feedback.classList.add("wrong");
+                feedback.innerHTML = `<strong>答錯囉，再接再厲！</strong><br>${quiz.explanation}`;
+            }
+            
+            feedback.style.display = "block";
+            
+            // Re-render math inside explanation
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(feedback, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+            
+            document.getElementById("btnSubmitQuiz").style.display = "none";
+            if (currentQuizIndex < quizDatabase.length - 1) {
+                document.getElementById("btnNextQuiz").style.display = "inline-flex";
+            }
+        }
+
+        function loadNextQuestion() {
+            currentQuizIndex++;
+            if (currentQuizIndex < quizDatabase.length) {
+                renderQuiz();
+            }
+        }
+
+        function triggerConfetti() {
+            // Gold Theme Confetti
+            const colors = ['#c5a86b', '#dfc282', '#ffffff', '#b39459'];
+            confetti({
+                particleCount: 80,
+                spread: 70,
+                origin: { y: 0.8 },
+                colors: colors
+            });
+        }
+
+        // =========================================================
+        // Scrollspy & Smooth Navigation Control
+        // =========================================================
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: "smooth" });
+            }
+        }
+
+        function initScrollspy() {
+            const scrollContainer = document.getElementById("mainScrollable");
+            const sections = document.querySelectorAll("section");
+            const tocItems = document.querySelectorAll(".toc-item");
+            const navButtons = document.querySelectorAll(".nav-btn");
+            const topNavbar = document.getElementById("topNavbar");
+            
+            let lastScrollY = scrollContainer.scrollTop;
+
+            // Scroll listener
+            scrollContainer.addEventListener("scroll", () => {
+                const currentScrollY = scrollContainer.scrollTop;
+                
+                // Mobile Top Navbar show/hide on scroll
+                if (currentScrollY > lastScrollY && currentScrollY > 60) {
+                    topNavbar.classList.add("hide-navbar");
+                } else {
+                    topNavbar.classList.remove("hide-navbar");
+                }
+                lastScrollY = currentScrollY;
+                
+                // Scrollspy active tag highlight
+                let activeId = "";
+                sections.forEach(sec => {
+                    const top = sec.offsetTop - 140;
+                    const h = sec.offsetHeight;
+                    if (currentScrollY >= top && currentScrollY < top + h) {
+                        activeId = sec.getAttribute("id");
+                    }
+                });
+
+                if (activeId) {
+                    // Highlight right TOC
+                    tocItems.forEach(item => {
+                        item.classList.remove("active");
+                        if (item.getAttribute("href") === `#${activeId}`) {
+                            item.classList.add("active");
+                        }
+                    });
+                    
+                    // Highlight mobile navbar buttons
+                    navButtons.forEach(btn => {
+                        btn.classList.remove("active");
+                        const onclickAttr = btn.getAttribute("onclick");
+                        if (onclickAttr && onclickAttr.includes(activeId)) {
+                            btn.classList.add("active");
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
